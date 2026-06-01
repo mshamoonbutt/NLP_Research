@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# venvs
+.venv/
+venv/
+env/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Results / artifacts (large + non-deterministic)
+results/
+!results/.gitkeep
+runs/
+wandb/
+*.log
+
+# Model cache (huge)
+.cache/
+hf_cache/
+~/.cache/huggingface/
+
+# Secrets
+.env
+.env.*
+!.env.example
+set_keys.sh
+*_keys.sh
+
+# Annotator dropbox — opt-in only
+data/csjail_v0.jsonl
+data/csjail_v*.jsonl
+data/*.csv
+data/*.xlsx
+!data/csjail_fixture.jsonl
+!data/judge_calibration/*.jsonl

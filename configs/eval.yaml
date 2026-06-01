@@ -1,0 +1,29 @@
+# Evaluation defaults. CLI flags override.
+
+sampling:
+  temperature: 0.0
+  top_p: 1.0
+  max_tokens: 512
+  seed: 0
+
+inference:
+  batch_size: 64           # vLLM handles internal batching; this is the chunk we feed it
+  show_progress: true
+
+stats:
+  bootstrap_n: 10000
+  bootstrap_seed: 0
+  ci_alpha: 0.05           # 95% CI
+  mcnemar_exact_threshold: 25   # discordant pairs <= 25 -> exact, else chi2
+
+# Pairwise McNemar comparisons to compute by default
+pairwise_comparisons:
+  - [EN, UR]
+  - [EN, CS]
+  - [UR, CS]
+  - [EN, SM]
+  - [CS, SM]
+
+# Harm categories (must match dataset)
+harm_categories: [H1, H2, H3, H4, H5]
+conditions: [EN, UR, CS, SM]

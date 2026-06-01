@@ -1,0 +1,33 @@
+# Model registry. Short keys used by --model on the CLI.
+# All three are SLMs (sub-4B). Llama-3-8B reference (RQ2) deferred to a later run.
+
+models:
+  phi3:
+    hf_id: microsoft/Phi-3-mini-4k-instruct
+    dtype: bfloat16
+    max_model_len: 2048              # 4080 (16 GB) headroom: 4096 is tight
+    gpu_memory_utilization: 0.80
+    notes: "3.8B. Most studied SLM with explicit safety training."
+
+  qwen25:
+    hf_id: Qwen/Qwen2.5-1.5B-Instruct
+    dtype: bfloat16
+    max_model_len: 4096
+    gpu_memory_utilization: 0.80
+    notes: "1.5B. Best multilingual SLM for Urdu/Nastaliq. Smallest -> use for smoke tests."
+
+  llama32:
+    hf_id: meta-llama/Llama-3.2-3B-Instruct
+    dtype: bfloat16
+    max_model_len: 3072              # 4080 (16 GB) headroom
+    gpu_memory_utilization: 0.80
+    notes: "3B. Most widely benchmarked SLM. Gated on HF -> needs HF_TOKEN."
+
+# Reference LLM for RQ2 (SLM-vs-LLM gap). Run in a separate sweep after the SLM headline.
+reference_llms:
+  llama3_8b:
+    hf_id: meta-llama/Meta-Llama-3-8B-Instruct
+    dtype: bfloat16
+    max_model_len: 8192
+    gpu_memory_utilization: 0.90
+    notes: "8B. LLM reference for RQ2 SLM-vs-LLM gap comparison. Deferred."
