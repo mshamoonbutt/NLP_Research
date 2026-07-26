@@ -18,6 +18,7 @@ the rest of the pipeline reads through `Prompt` objects.
 """
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable, Literal, Optional
@@ -26,20 +27,37 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from csjail.utils.io import read_jsonl
 
-Condition = Literal["EN", "UR", "CS", "SM"]
-HarmCategory = Literal["H1", "H2", "H3", "H4", "H5"]
+# Extended 4-condition design: CS (code-switched), EN, RU (Roman Urdu), UR
+# (Urdu-Nastaliq). SM (Nastaliq+Roman script-mix) is retained as a legacy
+# condition so the original v0 data/fixtures still load.
+Condition = Literal["EN", "UR", "CS", "RU", "SM"]
+CONDITIONS: tuple[str, ...] = ("CS", "EN", "RU", "UR")  # the active analysis set
+LEGACY_CONDITIONS: tuple[str, ...] = ("SM",)
+ALL_CONDITIONS: tuple[str, ...] = CONDITIONS + LEGACY_CONDITIONS
+# Conditions that must NOT carry a cs_style (monolingual / non-code-switched).
+_MONO_CONDITIONS: tuple[str, ...] = ("EN", "UR", "RU")
+# Conditions that must carry a cs_style + cs_authenticity.
+_CS_CONDITIONS: tuple[str, ...] = ("CS", "SM")
+
+# Harm categories are DYNAMIC (the extended design has 10). We validate the
+# shape only (H<n> or C<nn>) and read the actual set from the data, rather than
+# hardcoding H1..H5.
+HARM_CATEGORY_RE = re.compile(r"^[HC]\d{1,2}$")
 CSStyle = Literal["A", "B", "C"]
 
 
 class Prompt(BaseModel):
     id: str
     base_id: str
-    harm_category: HarmCategory
+    harm_category: str
     condition: Condition
     prompt: str = Field(min_length=1)
     cs_style: Optional[CSStyle] = None
     cs_authenticity: Optional[int] = Field(default=None, ge=1, le=3)
     harm_severity: int = Field(ge=1, le=3)
+    # Code-mixing features (computed in Exp0 if absent from the input file).
+    urdu_word_ratio: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    cmi: Optional[float] = Field(default=None, ge=0.0, le=100.0)
 
     @field_validator("prompt")
     @classmethod
@@ -48,18 +66,27 @@ class Prompt(BaseModel):
             raise ValueError("prompt is whitespace-only")
         return v
 
+    @field_validator("harm_category")
+    @classmethod
+    def _valid_category_shape(cls, v: str) -> str:
+        if not HARM_CATEGORY_RE.match(v):
+            raise ValueError(
+                f"harm_category {v!r} must match H<n> or C<nn> (e.g. H1, C07)"
+            )
+        return v
+
     def model_post_init(self, __context) -> None:  # pydantic v2 hook
-        # CS / SM rows must have a cs_style; EN / UR must not.
-        if self.condition in ("CS", "SM") and self.cs_style is None:
+        # CS / SM rows must have a cs_style; monolingual rows must not.
+        if self.condition in _CS_CONDITIONS and self.cs_style is None:
             raise ValueError(
                 f"id={self.id} condition={self.condition} requires cs_style"
             )
-        if self.condition in ("EN", "UR") and self.cs_style is not None:
+        if self.condition in _MONO_CONDITIONS and self.cs_style is not None:
             raise ValueError(
                 f"id={self.id} condition={self.condition} must not have cs_style"
             )
         # CS authenticity only meaningful for CS / SM.
-        if self.condition in ("CS", "SM") and self.cs_authenticity is None:
+        if self.condition in _CS_CONDITIONS and self.cs_authenticity is None:
             raise ValueError(
                 f"id={self.id} CS row missing cs_authenticity"
             )
@@ -98,7 +125,7 @@ def filter_prompts(
     rows: Iterable[Prompt],
     *,
     condition: Optional[Condition] = None,
-    harm_category: Optional[HarmCategory] = None,
+    harm_category: Optional[str] = None,
     cs_style: Optional[CSStyle] = None,
     min_cs_authenticity: Optional[int] = None,
 ) -> list[Prompt]:
@@ -120,10 +147,10 @@ def filter_prompts(
 def pairing_coverage(rows: list[Prompt]) -> dict[str, dict[str, int]]:
     """For each base_id, count rows per condition. Used for stats pairing.
 
-    Returns: {base_id: {EN: 1, UR: 1, CS: 1, SM: 0}, ...}
+    Returns: {base_id: {CS: 1, EN: 1, RU: 1, UR: 1, SM: 0}, ...}
     """
     cov: dict[str, dict[str, int]] = defaultdict(
-        lambda: {"EN": 0, "UR": 0, "CS": 0, "SM": 0}
+        lambda: {c: 0 for c in ALL_CONDITIONS}
     )
     for r in rows:
         cov[r.base_id][r.condition] += 1
@@ -136,16 +163,23 @@ def summarize(rows: list[Prompt]) -> dict:
     by_cat = Counter(r.harm_category for r in rows)
     by_style = Counter(r.cs_style for r in rows if r.cs_style)
     cov = pairing_coverage(rows)
-    fully_paired = sum(
+    fully_paired_legacy = sum(
         1
         for v in cov.values()
         if v["EN"] >= 1 and v["UR"] >= 1 and v["CS"] >= 1
+    )
+    fully_paired_4 = sum(
+        1
+        for v in cov.values()
+        if all(v[c] >= 1 for c in CONDITIONS)
     )
     return {
         "n_total": len(rows),
         "by_condition": dict(by_cond),
         "by_harm_category": dict(by_cat),
+        "n_harm_categories": len(by_cat),
         "by_cs_style": dict(by_style),
         "n_base_ids": len(cov),
-        "n_base_ids_with_EN_UR_CS": fully_paired,
+        "n_base_ids_with_EN_UR_CS": fully_paired_legacy,
+        "n_base_ids_with_CS_EN_RU_UR": fully_paired_4,
     }

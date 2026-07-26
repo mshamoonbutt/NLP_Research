@@ -1,0 +1,46 @@
+{
+  "assignments": {
+    "C01-001": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-002": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C02-001": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-002": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-001": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-002": {
+      "split": "train",
+      "held_out_category": false
+    }
+  },
+  "meta": {
+    "seed": 42,
+    "n_base_ids": 6,
+    "eval_holdout_requested": 2,
+    "eval_holdout_actual": 2,
+    "held_out_categories": [
+      "C01"
+    ],
+    "categories": [
+      "C01",
+      "C02",
+      "C03"
+    ],
+    "eval_by_category": {
+      "C01": 1,
+      "C03": 1
+    }
+  }
+}

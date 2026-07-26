@@ -1,0 +1,8 @@
+# Capability-retention eval (Exp 8). Multiple-choice accuracy, pre vs post DPO.
+capability:
+  mmlu_path: data/capability/mmlu_500.jsonl       # English general-knowledge MCQs
+  urdummlu_path: data/capability/urdummlu_300.jsonl  # Urdu MCQs
+  mmlu_n: 500
+  urdummlu_n: 300
+  max_tokens: 8
+  retention_min: 0.95    # post/pre accuracy must stay >= this

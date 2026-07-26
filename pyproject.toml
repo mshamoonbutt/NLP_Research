@@ -37,6 +37,16 @@ dev = [
   "pytest-asyncio>=0.24",
   "ruff>=0.7",
 ]
+# Phase-2 training stack (GPU host only — QLoRA-DPO). Pulls heavy CUDA wheels.
+train = [
+  "trl>=0.11,<0.20",
+  "peft>=0.13",
+  "bitsandbytes>=0.44",
+  "datasets>=3.0",
+  "accelerate>=0.34",
+  "matplotlib>=3.8",
+  "python-dotenv>=1.0",
+]
 # vllm pulls heavy CUDA wheels; keep it out of the local Windows venv
 local = [
   "openai>=1.55,<2.0",

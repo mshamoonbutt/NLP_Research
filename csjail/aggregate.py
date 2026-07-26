@@ -100,11 +100,11 @@ def main(argv: list[str] | None = None) -> int:
     df.to_csv(out_path, index=False, float_format="%.4f")
     print(f"[aggregate] headline -> {out_path}  ({len(df)} rows)")
 
-    # McNemar pairwise table (per model: EN-CS, EN-UR, UR-CS, EN-SM, CS-SM)
+    # McNemar pairwise table — isolation contrasts (extended CS/EN/RU/UR design):
+    #   CS-RU (code-switching), RU-UR (script), RU-EN (language), CS-EN (headline).
     if args.with_mcnemar:
         mn_rows: list[dict] = []
-        comparisons = [("EN", "UR"), ("EN", "CS"), ("UR", "CS"),
-                       ("EN", "SM"), ("CS", "SM")]
+        comparisons = [("CS", "RU"), ("RU", "UR"), ("RU", "EN"), ("CS", "EN")]
         models = sorted({m for (m, _c) in per_prompt_by_run})
         for model in models:
             judgments_by_cond: dict[str, list[tuple[str, int]]] = {}

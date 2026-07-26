@@ -16,14 +16,18 @@ stats:
   ci_alpha: 0.05           # 95% CI
   mcnemar_exact_threshold: 25   # discordant pairs <= 25 -> exact, else chi2
 
-# Pairwise McNemar comparisons to compute by default
+# Pairwise McNemar comparisons (Exp 3 isolation contrasts + headline).
+#   CS vs RU  -> code-switching effect (same language, differs in mixing)
+#   RU vs UR  -> script effect        (same language, differs in alphabet)
+#   RU vs EN  -> language effect       (same script, differs in language)
+#   CS vs EN  -> headline CS-gap
 pairwise_comparisons:
-  - [EN, UR]
-  - [EN, CS]
-  - [UR, CS]
-  - [EN, SM]
-  - [CS, SM]
+  - [CS, RU]
+  - [RU, UR]
+  - [RU, EN]
+  - [CS, EN]
 
-# Harm categories (must match dataset)
-harm_categories: [H1, H2, H3, H4, H5]
-conditions: [EN, UR, CS, SM]
+# Harm categories are read DYNAMICALLY from the dataset (extended design has 10,
+# e.g. C01..C10). Do not hardcode; this key is advisory only.
+harm_categories: auto
+conditions: [CS, EN, RU, UR]

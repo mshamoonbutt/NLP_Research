@@ -1,0 +1,45 @@
+# Phase-2 QLoRA-DPO configuration (Exp 7). Tuned for a single RTX 4080 (16 GB).
+# Consumed by csjail/train_dpo.py. All sub-4B SLMs fit at 4-bit NF4 + LoRA.
+
+dpo:
+  quantization: 4bit_nf4          # QLoRA; ~5-7 GB peak on the 4080
+  loss_type: sigmoid              # standard DPO; pluggable (ipo/kto_pair/... ; MPO/CS-weighted = arms F/G)
+  beta: 0.1
+  learning_rate: 5.0e-5
+  epochs: 2                       # sweep {1,2,3} on a val split; default 2
+  per_device_batch: 2
+  grad_accum: 8                   # effective batch 16
+  max_length: 1024
+  max_prompt_length: 512
+  optimizer: paged_adamw_8bit
+  lr_scheduler: cosine
+  warmup_ratio: 0.1
+  optional_sft_warmup: false      # light SFT on `chosen` before DPO if DPO underfits
+  seed: 42
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.05
+    target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+# Comparison arms (Exp 7). A/E are not trained; B/C/D are DPO runs.
+arms:
+  A: {method: none,      data: none,        note: "untrained reference"}
+  B: {method: dpo,       data: english,     note: "does English-only safety transfer?"}
+  C: {method: dpo,       data: cs,          note: "does our CS data work? (RQ4 core)"}
+  D: {method: dpo,       data: cs+english,  note: "best practical recipe"}
+  E: {method: prompt,    data: none,        note: "eval-time safety-priming prompt"}
+
+prefdata:
+  target_pairs: 800
+  length_balance_tolerance: 0.15
+
+ablations:
+  n_curve: [100, 200, 400, 800]
+  beta_sweep: [0.1, 0.3, 0.5]
+
+acceptance:
+  cs_asr_relative_reduction_min: 0.50
+  en_asr_drift_max_pp: 3.0
+  overrefusal_increase_max_pp: 10.0
+  capability_retention_min: 0.95

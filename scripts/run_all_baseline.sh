@@ -10,13 +10,13 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-DATASET="${DATASET:-data/csjail_v0.jsonl}"
+DATASET="${DATASET:-data/csjail_v1.jsonl}"
 OUTDIR="${OUTDIR:-results/baseline_$(date -u +%Y%m%dT%H%M%SZ)}"
 SEED="${SEED:-0}"
 TEMP="${TEMP:-0.0}"
 MAX_TOK="${MAX_TOK:-512}"
 MODELS="${MODELS_OVERRIDE:-qwen25 phi3 llama32}"
-CONDITIONS="${CONDITIONS_OVERRIDE:-EN UR CS SM}"
+CONDITIONS="${CONDITIONS_OVERRIDE:-CS EN RU UR}"
 
 if [ ! -f "$DATASET" ]; then
   echo "[sweep] FAIL: dataset not found at $DATASET" >&2

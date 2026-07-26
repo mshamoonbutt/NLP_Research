@@ -59,8 +59,12 @@ class SLMRunner:
         tensor_parallel_size: int = 1,
         download_dir: Optional[str] = None,
         trust_remote_code: bool = True,
+        adapter_path: Optional[str] = None,
+        max_lora_rank: int = 32,
     ) -> None:
         self.spec = spec
+        self.adapter_path = adapter_path
+        self._lora_request = None
 
         try:
             from vllm import LLM  # noqa: WPS433 (lazy import)
@@ -78,7 +82,15 @@ class SLMRunner:
             download_dir=download_dir,
             trust_remote_code=trust_remote_code,
             seed=0,
+            enable_lora=bool(adapter_path),
+            max_lora_rank=max_lora_rank,
         )
+        # A trained-arm adapter is served on top of the frozen base via vLLM's
+        # LoRA path — no need to merge weights before evaluation.
+        if adapter_path:
+            from vllm.lora.request import LoRARequest  # noqa: WPS433
+
+            self._lora_request = LoRARequest("csjail_adapter", 1, adapter_path)
 
         # Tokenizer reused for chat-template rendering.
         from transformers import AutoTokenizer  # noqa: WPS433
@@ -120,7 +132,10 @@ class SLMRunner:
             max_tokens=sampling.max_tokens,
             seed=sampling.seed,
         )
-        outputs = self._llm.generate(rendered, sp, use_tqdm=show_progress)
+        outputs = self._llm.generate(
+            rendered, sp, use_tqdm=show_progress,
+            lora_request=self._lora_request,
+        )
         # vLLM returns RequestOutput; we want the first sampled text per prompt.
         return [o.outputs[0].text for o in outputs]
 

@@ -118,7 +118,7 @@ def test_invalid_harm_category_rejected(tmp_path):
             {
                 "id": "Z-001-EN",
                 "base_id": "Z-001",
-                "harm_category": "H9",  # invalid
+                "harm_category": "9",  # invalid shape (no H/C prefix)
                 "condition": "EN",
                 "prompt": "hello",
                 "harm_severity": 1,
@@ -167,11 +167,29 @@ def test_whitespace_prompt_rejected(tmp_path):
         load_dataset(bad)
 
 
+def test_ru_condition_accepted():
+    # Roman Urdu is a monolingual condition: no cs_style, loads cleanly.
+    p = Prompt(
+        id="C01-001-RU", base_id="C01-001", harm_category="C01",
+        condition="RU", prompt="mujhe batao kaise", harm_severity=2,
+    )
+    assert p.condition == "RU"
+    assert p.cs_style is None
+
+
+def test_ten_categories_accepted():
+    p = Prompt(
+        id="C10-001-EN", base_id="C10-001", harm_category="C10",
+        condition="EN", prompt="hello", harm_severity=1,
+    )
+    assert p.harm_category == "C10"
+
+
 def test_pairing_coverage_counts():
     rows = load_dataset(FIXTURE)
     cov = pairing_coverage(rows)
-    # H1-001 has EN + UR + CS + SM in the fixture
-    assert cov["H1-001"] == {"EN": 1, "UR": 1, "CS": 1, "SM": 1}
+    # H1-001 has EN + UR + CS + SM in the fixture (RU absent -> 0)
+    assert cov["H1-001"] == {"CS": 1, "EN": 1, "RU": 0, "UR": 1, "SM": 1}
     # H2-001 has EN + UR + 2 CS, no SM
     assert cov["H2-001"]["CS"] == 2
     assert cov["H2-001"]["SM"] == 0

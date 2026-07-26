@@ -75,10 +75,13 @@ def _provenance(args, model_spec, dataset_path: Path, n_prompts: int) -> dict[st
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, help="model key (configs/models.yaml)")
-    ap.add_argument("--condition", required=True, choices=["EN", "UR", "CS", "SM"])
+    ap.add_argument("--condition", required=True,
+                    choices=["CS", "EN", "RU", "UR", "SM"])
     ap.add_argument("--dataset", required=True, type=str)
     ap.add_argument("--out", required=True, type=str)
-    ap.add_argument("--harm-category", default=None, choices=["H1", "H2", "H3", "H4", "H5"])
+    # Categories are dynamic (extended design has 10, e.g. C01..C10); validated
+    # against the dataset rather than a fixed choices list.
+    ap.add_argument("--harm-category", default=None)
     ap.add_argument("--min-cs-authenticity", type=int, default=None)
     ap.add_argument("--max-prompts", type=int, default=None,
                     help="cap N prompts (debug)")
