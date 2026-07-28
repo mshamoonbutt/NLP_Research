@@ -14,6 +14,7 @@ dist/
 
 # venvs
 .venv/
+.venv-cpu/
 venv/
 env/
 
@@ -37,6 +38,16 @@ wandb/
 .cache/
 hf_cache/
 ~/.cache/huggingface/
+
+# Harmful dataset + any file containing prompt text — KEEP LOCAL (ethics/AUP).
+# The pipeline rebuilds these locally from the annotation template.
+annotation_template.xlsx
+annotation_template*.xlsx
+annotation_template*.csv
+data/csjail_v1.jsonl
+data/*_v1.jsonl
+outputs/**/dataset_with_features.jsonl
+ubuntu-broken-backup.tar
 
 # Secrets
 .env

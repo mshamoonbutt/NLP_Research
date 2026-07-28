@@ -7,12 +7,30 @@ Two environments:
   post-eval. `pip install -e ".[train]"`, set `OPENAI_API_KEY` + `HF_TOKEN`.
 
 ## Input the pipeline expects
-Drop the extended dataset at **`data/csjail_v1.jsonl`** in long format (one row
-per base-prompt × condition). Required fields per the schema contract:
-`id, base_id, harm_category (C01..C10, dynamic), condition (CS|EN|RU|UR),
-prompt, harm_severity (1-3)`; CS rows also need `cs_style` + `cs_authenticity`.
-`urdu_word_ratio` / `cmi` are computed in Exp0 if absent. Benign probe →
+The extended dataset ships as the WIDE annotation template
+**`annotation_template.xlsx`** (1000 base prompts × 10 categories, one row per
+prompt with all four condition texts: `base_cs_prompt`, `en_translation`,
+`ur_translation`, `roman_urdu_translation`, plus optional `harm_severity_score`).
+Convert it to the long JSONL the pipeline reads:
+
+```bash
+python -m csjail.convert_v1 --input annotation_template.xlsx --out data/csjail_v1.jsonl
+# -> 4000 long rows (CS|EN|RU|UR), harm_category C01..C10, base_id shared across conditions
+```
+
+Long-format fields per the schema contract: `id, base_id, harm_category
+(C01..C10, dynamic), condition (CS|EN|RU|UR), prompt`, plus optional
+`harm_severity (1-3)`. `cs_style` / `cs_authenticity` are NOT in this template
+and are left absent (the schema accepts CS rows without them — no fabricated
+labels). `urdu_word_ratio` / `cmi` are computed in Exp0. Benign probe →
 `data/overrefusal_probe.jsonl` (`probe_id, condition∈{CS,RU,UR}, prompt`).
+
+**Known data caveats (from Exp0 on the real file):** 275 base prompts have
+CS == RU (byte-identical) — dilutes the CS-vs-RU contrast (kept as-is); 4 full
+duplicates in C06 were dropped via `--drop-duplicates` (1000→996); the Roman-Urdu
+CMI tagger under-counts Urdu content words, so CMI/urdu_word_ratio are reliable
+for EN/UR but do NOT cleanly separate CS from RU (needs a stronger Roman-Urdu
+language-ID before Exp4's CMI analysis).
 
 ---
 
@@ -25,9 +43,15 @@ PYTHONPATH=. pytest tests/ -q                       # 62 tests
 python scripts/exp0_finalize_data.py --smoke-test   # tiny 4-condition demo
 python scripts/smoke_pipeline_cpu.py                # full analysis chain, stubbed
 
-# Exp 0 for real (after adding data/csjail_v1.jsonl):
+# Build the real dataset from the wide template, then finalize:
+python -m csjail.convert_v1 --input annotation_template.xlsx \
+    --out data/csjail_v1.jsonl --drop-duplicates
 python scripts/exp0_finalize_data.py --dataset data/csjail_v1.jsonl \
     --eval-holdout 300 --held-out-categories 2 --out-dir outputs/exp0
+# -> outputs/exp0/{dataset_with_features.jsonl, splits.json, dataset_stats.json}
+#    DONE (this repo): 996 base prompts / 3984 rows (4 full duplicates dropped),
+#    parity 1.000, split 700 train / 300 eval, held-out categories C01,C06.
+#    GATE PASS.
 ```
 
 ## RTX 4080 (GPU host)

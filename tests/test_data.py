@@ -55,10 +55,12 @@ def test_filter_min_authenticity():
     )
 
 
-def test_cs_row_without_style_rejected(tmp_path):
-    bad = tmp_path / "bad.jsonl"
+def test_cs_row_without_style_loads(tmp_path):
+    # The extended annotation template does not label code-switch style, so a CS
+    # row without cs_style / cs_authenticity is valid (not fabricated).
+    ok = tmp_path / "ok.jsonl"
     write_jsonl(
-        bad,
+        ok,
         [
             {
                 "id": "X-001-CS",
@@ -67,12 +69,13 @@ def test_cs_row_without_style_rejected(tmp_path):
                 "condition": "CS",
                 "prompt": "hello",
                 "harm_severity": 1,
-                # missing cs_style + cs_authenticity
+                # no cs_style + cs_authenticity — accepted
             }
         ],
     )
-    with pytest.raises(DatasetError):
-        load_dataset(bad)
+    rows = load_dataset(ok)
+    assert rows[0].cs_style is None
+    assert rows[0].cs_authenticity is None
 
 
 def test_en_row_with_style_rejected(tmp_path):

@@ -54,7 +54,10 @@ class Prompt(BaseModel):
     prompt: str = Field(min_length=1)
     cs_style: Optional[CSStyle] = None
     cs_authenticity: Optional[int] = Field(default=None, ge=1, le=3)
-    harm_severity: int = Field(ge=1, le=3)
+    # Annotator-rated severity. Optional: the extended annotation template carries
+    # it for only a subset of rows, so it is descriptive (never imputed) and
+    # absent rows are simply dropped from the severity histogram.
+    harm_severity: Optional[int] = Field(default=None, ge=1, le=3)
     # Code-mixing features (computed in Exp0 if absent from the input file).
     urdu_word_ratio: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     cmi: Optional[float] = Field(default=None, ge=0.0, le=100.0)
@@ -76,19 +79,13 @@ class Prompt(BaseModel):
         return v
 
     def model_post_init(self, __context) -> None:  # pydantic v2 hook
-        # CS / SM rows must have a cs_style; monolingual rows must not.
-        if self.condition in _CS_CONDITIONS and self.cs_style is None:
-            raise ValueError(
-                f"id={self.id} condition={self.condition} requires cs_style"
-            )
+        # Monolingual rows must never carry a cs_style. cs_style / cs_authenticity
+        # are OPTIONAL on CS rows: the extended annotation template does not label
+        # code-switch style, so we accept CS rows without it rather than fabricate
+        # a label. When present, cs_style is only meaningful on CS / SM.
         if self.condition in _MONO_CONDITIONS and self.cs_style is not None:
             raise ValueError(
                 f"id={self.id} condition={self.condition} must not have cs_style"
-            )
-        # CS authenticity only meaningful for CS / SM.
-        if self.condition in _CS_CONDITIONS and self.cs_authenticity is None:
-            raise ValueError(
-                f"id={self.id} CS row missing cs_authenticity"
             )
 
 

@@ -1,46 +1,4022 @@
 {
   "assignments": {
-    "C01-001": {
+    "C01-0001": {
       "split": "train",
       "held_out_category": true
     },
-    "C01-002": {
+    "C01-0002": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0003": {
       "split": "eval",
       "held_out_category": true
     },
-    "C02-001": {
+    "C01-0004": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0005": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0006": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0007": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0008": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0009": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0010": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0011": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0012": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0013": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0014": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0015": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0016": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0017": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0018": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0019": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0020": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0021": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0022": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0023": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0024": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0025": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0026": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0027": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0028": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0029": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0030": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0031": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0032": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0033": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0034": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0035": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0036": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0037": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0038": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0039": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0040": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0041": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0042": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0043": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0044": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0045": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0046": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0047": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0048": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0049": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0050": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0051": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0052": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0053": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0054": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0055": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0056": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0057": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0058": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0059": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0060": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0061": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0062": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0063": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0064": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0065": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0066": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0067": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0068": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0069": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0070": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0071": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0072": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0073": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0074": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0075": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0076": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0077": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0078": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0079": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0080": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0081": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0082": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0083": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0084": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0085": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0086": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0087": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0088": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0089": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0090": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0091": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0092": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0093": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0094": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0095": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0096": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0097": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0098": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C01-0099": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C01-0100": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C02-0101": {
       "split": "train",
       "held_out_category": false
     },
-    "C02-002": {
+    "C02-0102": {
       "split": "train",
       "held_out_category": false
     },
-    "C03-001": {
+    "C02-0103": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0104": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0105": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0106": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0107": {
       "split": "eval",
       "held_out_category": false
     },
-    "C03-002": {
+    "C02-0108": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0109": {
       "split": "train",
+      "held_out_category": false
+    },
+    "C02-0110": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0111": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0112": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0113": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0114": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0115": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0116": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0117": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0118": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0119": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0120": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0121": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0122": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0123": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0124": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0125": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0126": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0127": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0128": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0129": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0130": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0131": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0132": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0133": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0134": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0135": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0136": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0137": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0138": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0139": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0140": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0141": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0142": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0143": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0144": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0145": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0146": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0147": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0148": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0149": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0150": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0151": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0152": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0153": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0154": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0155": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0156": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0157": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0158": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0159": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0160": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0161": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0162": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0163": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0164": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0165": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0166": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0167": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0168": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0169": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0170": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0171": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0172": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0173": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0174": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0175": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0176": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0177": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0178": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0179": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0180": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0181": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0182": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0183": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0184": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0185": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0186": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0187": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0188": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0189": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0190": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0191": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0192": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0193": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0194": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0195": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0196": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0197": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0198": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C02-0199": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C02-0200": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0201": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0202": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0203": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0204": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0205": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0206": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0207": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0208": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0209": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0210": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0211": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0212": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0213": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0214": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0215": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0216": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0217": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0218": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0219": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0220": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0221": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0222": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0223": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0224": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0225": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0226": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0227": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0228": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0229": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0230": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0231": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0232": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0233": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0234": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0235": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0236": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0237": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0238": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0239": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0240": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0241": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0242": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0243": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0244": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0245": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0246": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0247": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0248": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0249": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0250": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0251": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0252": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0253": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0254": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0255": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0256": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0257": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0258": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0259": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0260": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0261": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0262": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0263": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0264": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0265": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0266": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0267": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0268": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0269": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0270": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0271": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0272": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0273": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0274": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0275": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0276": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0277": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0278": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0279": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0280": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0281": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0282": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0283": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0284": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0285": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0286": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0287": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0288": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0289": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0290": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0291": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0292": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0293": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0294": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0295": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0296": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0297": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0298": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C03-0299": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C03-0300": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0301": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0302": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0303": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0304": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0305": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0306": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0307": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0308": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0309": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0310": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0311": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0312": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0313": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0314": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0315": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0316": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0317": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0318": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0319": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0320": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0321": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0322": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0323": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0324": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0325": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0326": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0327": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0328": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0329": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0330": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0331": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0332": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0333": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0334": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0335": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0336": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0337": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0338": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0339": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0340": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0341": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0342": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0343": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0344": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0345": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0346": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0347": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0348": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0349": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0350": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0351": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0352": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0353": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0354": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0355": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0356": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0357": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0358": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0359": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0360": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0361": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0362": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0363": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0364": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0365": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0366": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0367": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0368": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0369": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0370": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0371": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0372": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0373": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0374": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0375": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0376": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0377": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0378": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0379": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0380": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0381": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0382": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0383": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0384": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0385": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0386": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0387": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0388": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0389": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0390": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0391": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0392": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C04-0393": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0394": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0395": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0396": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0397": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0398": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0399": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C04-0400": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0401": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0402": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0403": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0404": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0405": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0406": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0407": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0408": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0409": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0410": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0411": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0412": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0413": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0414": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0415": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0416": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0417": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0418": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0419": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0420": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0421": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0422": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0423": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0424": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0425": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0426": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0427": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0428": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0429": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0430": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0431": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0432": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0433": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0434": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0435": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0436": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0437": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0438": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0439": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0440": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0441": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0442": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0443": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0444": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0445": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0446": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0447": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0448": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0449": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0450": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0451": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0452": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0453": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0454": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0455": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0456": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0457": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0458": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0459": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0460": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0461": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0462": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0463": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0464": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0465": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0466": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0467": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0468": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0469": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0470": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0471": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0472": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0473": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0474": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0475": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0476": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0477": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0478": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0479": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0480": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0481": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0482": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0483": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0484": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0485": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0486": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0487": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0488": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0489": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0490": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0491": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0492": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0493": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0494": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0495": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0496": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0497": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C05-0498": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0499": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C05-0500": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C06-0501": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0502": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0503": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0504": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0505": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0506": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0507": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0508": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0509": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0510": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0511": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0512": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0513": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0514": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0515": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0516": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0517": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0518": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0519": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0520": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0521": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0522": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0523": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0524": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0525": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0526": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0527": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0528": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0529": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0530": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0531": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0532": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0533": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0534": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0535": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0536": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0537": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0538": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0539": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0540": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0541": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0542": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0543": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0544": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0545": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0546": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0547": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0548": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0549": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0550": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0551": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0552": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0553": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0554": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0555": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0556": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0557": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0558": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0559": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0560": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0561": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0562": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0563": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0564": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0565": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0566": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0567": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0568": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0569": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0570": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0571": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0572": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0573": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0574": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0575": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0576": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0577": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0582": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0583": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0584": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0585": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0586": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0587": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0588": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0589": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0590": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0591": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0592": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0593": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0594": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0595": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0596": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0597": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0598": {
+      "split": "eval",
+      "held_out_category": true
+    },
+    "C06-0599": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C06-0600": {
+      "split": "train",
+      "held_out_category": true
+    },
+    "C07-0601": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0602": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0603": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0604": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0605": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0606": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0607": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0608": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0609": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0610": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0611": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0612": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0613": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0614": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0615": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0616": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0617": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0618": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0619": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0620": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0621": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0622": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0623": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0624": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0625": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0626": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0627": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0628": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0629": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0630": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0631": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0632": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0633": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0634": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0635": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0636": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0637": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0638": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0639": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0640": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0641": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0642": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0643": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0644": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0645": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0646": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0647": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0648": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0649": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0650": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0651": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0652": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0653": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0654": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0655": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0656": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0657": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0658": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0659": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0660": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0661": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0662": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0663": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0664": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0665": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0666": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0667": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0668": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0669": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0670": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0671": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0672": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0673": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0674": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0675": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0676": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0677": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0678": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0679": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0680": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0681": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0682": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0683": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0684": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0685": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0686": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0687": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0688": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0689": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0690": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0691": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0692": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0693": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0694": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0695": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0696": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0697": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C07-0698": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0699": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C07-0700": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0701": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0702": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0703": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0704": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0705": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0706": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0707": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0708": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0709": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0710": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0711": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0712": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0713": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0714": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0715": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0716": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0717": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0718": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0719": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0720": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0721": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0722": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0723": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0724": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0725": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0726": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0727": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0728": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0729": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0730": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0731": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0732": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0733": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0734": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0735": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0736": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0737": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0738": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0739": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0740": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0741": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0742": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0743": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0744": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0745": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0746": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0747": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0748": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0749": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0750": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0751": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0752": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0753": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0754": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0755": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0756": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0757": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0758": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0759": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0760": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0761": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0762": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0763": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0764": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0765": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0766": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0767": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0768": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0769": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0770": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0771": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0772": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0773": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0774": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0775": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0776": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0777": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0778": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0779": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0780": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0781": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0782": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0783": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0784": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0785": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0786": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0787": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0788": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0789": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0790": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0791": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0792": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0793": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0794": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0795": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0796": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C08-0797": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0798": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0799": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C08-0800": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0801": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0802": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0803": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0804": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0805": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0806": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0807": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0808": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0809": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0810": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0811": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0812": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0813": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0814": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0815": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0816": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0817": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0818": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0819": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0820": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0821": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0822": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0823": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0824": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0825": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0826": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0827": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0828": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0829": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0830": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0831": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0832": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0833": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0834": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0835": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0836": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0837": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0838": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0839": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0840": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0841": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0842": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0843": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0844": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0845": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0846": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0847": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0848": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0849": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0850": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0851": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0852": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0853": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0854": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0855": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0856": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0857": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0858": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0859": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0860": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0861": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0862": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0863": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0864": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0865": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0866": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0867": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0868": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0869": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0870": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0871": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0872": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0873": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0874": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0875": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0876": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0877": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0878": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0879": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0880": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0881": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0882": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0883": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0884": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0885": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0886": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0887": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0888": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0889": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0890": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0891": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0892": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0893": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0894": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0895": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0896": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0897": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0898": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C09-0899": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C09-0900": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0901": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0902": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0903": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0904": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0905": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0906": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0907": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0908": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0909": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0910": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0911": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0912": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0913": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0914": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0915": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0916": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0917": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0918": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0919": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0920": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0921": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0922": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0923": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0924": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0925": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0926": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0927": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0928": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0929": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0930": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0931": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0932": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0933": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0934": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0935": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0936": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0937": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0938": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0939": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0940": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0941": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0942": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0943": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0944": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0945": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0946": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0947": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0948": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0949": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0950": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0951": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0952": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0953": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0954": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0955": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0956": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0957": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0958": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0959": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0960": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0961": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0962": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0963": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0964": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0965": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0966": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0967": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0968": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0969": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0970": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0971": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0972": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0973": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0974": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0975": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0976": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0977": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0978": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0979": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0980": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0981": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0982": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0983": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0984": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0985": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0986": {
+      "split": "eval",
+      "held_out_category": false
+    },
+    "C10-0987": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0988": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0989": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0990": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0991": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0992": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0993": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0994": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0995": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0996": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0997": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0998": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-0999": {
+      "split": "train",
+      "held_out_category": false
+    },
+    "C10-1000": {
+      "split": "eval",
       "held_out_category": false
     }
   },
   "meta": {
     "seed": 42,
-    "n_base_ids": 6,
-    "eval_holdout_requested": 2,
-    "eval_holdout_actual": 2,
+    "n_base_ids": 996,
+    "eval_holdout_requested": 300,
+    "eval_holdout_actual": 300,
     "held_out_categories": [
-      "C01"
+      "C01",
+      "C06"
     ],
     "categories": [
       "C01",
       "C02",
-      "C03"
+      "C03",
+      "C04",
+      "C05",
+      "C06",
+      "C07",
+      "C08",
+      "C09",
+      "C10"
     ],
     "eval_by_category": {
-      "C01": 1,
-      "C03": 1
+      "C07": 30,
+      "C08": 30,
+      "C02": 30,
+      "C04": 30,
+      "C01": 30,
+      "C05": 30,
+      "C03": 31,
+      "C09": 30,
+      "C10": 30,
+      "C06": 29
     }
   }
 }
