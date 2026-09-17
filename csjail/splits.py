@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -117,7 +118,7 @@ def _base_id_category(rows: list[Prompt]) -> dict[str, str]:
 def make_splits(
     rows: list[Prompt],
     *,
-    eval_holdout: int = 300,
+    eval_holdout: int = 200,
     n_held_out_categories: int = 2,
     seed: int = 42,
 ) -> dict:
@@ -189,6 +190,70 @@ def make_splits(
         "eval_by_category": dict(Counter(cat_of[b] for b in eval_ids)),
     }
     return {"assignments": assignments, "meta": meta}
+
+
+def cohens_kappa(rater_a: list[int], rater_b: list[int]) -> float:
+    """Unweighted Cohen's kappa for two raters' categorical/ordinal scores."""
+    assert len(rater_a) == len(rater_b)
+    n = len(rater_a)
+    if n == 0:
+        return 0.0
+    categories = sorted(set(rater_a) | set(rater_b))
+    idx = {c: i for i, c in enumerate(categories)}
+    k = len(categories)
+    confusion = [[0] * k for _ in range(k)]
+    for a, b in zip(rater_a, rater_b, strict=True):
+        confusion[idx[a]][idx[b]] += 1
+    po = sum(confusion[i][i] for i in range(k)) / n
+    row_marg = [sum(row) / n for row in confusion]
+    col_marg = [sum(confusion[i][j] for i in range(k)) / n for j in range(k)]
+    pe = sum(row_marg[i] * col_marg[i] for i in range(k))
+    if pe >= 1.0:
+        return 1.0
+    return (po - pe) / (1 - pe)
+
+
+@dataclass
+class IAAReport:
+    n: int
+    kappa_authenticity: float
+    kappa_harm_severity: float
+    min_kappa: float
+    gate_threshold: float
+    passed: bool
+
+
+def inter_annotator_agreement(
+    csv_path: str | Path, *, threshold: float = 0.70,
+) -> IAAReport:
+    """Cohen's kappa between the two human reviewers, computed from the raw
+    wide annotation CSV (authenticity_score{1,2}, harm_severity_score{1,2}).
+
+    Must read the ORIGINAL annotation CSV, not the long-format pipeline
+    dataset: `csjail.convert_csv` averages the two reviewers' raw scores into
+    a single `cs_authenticity` / `harm_severity` field before rows enter the
+    pipeline, so the per-reviewer scores needed for kappa don't survive past
+    that conversion.
+    """
+    import csv as _csv
+
+    with Path(csv_path).open("r", encoding="utf-8", newline="") as f:
+        rows = list(_csv.DictReader(f))
+    auth1 = [int(r["authenticity_score1"]) for r in rows]
+    auth2 = [int(r["authenticity_score2"]) for r in rows]
+    sev1 = [int(r["harm_severity_score1"]) for r in rows]
+    sev2 = [int(r["harm_severity_score2"]) for r in rows]
+    k_auth = cohens_kappa(auth1, auth2)
+    k_sev = cohens_kappa(sev1, sev2)
+    min_k = min(k_auth, k_sev)
+    return IAAReport(
+        n=len(rows),
+        kappa_authenticity=round(k_auth, 4),
+        kappa_harm_severity=round(k_sev, 4),
+        min_kappa=round(min_k, 4),
+        gate_threshold=threshold,
+        passed=min_k >= threshold,
+    )
 
 
 def dataset_stats(rows: list[Prompt]) -> dict:

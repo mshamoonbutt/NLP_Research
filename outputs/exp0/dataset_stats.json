@@ -69,5 +69,13 @@
     "parity_rate": 1.0,
     "incomplete": []
   },
-  "n_near_duplicates": 3
+  "n_near_duplicates": 3,
+  "iaa": {
+    "n": 180,
+    "kappa_authenticity": 0.2596,
+    "kappa_harm_severity": 0.8401,
+    "min_kappa": 0.2596,
+    "gate_threshold": 0.7,
+    "passed": false
+  }
 }

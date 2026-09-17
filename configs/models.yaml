@@ -1,5 +1,12 @@
 # Model registry. Short keys used by --model on the CLI.
 # All three are SLMs (sub-4B). Llama-3-8B reference (RQ2) deferred to a later run.
+#
+# Phase 2 (Exp 6-9, DPO training + post-eval) runs on 2 models only, not 3:
+# phi3 (documented safety post-training -> most interesting case) + llama32
+# (architecturally different family, most widely benchmarked). This halves
+# the cost of Exp 7/8, the most expensive part of the pipeline. qwen25 stays
+# in Phase 1 (main sweep + smoke tests) only.
+phase2_models: [phi3, llama32]
 
 models:
   phi3:

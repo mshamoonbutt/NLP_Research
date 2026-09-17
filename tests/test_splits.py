@@ -4,9 +4,11 @@ from __future__ import annotations
 from csjail.data import CONDITIONS, Prompt
 from csjail.splits import (
     attach_features,
+    cohens_kappa,
     condition_parity,
     dataset_stats,
     find_near_duplicates,
+    inter_annotator_agreement,
     make_splits,
 )
 
@@ -96,3 +98,35 @@ def test_dataset_stats_shape():
     st = dataset_stats(rows)
     assert set(st["by_condition"]) == set(CONDITIONS)
     assert st["cmi"]["n"] == len(rows)
+
+
+def test_cohens_kappa_perfect_agreement():
+    assert cohens_kappa([1, 2, 3, 1, 2], [1, 2, 3, 1, 2]) == 1.0
+
+
+def test_cohens_kappa_chance_level():
+    # Two raters splitting 3/3 with no correlation between them -> ~0 kappa.
+    a = [1, 1, 1, 2, 2, 2]
+    b = [1, 2, 1, 2, 1, 2]
+    k = cohens_kappa(a, b)
+    assert -0.5 < k < 0.5
+
+
+def test_cohens_kappa_systematic_disagreement_is_negative():
+    a = [1, 1, 2, 2]
+    b = [2, 2, 1, 1]
+    assert cohens_kappa(a, b) < 0
+
+
+def test_inter_annotator_agreement_reads_real_csv(tmp_path):
+    csv_path = tmp_path / "iaa.csv"
+    csv_path.write_text(
+        "authenticity_score1,authenticity_score2,harm_severity_score1,harm_severity_score2\n"
+        "3,3,2,2\n3,3,1,1\n3,2,2,2\n2,2,3,3\n3,3,2,1\n",
+        encoding="utf-8",
+    )
+    report = inter_annotator_agreement(csv_path, threshold=0.70)
+    assert report.n == 5
+    assert report.min_kappa == min(report.kappa_authenticity,
+                                   report.kappa_harm_severity)
+    assert report.passed == (report.min_kappa >= 0.70)

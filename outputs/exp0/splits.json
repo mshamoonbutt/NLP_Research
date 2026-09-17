@@ -29,7 +29,7 @@
       "held_out_category": true
     },
     "C01-0008": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0009": {
@@ -105,7 +105,7 @@
       "held_out_category": true
     },
     "C01-0027": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0028": {
@@ -113,7 +113,7 @@
       "held_out_category": true
     },
     "C01-0029": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0030": {
@@ -149,7 +149,7 @@
       "held_out_category": true
     },
     "C01-0038": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0039": {
@@ -229,7 +229,7 @@
       "held_out_category": true
     },
     "C01-0058": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0059": {
@@ -305,7 +305,7 @@
       "held_out_category": true
     },
     "C01-0077": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0078": {
@@ -313,15 +313,15 @@
       "held_out_category": true
     },
     "C01-0079": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0080": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0081": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0082": {
@@ -377,7 +377,7 @@
       "held_out_category": true
     },
     "C01-0095": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C01-0096": {
@@ -461,11 +461,11 @@
       "held_out_category": false
     },
     "C02-0116": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0117": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0118": {
@@ -473,7 +473,7 @@
       "held_out_category": false
     },
     "C02-0119": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0120": {
@@ -501,7 +501,7 @@
       "held_out_category": false
     },
     "C02-0126": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0127": {
@@ -545,7 +545,7 @@
       "held_out_category": false
     },
     "C02-0137": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0138": {
@@ -573,7 +573,7 @@
       "held_out_category": false
     },
     "C02-0144": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0145": {
@@ -589,7 +589,7 @@
       "held_out_category": false
     },
     "C02-0148": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0149": {
@@ -629,7 +629,7 @@
       "held_out_category": false
     },
     "C02-0158": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0159": {
@@ -677,7 +677,7 @@
       "held_out_category": false
     },
     "C02-0170": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0171": {
@@ -781,7 +781,7 @@
       "held_out_category": false
     },
     "C02-0196": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C02-0197": {
@@ -801,7 +801,7 @@
       "held_out_category": false
     },
     "C03-0201": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0202": {
@@ -841,7 +841,7 @@
       "held_out_category": false
     },
     "C03-0211": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0212": {
@@ -861,7 +861,7 @@
       "held_out_category": false
     },
     "C03-0216": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0217": {
@@ -889,7 +889,7 @@
       "held_out_category": false
     },
     "C03-0223": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0224": {
@@ -945,7 +945,7 @@
       "held_out_category": false
     },
     "C03-0237": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0238": {
@@ -1037,7 +1037,7 @@
       "held_out_category": false
     },
     "C03-0260": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0261": {
@@ -1057,7 +1057,7 @@
       "held_out_category": false
     },
     "C03-0265": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0266": {
@@ -1085,7 +1085,7 @@
       "held_out_category": false
     },
     "C03-0272": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0273": {
@@ -1169,7 +1169,7 @@
       "held_out_category": false
     },
     "C03-0293": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C03-0294": {
@@ -1197,7 +1197,7 @@
       "held_out_category": false
     },
     "C03-0300": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0301": {
@@ -1209,7 +1209,7 @@
       "held_out_category": false
     },
     "C04-0303": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0304": {
@@ -1237,7 +1237,7 @@
       "held_out_category": false
     },
     "C04-0310": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0311": {
@@ -1253,7 +1253,7 @@
       "held_out_category": false
     },
     "C04-0314": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0315": {
@@ -1293,7 +1293,7 @@
       "held_out_category": false
     },
     "C04-0324": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0325": {
@@ -1301,7 +1301,7 @@
       "held_out_category": false
     },
     "C04-0326": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0327": {
@@ -1401,11 +1401,11 @@
       "held_out_category": false
     },
     "C04-0351": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0352": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0353": {
@@ -1449,7 +1449,7 @@
       "held_out_category": false
     },
     "C04-0363": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0364": {
@@ -1545,7 +1545,7 @@
       "held_out_category": false
     },
     "C04-0387": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0388": {
@@ -1565,7 +1565,7 @@
       "held_out_category": false
     },
     "C04-0392": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C04-0393": {
@@ -1625,7 +1625,7 @@
       "held_out_category": false
     },
     "C05-0407": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0408": {
@@ -1633,7 +1633,7 @@
       "held_out_category": false
     },
     "C05-0409": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0410": {
@@ -1649,7 +1649,7 @@
       "held_out_category": false
     },
     "C05-0413": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0414": {
@@ -1809,7 +1809,7 @@
       "held_out_category": false
     },
     "C05-0453": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0454": {
@@ -1841,7 +1841,7 @@
       "held_out_category": false
     },
     "C05-0461": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0462": {
@@ -1861,11 +1861,11 @@
       "held_out_category": false
     },
     "C05-0466": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0467": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0468": {
@@ -1933,7 +1933,7 @@
       "held_out_category": false
     },
     "C05-0484": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0485": {
@@ -1973,7 +1973,7 @@
       "held_out_category": false
     },
     "C05-0494": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0495": {
@@ -1985,7 +1985,7 @@
       "held_out_category": false
     },
     "C05-0497": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C05-0498": {
@@ -2005,7 +2005,7 @@
       "held_out_category": true
     },
     "C06-0502": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0503": {
@@ -2025,7 +2025,7 @@
       "held_out_category": true
     },
     "C06-0507": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0508": {
@@ -2097,7 +2097,7 @@
       "held_out_category": true
     },
     "C06-0525": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0526": {
@@ -2117,7 +2117,7 @@
       "held_out_category": true
     },
     "C06-0530": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0531": {
@@ -2193,7 +2193,7 @@
       "held_out_category": true
     },
     "C06-0549": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0550": {
@@ -2265,7 +2265,7 @@
       "held_out_category": true
     },
     "C06-0567": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0568": {
@@ -2273,11 +2273,11 @@
       "held_out_category": true
     },
     "C06-0569": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0570": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0571": {
@@ -2313,7 +2313,7 @@
       "held_out_category": true
     },
     "C06-0583": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0584": {
@@ -2325,7 +2325,7 @@
       "held_out_category": true
     },
     "C06-0586": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": true
     },
     "C06-0587": {
@@ -2401,7 +2401,7 @@
       "held_out_category": false
     },
     "C07-0605": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0606": {
@@ -2445,19 +2445,19 @@
       "held_out_category": false
     },
     "C07-0616": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0617": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0618": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0619": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0620": {
@@ -2497,7 +2497,7 @@
       "held_out_category": false
     },
     "C07-0629": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0630": {
@@ -2589,7 +2589,7 @@
       "held_out_category": false
     },
     "C07-0652": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0653": {
@@ -2605,7 +2605,7 @@
       "held_out_category": false
     },
     "C07-0656": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0657": {
@@ -2645,7 +2645,7 @@
       "held_out_category": false
     },
     "C07-0666": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0667": {
@@ -2669,7 +2669,7 @@
       "held_out_category": false
     },
     "C07-0672": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C07-0673": {
@@ -2797,7 +2797,7 @@
       "held_out_category": false
     },
     "C08-0704": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0705": {
@@ -2817,7 +2817,7 @@
       "held_out_category": false
     },
     "C08-0709": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0710": {
@@ -2873,7 +2873,7 @@
       "held_out_category": false
     },
     "C08-0723": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0724": {
@@ -2885,7 +2885,7 @@
       "held_out_category": false
     },
     "C08-0726": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0727": {
@@ -2933,7 +2933,7 @@
       "held_out_category": false
     },
     "C08-0738": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0739": {
@@ -2945,7 +2945,7 @@
       "held_out_category": false
     },
     "C08-0741": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0742": {
@@ -2973,7 +2973,7 @@
       "held_out_category": false
     },
     "C08-0748": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0749": {
@@ -2985,7 +2985,7 @@
       "held_out_category": false
     },
     "C08-0751": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0752": {
@@ -3041,7 +3041,7 @@
       "held_out_category": false
     },
     "C08-0765": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0766": {
@@ -3165,7 +3165,7 @@
       "held_out_category": false
     },
     "C08-0796": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C08-0797": {
@@ -3217,7 +3217,7 @@
       "held_out_category": false
     },
     "C09-0809": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0810": {
@@ -3293,7 +3293,7 @@
       "held_out_category": false
     },
     "C09-0828": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0829": {
@@ -3337,7 +3337,7 @@
       "held_out_category": false
     },
     "C09-0839": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0840": {
@@ -3365,7 +3365,7 @@
       "held_out_category": false
     },
     "C09-0846": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0847": {
@@ -3377,7 +3377,7 @@
       "held_out_category": false
     },
     "C09-0849": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0850": {
@@ -3389,11 +3389,11 @@
       "held_out_category": false
     },
     "C09-0852": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0853": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0854": {
@@ -3413,7 +3413,7 @@
       "held_out_category": false
     },
     "C09-0858": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0859": {
@@ -3549,7 +3549,7 @@
       "held_out_category": false
     },
     "C09-0892": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0893": {
@@ -3569,7 +3569,7 @@
       "held_out_category": false
     },
     "C09-0897": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C09-0898": {
@@ -3617,7 +3617,7 @@
       "held_out_category": false
     },
     "C10-0909": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0910": {
@@ -3625,7 +3625,7 @@
       "held_out_category": false
     },
     "C10-0911": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0912": {
@@ -3657,7 +3657,7 @@
       "held_out_category": false
     },
     "C10-0919": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0920": {
@@ -3665,7 +3665,7 @@
       "held_out_category": false
     },
     "C10-0921": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0922": {
@@ -3761,7 +3761,7 @@
       "held_out_category": false
     },
     "C10-0945": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0946": {
@@ -3781,7 +3781,7 @@
       "held_out_category": false
     },
     "C10-0950": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0951": {
@@ -3829,7 +3829,7 @@
       "held_out_category": false
     },
     "C10-0962": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0963": {
@@ -3901,11 +3901,11 @@
       "held_out_category": false
     },
     "C10-0980": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0981": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0982": {
@@ -3925,7 +3925,7 @@
       "held_out_category": false
     },
     "C10-0986": {
-      "split": "eval",
+      "split": "train",
       "held_out_category": false
     },
     "C10-0987": {
@@ -3988,8 +3988,8 @@
   "meta": {
     "seed": 42,
     "n_base_ids": 996,
-    "eval_holdout_requested": 300,
-    "eval_holdout_actual": 300,
+    "eval_holdout_requested": 200,
+    "eval_holdout_actual": 200,
     "held_out_categories": [
       "C01",
       "C06"
@@ -4007,16 +4007,16 @@
       "C10"
     ],
     "eval_by_category": {
-      "C07": 30,
-      "C08": 30,
-      "C02": 30,
-      "C04": 30,
-      "C01": 30,
-      "C05": 30,
-      "C03": 31,
-      "C09": 30,
-      "C10": 30,
-      "C06": 29
+      "C01": 20,
+      "C06": 19,
+      "C09": 20,
+      "C08": 20,
+      "C02": 20,
+      "C10": 20,
+      "C04": 20,
+      "C03": 21,
+      "C05": 20,
+      "C07": 20
     }
   }
 }
