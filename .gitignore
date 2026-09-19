@@ -45,6 +45,12 @@ data/csjail_v1.jsonl
 data/*_v1.jsonl
 outputs/**/dataset_with_features.jsonl
 ubuntu-broken-backup.tar
+# Exp1 annotation CSVs (real prompts + SLM responses), Exp4b comprehension
+# rows (prompt + response + paraphrase), Exp6 naturalness samples (prompt +
+# chosen refusal) — same category as the dataset files above.
+outputs/exp1/*.csv
+outputs/exp4b/*.jsonl
+outputs/exp6/*.csv
 
 # Secrets
 .env

@@ -23,13 +23,13 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from csjail.data import CONDITIONS, load_dataset  # noqa: E402
 from csjail.models import SamplingConfig, SLMRunner, resolve  # noqa: E402
+from csjail.splits import proportional_stratified_indices  # noqa: E402
 
 CSV_FIELDS = ["id", "model", "condition", "harm_category", "base_id",
               "prompt", "response", "gold", "annotator"]
@@ -37,24 +37,10 @@ CSV_FIELDS = ["id", "model", "condition", "harm_category", "base_id",
 
 def _stratified_sample(rows, condition: str, n: int, seed: int):
     """Proportional-by-category sample of `n` rows in `condition`."""
-    import numpy as np
-
     cond_rows = [r for r in rows if r.condition == condition]
-    by_cat: dict[str, list] = defaultdict(list)
-    for r in cond_rows:
-        by_cat[r.harm_category].append(r)
-    rng = np.random.default_rng(seed)
-    n_total = len(cond_rows)
-    picked = []
-    for cat, rs in sorted(by_cat.items()):
-        quota = max(1, round(n * len(rs) / n_total)) if n_total else 0
-        idx = rng.permutation(len(rs))[: min(quota, len(rs))]
-        picked.extend(rs[i] for i in idx)
-    # Exact-size correction.
-    rng.shuffle(picked)
-    if len(picked) > n:
-        picked = picked[:n]
-    return picked
+    idx = proportional_stratified_indices(
+        [r.harm_category for r in cond_rows], n, seed=seed)
+    return [cond_rows[i] for i in idx]
 
 
 def main(argv=None) -> int:

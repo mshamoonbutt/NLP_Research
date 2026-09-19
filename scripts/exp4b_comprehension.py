@@ -26,7 +26,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -39,27 +38,18 @@ from csjail.comprehension import (  # noqa: E402
 from csjail.data import CONDITIONS, load_dataset  # noqa: E402
 from csjail.judge import Judge  # noqa: E402
 from csjail.models import SamplingConfig, SLMRunner, resolve  # noqa: E402
+from csjail.splits import proportional_stratified_indices  # noqa: E402
 
 
 def _sample_base_ids(rows, n: int, seed: int) -> set[str]:
-    """Stratified-by-category sample of ~n base_ids (proportional allocation)."""
-    import numpy as np
-
-    by_cat: dict[str, list[str]] = defaultdict(list)
-    seen: set[str] = set()
+    """Stratified-by-category sample of ~n unique base_ids (proportional)."""
+    seen: dict[str, str] = {}  # base_id -> harm_category, first-seen order
     for r in rows:
-        if r.base_id in seen:
-            continue
-        seen.add(r.base_id)
-        by_cat[r.harm_category].append(r.base_id)
-    n_total = len(seen)
-    rng = np.random.default_rng(seed)
-    picked: set[str] = set()
-    for cat, ids in sorted(by_cat.items()):
-        quota = max(1, round(n * len(ids) / n_total)) if n_total else 0
-        idx = rng.permutation(len(ids))[: min(quota, len(ids))]
-        picked.update(ids[i] for i in idx)
-    return picked
+        seen.setdefault(r.base_id, r.harm_category)
+    base_ids = list(seen)
+    idx = proportional_stratified_indices(
+        [seen[b] for b in base_ids], n, seed=seed)
+    return {base_ids[i] for i in idx}
 
 
 def main(argv=None) -> int:

@@ -10,6 +10,7 @@ from csjail.splits import (
     find_near_duplicates,
     inter_annotator_agreement,
     make_splits,
+    proportional_stratified_indices,
 )
 
 
@@ -116,6 +117,42 @@ def test_cohens_kappa_systematic_disagreement_is_negative():
     a = [1, 1, 2, 2]
     b = [2, 2, 1, 1]
     assert cohens_kappa(a, b) < 0
+
+
+def test_proportional_stratified_indices_hits_exact_n():
+    keys = ["A"] * 70 + ["B"] * 20 + ["C"] * 10
+    idx = proportional_stratified_indices(keys, 20, seed=0)
+    assert len(idx) == 20
+    assert len(set(idx)) == 20  # no duplicates
+    assert all(0 <= i < len(keys) for i in idx)
+
+
+def test_proportional_stratified_indices_proportional_by_group():
+    keys = ["A"] * 80 + ["B"] * 20
+    idx = proportional_stratified_indices(keys, 50, seed=0)
+    n_a = sum(1 for i in idx if keys[i] == "A")
+    n_b = sum(1 for i in idx if keys[i] == "B")
+    # ~80/20 split of 50 -> ~40/10; allow rounding slack.
+    assert 35 <= n_a <= 45
+    assert 5 <= n_b <= 15
+
+
+def test_proportional_stratified_indices_deterministic():
+    keys = ["A"] * 30 + ["B"] * 30 + ["C"] * 30
+    a = proportional_stratified_indices(keys, 15, seed=7)
+    b = proportional_stratified_indices(keys, 15, seed=7)
+    assert a == b
+
+
+def test_proportional_stratified_indices_n_gte_total_returns_all():
+    keys = ["A", "B", "C"]
+    idx = proportional_stratified_indices(keys, 10, seed=0)
+    assert idx == [0, 1, 2]
+
+
+def test_proportional_stratified_indices_empty():
+    assert proportional_stratified_indices([], 10, seed=0) == []
+    assert proportional_stratified_indices(["A", "B"], 0, seed=0) == []
 
 
 def test_inter_annotator_agreement_reads_real_csv(tmp_path):

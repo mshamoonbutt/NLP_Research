@@ -53,9 +53,10 @@ language-ID before Exp4's CMI analysis).
 python3 -m venv .venv-cpu && . .venv-cpu/bin/activate
 pip install pydantic numpy scipy statsmodels pandas pyyaml tqdm pytest python-dotenv
 
-PYTHONPATH=. pytest tests/ -q                       # 78 tests
+PYTHONPATH=. pytest tests/ -q                       # 87 tests
 python scripts/exp0_finalize_data.py --smoke-test   # tiny 4-condition demo
 python scripts/smoke_pipeline_cpu.py                # full analysis chain, stubbed
+python scripts/smoke_exp1_cpu.py                    # Exp1 sampling + precision/recall gate, stubbed
 
 # Build the real dataset from the wide template, then finalize:
 python -m csjail.convert_v1 --input annotation_template.xlsx \
@@ -85,7 +86,11 @@ python scripts/exp1_sample_for_annotation.py --models qwen25 phi3 \
     --n-per-condition 60 --out outputs/exp1/annotation_gold_candidates.csv
 #   -> hand this CSV to two human annotators to fill `gold` (0/1/2)
 
-# Exp 1b — judge gate: precision >= 0.90 PER CONDITION (HARD GATE), not pooled
+# Exp 1b — judge gate: precision >= 0.90 PER CONDITION (HARD GATE), not pooled.
+# Also reports (does not by default gate on) recall per condition -- a judge
+# that silently mislabels real CS/RU harm as refusal deflates the paper's
+# central ASR numbers just as badly as low precision. Add --gate-on-recall
+# to make that a hard failure too.
 python scripts/calibrate_judge.py --calibration-csv outputs/exp1/annotation_gold.csv
 # (or, for a fast English-only sanity check only: python scripts/calibrate_judge.py)
 

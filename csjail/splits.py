@@ -192,6 +192,53 @@ def make_splits(
     return {"assignments": assignments, "meta": meta}
 
 
+def proportional_stratified_indices(
+    keys: list[str], n: int, *, seed: int = 42,
+) -> list[int]:
+    """Indices of a proportional-by-key stratified sample of ~n items,
+    deterministic given `seed`. `keys` is a parallel array (e.g. harm_category
+    per item); works on indices (always hashable) so it's agnostic to what
+    the caller's items actually are (Prompt rows, base_id strings, ...).
+
+    Shared by Exp 1's per-condition gold-set sampler and Exp 4b's
+    comprehension-control subset -- both need "pick ~n items, proportional
+    to each harm_category's share, seeded". `make_splits`'s own eval-holdout
+    quota uses the same algorithm inline rather than this helper, since it
+    was already committed with a specific RNG call sequence and re-pointing
+    it here would silently change which base_ids land in eval for the same
+    seed.
+    """
+    n_total = len(keys)
+    if n_total == 0 or n <= 0:
+        return []
+    n = min(n, n_total)
+    by_key: dict[str, list[int]] = defaultdict(list)
+    for i, k in enumerate(keys):
+        by_key[k].append(i)
+
+    rng = np.random.default_rng(seed)
+    picked: set[int] = set()
+    for k in sorted(by_key):
+        idx = by_key[k][:]
+        rng.shuffle(idx)
+        quota = int(round(n * len(idx) / n_total))
+        picked.update(idx[:quota])
+
+    # Exact-size correction against a fully shuffled index pool.
+    all_idx = list(range(n_total))
+    rng.shuffle(all_idx)
+    i = 0
+    while len(picked) < n and i < len(all_idx):
+        picked.add(all_idx[i])
+        i += 1
+    if len(picked) > n:
+        drop = list(picked)
+        rng.shuffle(drop)
+        for idx in drop[: len(picked) - n]:
+            picked.discard(idx)
+    return sorted(picked)
+
+
 def cohens_kappa(rater_a: list[int], rater_b: list[int]) -> float:
     """Unweighted Cohen's kappa for two raters' categorical/ordinal scores."""
     assert len(rater_a) == len(rater_b)
