@@ -15,18 +15,20 @@ Two modes:
    English and 70% on Roman Urdu; the per-condition minimum is the only
    number that catches that.
 
-   Also reports RECALL per condition (not gated by default, matching the
-   guide's documented precision-only spec). A judge with high precision but
-   low recall in RU/CS silently mislabels real harmful responses as
-   refusals, which deflates exactly the ASR numbers this paper's central
-   claim depends on -- pass --gate-on-recall to make that a hard failure
-   too once you and your advisor have seen the numbers.
+   Also gates on RECALL per condition, by default (this goes beyond the
+   guide's literal precision-only spec -- pass --no-gate-on-recall to match
+   it exactly). A judge with high precision but low recall in RU/CS
+   silently mislabels real harmful responses as refusals, which deflates
+   exactly the ASR numbers this paper's central claim depends on -- a
+   quieter failure than low precision, and at least as damaging for THIS
+   paper's specific hypothesis (that code-switching raises harm, not
+   lowers it).
 
    A condition with zero actual-harmful gold examples in the sample reports
    precision/recall as N/A, not 0.0 -- that's undefined, not a failure.
 
-EXITS NON-ZERO IF THE RELEVANT PRECISION (or, with --gate-on-recall,
-RECALL) < threshold. Do not produce paper numbers until this gate passes.
+EXITS NON-ZERO IF PRECISION, OR (by default) RECALL, < threshold in any
+condition. Do not produce paper numbers until this gate passes.
 
 Usage (A100 host or anywhere with OPENAI_API_KEY):
     python scripts/calibrate_judge.py
@@ -74,7 +76,8 @@ async def _run_per_condition(
     print(f"[calibrate] {len(rows)} annotated pairs across "
           f"{len(set(conditions))} conditions")
     print(f"[calibrate] per-condition gate: min_precision >= {threshold}"
-          + (f", min_recall >= {threshold} (--gate-on-recall)" if gate_on_recall else ""))
+          + (f" AND min_recall >= {threshold}" if gate_on_recall
+             else " (--no-gate-on-recall: precision only, recall reported not gated)"))
 
     judge = Judge()
     judgments = await judge.score_many(pairs, show_progress=True)
@@ -153,12 +156,21 @@ async def _run() -> int:
                     help="--calibration-csv only: warn (not fail, unless "
                          "--gate-on-recall) if any condition's recall falls "
                          "below this")
-    ap.add_argument("--gate-on-recall", action="store_true",
+    ap.add_argument("--gate-on-recall", dest="gate_on_recall",
+                    action="store_true", default=True,
                     help="--calibration-csv only: also FAIL the run if any "
                          "condition's recall < --threshold, not just "
-                         "precision. Off by default to match the documented "
-                         "Exp 1 gate spec (precision only); recommended once "
-                         "your advisor has seen the recall numbers.")
+                         "precision (default: ON). A judge with good "
+                         "precision but poor RU/CS recall silently "
+                         "undercounts real harm, deflating exactly the ASR "
+                         "numbers this paper's claim rests on -- more "
+                         "dangerous than a precision miss, not less. Pass "
+                         "--no-gate-on-recall to fall back to the guide's "
+                         "literal precision-only spec.")
+    ap.add_argument("--no-gate-on-recall", dest="gate_on_recall",
+                    action="store_false",
+                    help="revert to precision-only gating (the guide's "
+                         "literal spec)")
     ap.add_argument("--out", type=str, default=None,
                     help="optional path to write full judgments JSON")
     ap.add_argument(
