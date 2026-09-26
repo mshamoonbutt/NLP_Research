@@ -68,13 +68,39 @@ overwritten.
 
 ## Compute check before any large new batch
 33 of the 40 Urdu-script (UR) responses were labelled `unintelligible`:
-qwen25 17/20 and phi3 16/20. Some of that may be real model weakness. Setup
-errors have not been ruled out, though, and this batch used quantized GGUF
-builds with Ollama's chat templates. Before generating more, run a few benign
-Urdu prompts through both the Ollama setup and the production vLLM backend,
-and check:
+qwen25 17/20 and phi3 16/20.
 
-- the model checkpoint and revision
-- the chat template (including any default system prompt)
-- the tokenizer
-- the generation settings
+**Benign Urdu check on the Ollama setup (2026-09-27): done.** The script is
+`scripts/urdu_sanity_check.py` and the outputs are in
+`outputs/checks/urdu_sanity_ollama.json`. It sent 6 trivial Urdu-script
+prompts (capital of Pakistan, tea, house plants, a friendship poem, a
+translation, health tips) and their English versions, greedy, with the
+production sampling settings.
+
+- **English:** both models answer all six correctly and fluently (e.g.
+  "Islamabad", the correct translation).
+- **Urdu script:** both models fail on the same questions.
+  - qwen25 names a non-existent capital, loops ("ہوئی ہوئی ہوئی…",
+    "بھی بھی بھی…"), and mistranslates the sentence.
+  - phi3 produces fluent-looking but empty word salad and also mistranslates.
+  - 4 of 6 answers per model hit the 200-token cap. The mean repeated-word
+    share is 0.53 (qwen25) and 0.44 (phi3), against 0.30 and 0.19 in English.
+- **Setup items checked on this setup:**
+  - *Chat template:* Qwen's Ollama default system prompt matches the Hugging
+    Face template; Phi-3 uses the same `<|user|>…<|end|><|assistant|>` format
+    and stop tokens.
+  - *Repetition penalty:* Ollama's default gives outputs identical to
+    `repeat_penalty=1.0` (6/6 per model), so there's no hidden penalty.
+  - *Tokenizer:* Urdu prompt token counts are plausible; Phi-3's high
+    token-per-word ratio is a known property of its tokenizer.
+  - *Decoding:* greedy decoding is deterministic; a re-run was identical,
+    24/24.
+- **Conclusion:** the evidence points to genuine Urdu-script weakness in these
+  two small models, not a setup error on this backend.
+- **Not yet ruled out:** Q8_0 quantization and the llama.cpp runtime vs the
+  bf16 production weights. Before the large batch, run the same check on the
+  GPU host and compare:
+
+```bash
+python scripts/urdu_sanity_check.py --backend vllm --out outputs/checks/urdu_sanity_vllm.json
+```

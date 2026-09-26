@@ -1,0 +1,302 @@
+{
+ "backend": "ollama",
+ "sampling": {
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "max_tokens": 200,
+  "seed": 0,
+  "n": 1
+ },
+ "results": [
+  {
+   "model": "qwen25",
+   "lang": "UR",
+   "i": 0,
+   "prompt": "پاکستان کا دارالحکومت کون سا شہر ہے؟",
+   "text": "پاکستان کا دارالحکومت کون سا شہر ہے:\n\nچاکریا\n\nچاکریا کا شہر 1325ء میں ایشیائی ایک شہر ہے۔ اس کے نام کے ساتھ ایک اہم اہمیت ہے جسے \"چاکریا\" ہے۔ اس کا نام ایک اہم اہمیت ہے جس میں ایک اہم اہمیت ہے۔ اس کا نام ایک اہم اہمیت ہے جس میں ایک اہم اہمیت ہے۔ اس کا نام ایک اہم ا",
+   "finish_reason": "length",
+   "prompt_tokens": 53,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.61
+  },
+  {
+   "model": "qwen25",
+   "lang": "UR",
+   "i": 1,
+   "prompt": "چائے بنانے کا آسان طریقہ بتائیں۔",
+   "text": "آسان طریقہ بنانے کا آسان طریقہ ہے:\n\n1. جو معلوماتیں ہیں جسے بھیا ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہوئی ہو",
+   "finish_reason": "length",
+   "prompt_tokens": 49,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.71
+  },
+  {
+   "model": "qwen25",
+   "lang": "UR",
+   "i": 2,
+   "prompt": "بارش کے موسم میں گھر کے پودوں کی دیکھ بھال کیسے کریں؟",
+   "text": "ایک بارش کے موسم میں گھر کے پودوں کی دیکھ کر کہاں ہوں، اس سے پہلے کسی بھی اس کی ایک معلومات کیا جاتا ہے:\n\n1. گھر کے پودوں کی مسیر کو بیان کریں: اس سے ایک اس کی مسیر کو بیان کریں، اس کی مسیر کو گھر کے پودوں کی مسیر کو بیان کریں۔\n\n2. گھر کے پودوں کی مسیر کو بیان کریں: اس سے ایک اس کی مسیر ک",
+   "finish_reason": "length",
+   "prompt_tokens": 66,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.58
+  },
+  {
+   "model": "qwen25",
+   "lang": "UR",
+   "i": 3,
+   "prompt": "دوستی کے بارے میں ایک مختصر نظم لکھیں۔",
+   "text": "دوسٹی کے بارے میں ایک مختصر نظم:\n\nدوسٹی کے بارے میں ایک نظم ہے،\nکہا جاتا ہے کہ دوسٹی کے بارے میں\nہمیں ایک ایک کہا جاتا ہے،\nدوسٹی کے بارے میں ایک نظم ہے۔",
+   "finish_reason": "stop",
+   "prompt_tokens": 54,
+   "completion_tokens": 110,
+   "repeat_word_share": 0.57
+  },
+  {
+   "model": "qwen25",
+   "lang": "UR",
+   "i": 4,
+   "prompt": "اس جملے کا انگریزی میں ترجمہ کریں: میں کل بازار جاؤں گا۔",
+   "text": "My salary will be deposited in the bank.",
+   "finish_reason": "stop",
+   "prompt_tokens": 68,
+   "completion_tokens": 10,
+   "repeat_word_share": 0.0
+  },
+  {
+   "model": "qwen25",
+   "lang": "UR",
+   "i": 5,
+   "prompt": "صحت مند رہنے کے تین مشورے دیں۔",
+   "text": "1. ایک بھی ایک بھی: اپنی صحت کو بھی بھی اپنے رہنے کے لیے بھی بھی بھی کیا جا سکتا ہے۔\n\n2. ایک بھی ایک بھی: اپنے رہنے کے لیے بھی بھی اپنے صحت کو بھی بھی بھی کیا جا سکتا ہے۔\n\n3. ایک بھی ایک بھی: اپنے رہنے کے لیے بھی بھی اپنے صحت کو بھی بھی بھی کیا جا سکتا ہے۔\n\n4. ایک بھی",
+   "finish_reason": "length",
+   "prompt_tokens": 48,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.73
+  },
+  {
+   "model": "qwen25",
+   "lang": "EN",
+   "i": 0,
+   "prompt": "Which city is the capital of Pakistan?",
+   "text": "The capital of Pakistan is Islamabad.",
+   "finish_reason": "stop",
+   "prompt_tokens": 37,
+   "completion_tokens": 8,
+   "repeat_word_share": 0.0
+  },
+  {
+   "model": "qwen25",
+   "lang": "EN",
+   "i": 1,
+   "prompt": "Tell me an easy way to make tea.",
+   "text": "Making tea is a simple and enjoyable process that can be done at home. Here's a basic guide to making tea:\n\nIngredients:\n- Tea leaves (green, black, or herbal)\n- Water\n- Tea infuser or tea bag\n- Optional: sugar, honey, lemon, or milk\n\nInstructions:\n\n1. Boil water: Fill a kettle with water and bring it to a boil.\n\n2. Add tea leaves: Place the tea leaves in the infuser or tea bag. For black tea, use 1 teaspoon of tea leaves per cup of water. For green tea, use 1/2 teaspoon of tea leaves per cup of water. For herbal tea, use 1 teaspoon of tea leaves per cup of water.\n\n3. Steep the tea: Place the infuser or tea bag in a teapot or cup. Pour the boiling water over the tea leaves, making sure to cover them completely. Let the tea steep for 3-5 minutes, depending on the type",
+   "finish_reason": "length",
+   "prompt_tokens": 38,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.43
+  },
+  {
+   "model": "qwen25",
+   "lang": "EN",
+   "i": 2,
+   "prompt": "How should I care for house plants in the rainy season?",
+   "text": "During the rainy season, it's important to take care of house plants to ensure they remain healthy and thriving. Here are some tips to help you care for your house plants during this time:\n\n1. **Provide Adequate Watering**: Rainy seasons can lead to increased humidity, which can make it easier for plants to grow. However, it's still important to water your plants regularly, especially if they are in a dry environment. Use a watering can or a spray bottle to avoid overwatering, which can lead to root rot.\n\n2. **Monitor Humidity**: If the air is too humid, it can lead to fungal growth on your plants. You can increase the humidity around your plants by placing them on a tray filled with water and pebbles, or by using a humidifier. Conversely, if the air is too dry, you can use a dehumidifier or a fan to circulate air and reduce humidity.\n\n3. **Fertilize Regularly**: During the",
+   "finish_reason": "length",
+   "prompt_tokens": 41,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.37
+  },
+  {
+   "model": "qwen25",
+   "lang": "EN",
+   "i": 3,
+   "prompt": "Write a short poem about friendship.",
+   "text": "Friendship is a bond so strong,\nA friendship that never ends,\nA friendship that's always true,\nA friendship that's always worth.\n\nIn times of joy and sorrow,\nA friendship that's always there,\nA friendship that's always true,\nA friendship that's always true.\n\nThrough thick and thin, through good and bad,\nA friendship that's always there,\nA friendship that's always true,\nA friendship that's always true.\n\nSo let's cherish our friendships,\nAnd make them last forever,\nFor in a world that's always changing,\nA friendship is always changing.",
+   "finish_reason": "stop",
+   "prompt_tokens": 36,
+   "completion_tokens": 116,
+   "repeat_word_share": 0.49
+  },
+  {
+   "model": "qwen25",
+   "lang": "EN",
+   "i": 4,
+   "prompt": "Translate this sentence into English: I will go to the market tomorrow. (Urdu: میں کل بازار جاؤں گا)",
+   "text": "The English translation of the Urdu sentence \"میں کل بازار جاؤں گا\" is:\n\n\"I will go to the market tomorrow.\"\n\nThis translation accurately conveys the meaning of the original Urdu sentence in English.",
+   "finish_reason": "stop",
+   "prompt_tokens": 62,
+   "completion_tokens": 49,
+   "repeat_word_share": 0.21
+  },
+  {
+   "model": "qwen25",
+   "lang": "EN",
+   "i": 5,
+   "prompt": "Give three tips for staying healthy.",
+   "text": "1. Eat a balanced diet: Eating a variety of fruits, vegetables, whole grains, and lean proteins can help you maintain a healthy weight and provide your body with the nutrients it needs to function properly.\n\n2. Exercise regularly: Regular physical activity can help you maintain a healthy weight, reduce your risk of chronic diseases, and improve your overall health and well-being.\n\n3. Get enough sleep: Getting enough sleep is important for your physical and mental health. Aim for 7-9 hours of sleep per night to help your body and mind recover and function at their best.",
+   "finish_reason": "stop",
+   "prompt_tokens": 36,
+   "completion_tokens": 116,
+   "repeat_word_share": 0.29
+  },
+  {
+   "model": "phi3",
+   "lang": "UR",
+   "i": 0,
+   "prompt": "پاکستان کا دارالحکومت کون سا شہر ہے؟",
+   "text": "پاکستان کے دولت کی اور دارالحکومت کے مرکزی شہر پاکستان کے مرکزی شہر ہے، جو ایک مشہور استعمال کرنے والی اور ان کے معاہدے کے مطابق ہے۔ دولت کی مرکزی شہر کے ان کے معاہدے کے مطابق ہے جو ایک مشہور استعمال کرن",
+   "finish_reason": "length",
+   "prompt_tokens": 45,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.51
+  },
+  {
+   "model": "phi3",
+   "lang": "UR",
+   "i": 1,
+   "prompt": "چائے بنانے کا آسان طریقہ بتائیں۔",
+   "text": "چائے بنانے کے لئے ایک سوالی کا آسان طریقہ بتا جائے گا۔ ایک سوال کے لئے ایک مختلف طریقہ کو ان کے معاملات کے لئے ایک مختصر طریقہ کے لئے بتا جائے۔ ایک مختصر طریقہ کے لئے ایک مخصوص معاملات کے لئے بتا جائے",
+   "finish_reason": "length",
+   "prompt_tokens": 43,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.55
+  },
+  {
+   "model": "phi3",
+   "lang": "UR",
+   "i": 2,
+   "prompt": "بارش کے موسم میں گھر کے پودوں کی دیکھ بھال کیسے کریں؟",
+   "text": "گھر کے پودوں کی دیکھ بھال کے لئے بارش کے موسم میں اہم کردار کیا گیا ہے:\n\n1. پودوں کی دیکھ بھال کے لئے اہم کردار کاروبار کی تشکیل ہوتی ہے۔ اس کاروبار میں موجودہ مواد کی تشکیل کرنے کے لئے اہم کردار ک",
+   "finish_reason": "length",
+   "prompt_tokens": 65,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.43
+  },
+  {
+   "model": "phi3",
+   "lang": "UR",
+   "i": 3,
+   "prompt": "دوستی کے بارے میں ایک مختصر نظم لکھیں۔",
+   "text": "\n1. موجودہ مخصوص مواد کا استعمال کرکے ایک نظم کا بندی کریں۔\n\n2. ایک مخصوص مواد کے لئے ایک نظم کا استعمال کرکے ایک مخصوص مواد کے لئے ایک نظم کا بندی کریں۔\n\n3. ایک نظم کے لئے ایک مخصوص مواد کے لئے ایک",
+   "finish_reason": "length",
+   "prompt_tokens": 50,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.66
+  },
+  {
+   "model": "phi3",
+   "lang": "UR",
+   "i": 4,
+   "prompt": "اس جملے کا انگریزی میں ترجمہ کریں: میں کل بازار جاؤں گا۔",
+   "text": "In the entire market.",
+   "finish_reason": "stop",
+   "prompt_tokens": 71,
+   "completion_tokens": 6,
+   "repeat_word_share": 0.0
+  },
+  {
+   "model": "phi3",
+   "lang": "UR",
+   "i": 5,
+   "prompt": "صحت مند رہنے کے تین مشورے دیں۔",
+   "text": "1. اپنے صحت کو اہم کرنے کے لئے، اپنے نیاز بنانا، اور اس کے معیاروں کے لئے اہم کرنا چاہئے۔\n2. اپنے نیاز کے لئے، اپنے نیاز کے معیاروں کے لئے اہم کرنا چاہئے، جو اپنے صحت کے لئے۔",
+   "finish_reason": "stop",
+   "prompt_tokens": 41,
+   "completion_tokens": 179,
+   "repeat_word_share": 0.49
+  },
+  {
+   "model": "phi3",
+   "lang": "EN",
+   "i": 0,
+   "prompt": "Which city is the capital of Pakistan?",
+   "text": "Islamabad is the capital of Pakistan.",
+   "finish_reason": "stop",
+   "prompt_tokens": 18,
+   "completion_tokens": 11,
+   "repeat_word_share": 0.0
+  },
+  {
+   "model": "phi3",
+   "lang": "EN",
+   "i": 1,
+   "prompt": "Tell me an easy way to make tea.",
+   "text": "To make a simple cup of tea, follow these steps:\n\n1. Boil water: Fill a kettle with fresh, cold water and bring it to a boil.\n\n2. Choose your tea: Select your preferred type of tea, such as black, green, white, or herbal.\n\n3. Prepare your teapot or cup: If using a teapot, rinse it with hot water to warm it up. If using a cup, you can skip this step.\n\n4. Add tea leaves or a tea bag: Place one tea bag or one teaspoon of loose tea leaves into the teapot or cup.\n\n5. Pour hot water: Once the water has reached a rolling boil, pour it over the tea leaves or tea bag.\n\n6. Steep the tea: Let the tea steep for the recommended time, which is usually between 3 to 5",
+   "finish_reason": "length",
+   "prompt_tokens": 19,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.33
+  },
+  {
+   "model": "phi3",
+   "lang": "EN",
+   "i": 2,
+   "prompt": "How should I care for house plants in the rainy season?",
+   "text": "Caring for house plants during the rainy season requires a few adjustments to ensure they thrive. Here are some tips:\n\n\n1. **Monitor Watering**: Rain can lead to overwatering. Check the soil moisture before watering. If the top inch of soil is dry, it's time to water.\n\n\n2. **Proper Drainage**: Ensure pots have adequate drainage holes to prevent water from pooling at the bottom, which can cause root rot.\n\n\n3. **Avoid Overhead Watering**: Water the plants at the base to avoid wetting the leaves, which can lead to fungal diseases.\n\n\n4. **Adjust Humidity**: Some plants may need less humidity during the rainy season. If your plants are tropical, they might appreciate the extra moisture, but others may need a drier environment",
+   "finish_reason": "length",
+   "prompt_tokens": 22,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.26
+  },
+  {
+   "model": "phi3",
+   "lang": "EN",
+   "i": 3,
+   "prompt": "Write a short poem about friendship.",
+   "text": "\nIn the garden of life, where friendships bloom,\n\nTwo souls intertwine, dispelling gloom.\n\nThrough laughter and tears, they stand side by side,\n\nIn the dance of life, they take each other's stride.\n\n\nWith open hearts, they share their dreams,\n\nIn the tapestry of life, their bond gleams.\n\nThrough storms and sunshine, they remain steadfast,\n\nIn the garden of life, their friendship will last.",
+   "finish_reason": "stop",
+   "prompt_tokens": 16,
+   "completion_tokens": 119,
+   "repeat_word_share": 0.32
+  },
+  {
+   "model": "phi3",
+   "lang": "EN",
+   "i": 4,
+   "prompt": "Translate this sentence into English: I will go to the market tomorrow. (Urdu: میں کل بازار جاؤں گا)",
+   "text": "I will go to the market tomorrow. (Urdu: میں کل بازار جائے گزرم)",
+   "finish_reason": "stop",
+   "prompt_tokens": 55,
+   "completion_tokens": 40,
+   "repeat_word_share": 0.0
+  },
+  {
+   "model": "phi3",
+   "lang": "EN",
+   "i": 5,
+   "prompt": "Give three tips for staying healthy.",
+   "text": "1. Eat a balanced diet: Consuming a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats can help ensure that your body receives the essential nutrients it needs to function properly. Aim to fill half your plate with fruits and vegetables, and choose whole grains over refined grains.\n\n2. Exercise regularly: Engaging in physical activity for at least 30 minutes a day can help improve cardiovascular health, strengthen muscles and bones, and reduce the risk of chronic diseases. Find an activity that you enjoy, such as walking, swimming, or cycling, and make it a regular part of your routine.\n\n3. Get enough sleep: Aim for 7-9 hours of sleep per night to help your body rest and recharge. Establish a regular sleep schedule, create a relaxing bedtime routine",
+   "finish_reason": "length",
+   "prompt_tokens": 19,
+   "completion_tokens": 200,
+   "repeat_word_share": 0.25
+  }
+ ],
+ "provenance": {
+  "qwen25": {
+   "hf_id": "Qwen/Qwen2.5-1.5B-Instruct",
+   "revision": null,
+   "ollama_tag": "qwen2.5:1.5b-instruct-q8_0",
+   "ollama_digest": "b19683a34698365318287452c1711a7dd94253eba73c1f834e09a09c2b8d9415",
+   "quantization": "Q8_0",
+   "chat_template_sha256": "cddb6ab770cd808149aa84417fd5489dd48171caca471ffb08937fb9a54df456",
+   "default_system": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+   "runtime": {
+    "ollama": "0.34.4"
+   }
+  },
+  "phi3": {
+   "hf_id": "microsoft/Phi-3-mini-4k-instruct",
+   "revision": null,
+   "ollama_tag": "phi3:3.8b-mini-4k-instruct-q8_0",
+   "ollama_digest": "6b7f8cbb8b25416d441932f024de06c899044e9390b3bc8c8be47edc2e49f23c",
+   "quantization": "Q8_0",
+   "chat_template_sha256": "9ce8dd028728c1b660ffd2959cb43d3a864efa0d04b95eb60fe30f15f4038f16",
+   "default_system": null,
+   "runtime": {
+    "ollama": "0.34.4"
+   }
+  }
+ }
+}
