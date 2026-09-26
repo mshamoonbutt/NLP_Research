@@ -396,7 +396,6 @@ The work is **net-positive for safety**: characterizing which attack vectors fai
 - Pipeline tests, all passing: `tests/` (33 / 33 green)
 - Inference + judge + stats library: `csjail/`
 - One-command experiment runner: `scripts/run_all_baseline.sh`
-- Plan history: `C:\Users\271046574\.claude\plans\so-we-are-doing-crispy-pearl.md`
 
 ---
 
