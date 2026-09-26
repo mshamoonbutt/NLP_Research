@@ -85,7 +85,9 @@ def main(argv=None) -> int:
     ap.add_argument("--exp0-dir", default=None)
     ap.add_argument("--models", nargs="+", default=["qwen25", "phi3"])
     ap.add_argument("--n-per-model-condition", type=int, default=60)
-    ap.add_argument("--role", choices=["validation", "development"], required=True)
+    ap.add_argument("--role", choices=["validation", "development", "feasibility"], required=True,
+                    help="feasibility = Phase 2 pair-yield pilot (review sheets, not judge gold)")
+    ap.add_argument("--conditions", nargs="+", choices=list(CONDITIONS), default=list(CONDITIONS))
     ap.add_argument("--sample-kind", choices=["representative", "challenge"],
                     default="representative")
     ap.add_argument("--exclude-sample-dirs", nargs="*", default=[],
@@ -126,6 +128,8 @@ def main(argv=None) -> int:
         "excluded_families_from": args.exclude_sample_dirs,
         "families": sample_families(rows, art.split, args.n_per_model_condition, args.seed, exclude),
     }
+    if list(args.conditions) != list(CONDITIONS):  # older plans (all four) stay resumable
+        plan["conditions"] = list(args.conditions)
     plan_path = out_dir / "sample_plan.json"
     if plan_path.exists():
         old = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -145,7 +149,8 @@ def main(argv=None) -> int:
 
     sampling = SamplingConfig(**eval_cfg["sampling"])
     fam_set = set(fams)
-    sub = sorted((r for r in rows if r.base_id in fam_set), key=lambda r: (r.condition, r.base_id))
+    sub = sorted((r for r in rows if r.base_id in fam_set and r.condition in args.conditions),
+                 key=lambda r: (r.condition, r.base_id))
     cache = JsonlCache(out_dir / "generations.jsonl", "gen_key")
     gens_by_model, model_prov = {}, {}
     for model in args.models:
@@ -205,12 +210,13 @@ def main(argv=None) -> int:
             "role", "sample_kind", "dataset_version", "split_id", "seed", "models",
             "n_per_model_condition", "families", "excluded_families_from")},
         "source_pool": "train_pool", "generation_backend": args.backend,
+        "conditions": list(args.conditions),
         "n_items": len(items), "item_ids": [it["item_id"] for it in items],
         "items_sha256": sha256_json(items), "sampling": sampling.as_dict(),
         "finish_reasons": finish, "model_provenance": model_prov,
     }
     write_text_lf(out_dir / "sample_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
-    print(f"[exp1] {len(items)} items = {len(args.models)} models x {len(CONDITIONS)} "
+    print(f"[exp1] {len(items)} items = {len(args.models)} models x {len(args.conditions)} "
           f"conditions x {len(fams)} families -> {out_dir}  (finish reasons: {finish})")
     print("[exp1] NEXT: two raters fill rater1.csv / rater2.csv independently following "
           "docs/exp1_rater_guide.md; adjudicate disagreements in adjudication.csv; then run "
