@@ -1,0 +1,369 @@
+{
+  "equal_variants_within_family": [],
+  "exact_duplicates_across_families": [],
+  "script": [
+    {
+      "id": "106::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "107::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "108::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "176::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "301::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "309::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "333::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "401::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "403::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "409::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "410::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "430::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "431::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "435::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "437::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "445::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "447::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "453::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "458::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "462::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "468::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "469::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "471::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "475::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "476::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "481::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "490::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "491::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "557::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "559::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "560::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "561::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "582::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "590::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "593::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "594::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "704::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "705::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "707::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "718::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "719::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "748::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "751::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "756::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "791::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-R-0933-01::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-R-0955-01::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-R-0956-01::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0065::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0066::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0068::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0069::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0070::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0072::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0074::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0077::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0080::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0081::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0082::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0084::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    }
+  ],
+  "ru_possible_english_clause": [
+    {
+      "id": "384::RU",
+      "flag": "ru_possible_english_clause",
+      "n_english_function_words": 2,
+      "words": [
+        "it"
+      ],
+      "severity": "review"
+    },
+    {
+      "id": "993::RU",
+      "flag": "ru_possible_english_clause",
+      "n_english_function_words": 2,
+      "words": [
+        "of",
+        "the"
+      ],
+      "severity": "review"
+    }
+  ],
+  "ru_loanword_inventory": {
+    "n_ru_items_with_technical_loans": 308,
+    "term_item_counts": {
+      "script": 47,
+      "whatsapp": 43,
+      "account": 35,
+      "phone": 34,
+      "data": 34,
+      "email": 29,
+      "code": 25,
+      "app": 25,
+      "login": 23,
+      "number": 20,
+      "website": 19,
+      "online": 18,
+      "link": 18,
+      "server": 16,
+      "bank": 16,
+      "network": 13,
+      "password": 12,
+      "card": 11,
+      "system": 11,
+      "download": 11,
+      "software": 10,
+      "media": 9,
+      "video": 9,
+      "file": 9,
+      "social": 8,
+      "hack": 7,
+      "id": 6,
+      "profile": 6,
+      "upload": 6,
+      "malware": 6,
+      "sim": 4,
+      "otp": 4,
+      "wifi": 2,
+      "photo": 1,
+      "screenshot": 1,
+      "pdf": 1
+    },
+    "policy": "technical loans/names/acronyms permitted; substantive English clauses flagged for bilingual adjudication"
+  }
+}

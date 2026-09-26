@@ -1,0 +1,3505 @@
+{
+  "assignments": {
+    "1": {
+      "split": "eval_main",
+      "group_id": "1",
+      "domain_id": "D1"
+    },
+    "10": {
+      "split": "train_pool",
+      "group_id": "10",
+      "domain_id": "D1"
+    },
+    "100": {
+      "split": "eval_main",
+      "group_id": "100",
+      "domain_id": "D1"
+    },
+    "101": {
+      "split": "train_pool",
+      "group_id": "101",
+      "domain_id": "D2"
+    },
+    "102": {
+      "split": "eval_main",
+      "group_id": "102",
+      "domain_id": "D2"
+    },
+    "103": {
+      "split": "eval_main",
+      "group_id": "103",
+      "domain_id": "D3"
+    },
+    "104": {
+      "split": "train_pool",
+      "group_id": "104",
+      "domain_id": "D3"
+    },
+    "105": {
+      "split": "train_pool",
+      "group_id": "105",
+      "domain_id": "D2"
+    },
+    "106": {
+      "split": "eval_main",
+      "group_id": "106",
+      "domain_id": "D2"
+    },
+    "107": {
+      "split": "train_pool",
+      "group_id": "107",
+      "domain_id": "D2"
+    },
+    "108": {
+      "split": "train_pool",
+      "group_id": "108",
+      "domain_id": "D2"
+    },
+    "109": {
+      "split": "train_pool",
+      "group_id": "109",
+      "domain_id": "D3"
+    },
+    "11": {
+      "split": "eval_main",
+      "group_id": "11",
+      "domain_id": "D1"
+    },
+    "110": {
+      "split": "train_pool",
+      "group_id": "110",
+      "domain_id": "D3"
+    },
+    "111": {
+      "split": "eval_main",
+      "group_id": "111",
+      "domain_id": "D2"
+    },
+    "112": {
+      "split": "eval_main",
+      "group_id": "112",
+      "domain_id": "D2"
+    },
+    "113": {
+      "split": "train_pool",
+      "group_id": "113",
+      "domain_id": "D2"
+    },
+    "114": {
+      "split": "train_pool",
+      "group_id": "114",
+      "domain_id": "D2"
+    },
+    "115": {
+      "split": "train_pool",
+      "group_id": "115",
+      "domain_id": "D2"
+    },
+    "116": {
+      "split": "train_pool",
+      "group_id": "116",
+      "domain_id": "D2"
+    },
+    "117": {
+      "split": "train_pool",
+      "group_id": "117",
+      "domain_id": "D2"
+    },
+    "118": {
+      "split": "train_pool",
+      "group_id": "118",
+      "domain_id": "D2"
+    },
+    "119": {
+      "split": "train_pool",
+      "group_id": "119",
+      "domain_id": "D2"
+    },
+    "120": {
+      "split": "train_pool",
+      "group_id": "120",
+      "domain_id": "D2"
+    },
+    "121": {
+      "split": "eval_main",
+      "group_id": "121",
+      "domain_id": "D2"
+    },
+    "122": {
+      "split": "train_pool",
+      "group_id": "122",
+      "domain_id": "D2"
+    },
+    "123": {
+      "split": "train_pool",
+      "group_id": "123",
+      "domain_id": "D2"
+    },
+    "124": {
+      "split": "eval_main",
+      "group_id": "124",
+      "domain_id": "D2"
+    },
+    "125": {
+      "split": "train_pool",
+      "group_id": "125",
+      "domain_id": "D2"
+    },
+    "126": {
+      "split": "train_pool",
+      "group_id": "126",
+      "domain_id": "D2"
+    },
+    "127": {
+      "split": "train_pool",
+      "group_id": "127",
+      "domain_id": "D2"
+    },
+    "128": {
+      "split": "train_pool",
+      "group_id": "128",
+      "domain_id": "D2"
+    },
+    "132": {
+      "split": "train_pool",
+      "group_id": "132",
+      "domain_id": "D2"
+    },
+    "133": {
+      "split": "train_pool",
+      "group_id": "133",
+      "domain_id": "D2"
+    },
+    "134": {
+      "split": "train_pool",
+      "group_id": "134",
+      "domain_id": "D2"
+    },
+    "135": {
+      "split": "train_pool",
+      "group_id": "135",
+      "domain_id": "D2"
+    },
+    "136": {
+      "split": "train_pool",
+      "group_id": "136",
+      "domain_id": "D2"
+    },
+    "137": {
+      "split": "train_pool",
+      "group_id": "137",
+      "domain_id": "D2"
+    },
+    "138": {
+      "split": "train_pool",
+      "group_id": "138",
+      "domain_id": "D2"
+    },
+    "139": {
+      "split": "train_pool",
+      "group_id": "139",
+      "domain_id": "D2"
+    },
+    "14": {
+      "split": "eval_main",
+      "group_id": "14",
+      "domain_id": "D1"
+    },
+    "140": {
+      "split": "train_pool",
+      "group_id": "140",
+      "domain_id": "D2"
+    },
+    "141": {
+      "split": "train_pool",
+      "group_id": "141",
+      "domain_id": "D2"
+    },
+    "142": {
+      "split": "train_pool",
+      "group_id": "142",
+      "domain_id": "D2"
+    },
+    "143": {
+      "split": "eval_main",
+      "group_id": "143",
+      "domain_id": "D2"
+    },
+    "144": {
+      "split": "eval_main",
+      "group_id": "144",
+      "domain_id": "D2"
+    },
+    "145": {
+      "split": "eval_main",
+      "group_id": "145",
+      "domain_id": "D2"
+    },
+    "146": {
+      "split": "eval_main",
+      "group_id": "146",
+      "domain_id": "D2"
+    },
+    "147": {
+      "split": "train_pool",
+      "group_id": "147",
+      "domain_id": "D2"
+    },
+    "148": {
+      "split": "eval_main",
+      "group_id": "148",
+      "domain_id": "D2"
+    },
+    "149": {
+      "split": "train_pool",
+      "group_id": "149",
+      "domain_id": "D2"
+    },
+    "150": {
+      "split": "train_pool",
+      "group_id": "150",
+      "domain_id": "D2"
+    },
+    "151": {
+      "split": "train_pool",
+      "group_id": "151",
+      "domain_id": "D2"
+    },
+    "152": {
+      "split": "eval_main",
+      "group_id": "152",
+      "domain_id": "D2"
+    },
+    "153": {
+      "split": "train_pool",
+      "group_id": "153",
+      "domain_id": "D2"
+    },
+    "154": {
+      "split": "eval_main",
+      "group_id": "154",
+      "domain_id": "D2"
+    },
+    "155": {
+      "split": "eval_main",
+      "group_id": "155",
+      "domain_id": "D2"
+    },
+    "156": {
+      "split": "train_pool",
+      "group_id": "156",
+      "domain_id": "D2"
+    },
+    "157": {
+      "split": "eval_main",
+      "group_id": "157",
+      "domain_id": "D2"
+    },
+    "158": {
+      "split": "eval_main",
+      "group_id": "158",
+      "domain_id": "D2"
+    },
+    "159": {
+      "split": "train_pool",
+      "group_id": "159",
+      "domain_id": "D2"
+    },
+    "16": {
+      "split": "train_pool",
+      "group_id": "16",
+      "domain_id": "D1"
+    },
+    "160": {
+      "split": "train_pool",
+      "group_id": "160",
+      "domain_id": "D2"
+    },
+    "161": {
+      "split": "eval_main",
+      "group_id": "161",
+      "domain_id": "D2"
+    },
+    "163": {
+      "split": "train_pool",
+      "group_id": "163",
+      "domain_id": "D2"
+    },
+    "164": {
+      "split": "train_pool",
+      "group_id": "164",
+      "domain_id": "D2"
+    },
+    "166": {
+      "split": "train_pool",
+      "group_id": "166",
+      "domain_id": "D2"
+    },
+    "167": {
+      "split": "eval_main",
+      "group_id": "167",
+      "domain_id": "D2"
+    },
+    "168": {
+      "split": "train_pool",
+      "group_id": "168",
+      "domain_id": "D2"
+    },
+    "169": {
+      "split": "train_pool",
+      "group_id": "169",
+      "domain_id": "D2"
+    },
+    "170": {
+      "split": "train_pool",
+      "group_id": "170",
+      "domain_id": "D2"
+    },
+    "176": {
+      "split": "train_pool",
+      "group_id": "176",
+      "domain_id": "D2"
+    },
+    "177": {
+      "split": "train_pool",
+      "group_id": "177",
+      "domain_id": "D2"
+    },
+    "179": {
+      "split": "train_pool",
+      "group_id": "179",
+      "domain_id": "D2"
+    },
+    "18": {
+      "split": "train_pool",
+      "group_id": "18",
+      "domain_id": "D1"
+    },
+    "182": {
+      "split": "eval_main",
+      "group_id": "182",
+      "domain_id": "D2"
+    },
+    "183": {
+      "split": "train_pool",
+      "group_id": "183",
+      "domain_id": "D2"
+    },
+    "184": {
+      "split": "train_pool",
+      "group_id": "184",
+      "domain_id": "D2"
+    },
+    "185": {
+      "split": "train_pool",
+      "group_id": "185",
+      "domain_id": "D2"
+    },
+    "187": {
+      "split": "train_pool",
+      "group_id": "187",
+      "domain_id": "D2"
+    },
+    "19": {
+      "split": "train_pool",
+      "group_id": "19",
+      "domain_id": "D1"
+    },
+    "190": {
+      "split": "train_pool",
+      "group_id": "190",
+      "domain_id": "D2"
+    },
+    "192": {
+      "split": "train_pool",
+      "group_id": "192",
+      "domain_id": "D2"
+    },
+    "194": {
+      "split": "train_pool",
+      "group_id": "194",
+      "domain_id": "D2"
+    },
+    "197": {
+      "split": "eval_main",
+      "group_id": "197",
+      "domain_id": "D2"
+    },
+    "198": {
+      "split": "train_pool",
+      "group_id": "198",
+      "domain_id": "D2"
+    },
+    "199": {
+      "split": "train_pool",
+      "group_id": "199",
+      "domain_id": "D2"
+    },
+    "2": {
+      "split": "train_pool",
+      "group_id": "2",
+      "domain_id": "D1"
+    },
+    "20": {
+      "split": "train_pool",
+      "group_id": "20",
+      "domain_id": "D1"
+    },
+    "201": {
+      "split": "eval_main",
+      "group_id": "201",
+      "domain_id": "D3"
+    },
+    "202": {
+      "split": "eval_main",
+      "group_id": "202",
+      "domain_id": "D4"
+    },
+    "203": {
+      "split": "train_pool",
+      "group_id": "203",
+      "domain_id": "D4"
+    },
+    "204": {
+      "split": "train_pool",
+      "group_id": "204",
+      "domain_id": "D3"
+    },
+    "205": {
+      "split": "train_pool",
+      "group_id": "205",
+      "domain_id": "D3"
+    },
+    "206": {
+      "split": "train_pool",
+      "group_id": "206",
+      "domain_id": "D4"
+    },
+    "207": {
+      "split": "train_pool",
+      "group_id": "207",
+      "domain_id": "D1"
+    },
+    "208": {
+      "split": "train_pool",
+      "group_id": "208",
+      "domain_id": "D3"
+    },
+    "209": {
+      "split": "train_pool",
+      "group_id": "209",
+      "domain_id": "D4"
+    },
+    "21": {
+      "split": "train_pool",
+      "group_id": "21",
+      "domain_id": "D1"
+    },
+    "210": {
+      "split": "train_pool",
+      "group_id": "210",
+      "domain_id": "D3"
+    },
+    "211": {
+      "split": "train_pool",
+      "group_id": "211",
+      "domain_id": "D4"
+    },
+    "212": {
+      "split": "train_pool",
+      "group_id": "212",
+      "domain_id": "D3"
+    },
+    "213": {
+      "split": "train_pool",
+      "group_id": "213",
+      "domain_id": "D3"
+    },
+    "214": {
+      "split": "train_pool",
+      "group_id": "214",
+      "domain_id": "D3"
+    },
+    "215": {
+      "split": "train_pool",
+      "group_id": "215",
+      "domain_id": "D3"
+    },
+    "216": {
+      "split": "train_pool",
+      "group_id": "216",
+      "domain_id": "D4"
+    },
+    "217": {
+      "split": "eval_main",
+      "group_id": "217",
+      "domain_id": "D3"
+    },
+    "218": {
+      "split": "train_pool",
+      "group_id": "218",
+      "domain_id": "D4"
+    },
+    "219": {
+      "split": "eval_main",
+      "group_id": "219",
+      "domain_id": "D3"
+    },
+    "22": {
+      "split": "train_pool",
+      "group_id": "22",
+      "domain_id": "D1"
+    },
+    "221": {
+      "split": "train_pool",
+      "group_id": "221",
+      "domain_id": "D3"
+    },
+    "229": {
+      "split": "train_pool",
+      "group_id": "229",
+      "domain_id": "D3"
+    },
+    "230": {
+      "split": "train_pool",
+      "group_id": "230",
+      "domain_id": "D3"
+    },
+    "232": {
+      "split": "train_pool",
+      "group_id": "232",
+      "domain_id": "D3"
+    },
+    "234": {
+      "split": "train_pool",
+      "group_id": "234",
+      "domain_id": "D6"
+    },
+    "235": {
+      "split": "eval_main",
+      "group_id": "235",
+      "domain_id": "D3"
+    },
+    "236": {
+      "split": "train_pool",
+      "group_id": "236",
+      "domain_id": "D3"
+    },
+    "239": {
+      "split": "train_pool",
+      "group_id": "239",
+      "domain_id": "D6"
+    },
+    "24": {
+      "split": "train_pool",
+      "group_id": "24",
+      "domain_id": "D1"
+    },
+    "240": {
+      "split": "eval_main",
+      "group_id": "240",
+      "domain_id": "D4"
+    },
+    "241": {
+      "split": "train_pool",
+      "group_id": "241",
+      "domain_id": "D3"
+    },
+    "247": {
+      "split": "train_pool",
+      "group_id": "247",
+      "domain_id": "D5"
+    },
+    "248": {
+      "split": "train_pool",
+      "group_id": "248",
+      "domain_id": "D3"
+    },
+    "249": {
+      "split": "train_pool",
+      "group_id": "249",
+      "domain_id": "D6"
+    },
+    "25": {
+      "split": "train_pool",
+      "group_id": "25",
+      "domain_id": "D1"
+    },
+    "250": {
+      "split": "train_pool",
+      "group_id": "250",
+      "domain_id": "D3"
+    },
+    "26": {
+      "split": "train_pool",
+      "group_id": "26",
+      "domain_id": "D1"
+    },
+    "263": {
+      "split": "train_pool",
+      "group_id": "263",
+      "domain_id": "D6"
+    },
+    "264": {
+      "split": "train_pool",
+      "group_id": "264",
+      "domain_id": "D3"
+    },
+    "265": {
+      "split": "train_pool",
+      "group_id": "265",
+      "domain_id": "D4"
+    },
+    "266": {
+      "split": "train_pool",
+      "group_id": "266",
+      "domain_id": "D3"
+    },
+    "267": {
+      "split": "eval_main",
+      "group_id": "267",
+      "domain_id": "D3"
+    },
+    "268": {
+      "split": "train_pool",
+      "group_id": "268",
+      "domain_id": "D3"
+    },
+    "269": {
+      "split": "train_pool",
+      "group_id": "269",
+      "domain_id": "D3"
+    },
+    "27": {
+      "split": "train_pool",
+      "group_id": "27",
+      "domain_id": "D1"
+    },
+    "270": {
+      "split": "train_pool",
+      "group_id": "270",
+      "domain_id": "D3"
+    },
+    "271": {
+      "split": "eval_main",
+      "group_id": "271",
+      "domain_id": "D4"
+    },
+    "272": {
+      "split": "train_pool",
+      "group_id": "272",
+      "domain_id": "D3"
+    },
+    "273": {
+      "split": "train_pool",
+      "group_id": "273",
+      "domain_id": "D3"
+    },
+    "278": {
+      "split": "train_pool",
+      "group_id": "278",
+      "domain_id": "D3"
+    },
+    "28": {
+      "split": "train_pool",
+      "group_id": "28",
+      "domain_id": "D1"
+    },
+    "286": {
+      "split": "train_pool",
+      "group_id": "286",
+      "domain_id": "D3"
+    },
+    "289": {
+      "split": "eval_main",
+      "group_id": "289",
+      "domain_id": "D6"
+    },
+    "29": {
+      "split": "eval_main",
+      "group_id": "29",
+      "domain_id": "D1"
+    },
+    "293": {
+      "split": "eval_main",
+      "group_id": "293",
+      "domain_id": "D3"
+    },
+    "297": {
+      "split": "train_pool",
+      "group_id": "297",
+      "domain_id": "D6"
+    },
+    "299": {
+      "split": "train_pool",
+      "group_id": "299",
+      "domain_id": "D5"
+    },
+    "3": {
+      "split": "train_pool",
+      "group_id": "3",
+      "domain_id": "D1"
+    },
+    "300": {
+      "split": "train_pool",
+      "group_id": "300",
+      "domain_id": "D3"
+    },
+    "301": {
+      "split": "train_pool",
+      "group_id": "301",
+      "domain_id": "D4"
+    },
+    "302": {
+      "split": "train_pool",
+      "group_id": "302",
+      "domain_id": "D4"
+    },
+    "304": {
+      "split": "train_pool",
+      "group_id": "304",
+      "domain_id": "D4"
+    },
+    "305": {
+      "split": "train_pool",
+      "group_id": "305",
+      "domain_id": "D4"
+    },
+    "306": {
+      "split": "train_pool",
+      "group_id": "306",
+      "domain_id": "D4"
+    },
+    "308": {
+      "split": "train_pool",
+      "group_id": "308",
+      "domain_id": "D4"
+    },
+    "309": {
+      "split": "train_pool",
+      "group_id": "309",
+      "domain_id": "D4"
+    },
+    "310": {
+      "split": "train_pool",
+      "group_id": "310",
+      "domain_id": "D4"
+    },
+    "311": {
+      "split": "eval_main",
+      "group_id": "311",
+      "domain_id": "D4"
+    },
+    "312": {
+      "split": "eval_main",
+      "group_id": "312",
+      "domain_id": "D4"
+    },
+    "313": {
+      "split": "train_pool",
+      "group_id": "313",
+      "domain_id": "D4"
+    },
+    "314": {
+      "split": "train_pool",
+      "group_id": "314",
+      "domain_id": "D4"
+    },
+    "315": {
+      "split": "train_pool",
+      "group_id": "315",
+      "domain_id": "D4"
+    },
+    "316": {
+      "split": "train_pool",
+      "group_id": "316",
+      "domain_id": "D4"
+    },
+    "317": {
+      "split": "eval_main",
+      "group_id": "317",
+      "domain_id": "D4"
+    },
+    "318": {
+      "split": "train_pool",
+      "group_id": "318",
+      "domain_id": "D4"
+    },
+    "319": {
+      "split": "train_pool",
+      "group_id": "319",
+      "domain_id": "D4"
+    },
+    "32": {
+      "split": "eval_main",
+      "group_id": "32",
+      "domain_id": "D1"
+    },
+    "320": {
+      "split": "eval_main",
+      "group_id": "320",
+      "domain_id": "D4"
+    },
+    "321": {
+      "split": "train_pool",
+      "group_id": "321",
+      "domain_id": "D4"
+    },
+    "322": {
+      "split": "eval_main",
+      "group_id": "322",
+      "domain_id": "D4"
+    },
+    "323": {
+      "split": "eval_main",
+      "group_id": "323",
+      "domain_id": "D4"
+    },
+    "324": {
+      "split": "eval_main",
+      "group_id": "324",
+      "domain_id": "D4"
+    },
+    "327": {
+      "split": "train_pool",
+      "group_id": "327",
+      "domain_id": "D6"
+    },
+    "328": {
+      "split": "train_pool",
+      "group_id": "328",
+      "domain_id": "D4"
+    },
+    "329": {
+      "split": "train_pool",
+      "group_id": "329",
+      "domain_id": "D4"
+    },
+    "331": {
+      "split": "train_pool",
+      "group_id": "331",
+      "domain_id": "D4"
+    },
+    "332": {
+      "split": "train_pool",
+      "group_id": "332",
+      "domain_id": "D4"
+    },
+    "333": {
+      "split": "eval_main",
+      "group_id": "333",
+      "domain_id": "D4"
+    },
+    "334": {
+      "split": "train_pool",
+      "group_id": "334",
+      "domain_id": "D4"
+    },
+    "346": {
+      "split": "train_pool",
+      "group_id": "346",
+      "domain_id": "D4"
+    },
+    "348": {
+      "split": "train_pool",
+      "group_id": "348",
+      "domain_id": "D4"
+    },
+    "349": {
+      "split": "train_pool",
+      "group_id": "349",
+      "domain_id": "D4"
+    },
+    "35": {
+      "split": "train_pool",
+      "group_id": "35",
+      "domain_id": "D1"
+    },
+    "350": {
+      "split": "train_pool",
+      "group_id": "350",
+      "domain_id": "D4"
+    },
+    "352": {
+      "split": "eval_main",
+      "group_id": "352",
+      "domain_id": "D4"
+    },
+    "353": {
+      "split": "train_pool",
+      "group_id": "353",
+      "domain_id": "D4"
+    },
+    "356": {
+      "split": "eval_main",
+      "group_id": "356",
+      "domain_id": "D4"
+    },
+    "357": {
+      "split": "eval_main",
+      "group_id": "357",
+      "domain_id": "D4"
+    },
+    "358": {
+      "split": "train_pool",
+      "group_id": "358",
+      "domain_id": "D4"
+    },
+    "359": {
+      "split": "train_pool",
+      "group_id": "359",
+      "domain_id": "D4"
+    },
+    "36": {
+      "split": "train_pool",
+      "group_id": "36",
+      "domain_id": "D1"
+    },
+    "361": {
+      "split": "eval_main",
+      "group_id": "361",
+      "domain_id": "D4"
+    },
+    "362": {
+      "split": "eval_main",
+      "group_id": "362",
+      "domain_id": "D4"
+    },
+    "363": {
+      "split": "train_pool",
+      "group_id": "363",
+      "domain_id": "D4"
+    },
+    "364": {
+      "split": "train_pool",
+      "group_id": "364",
+      "domain_id": "D4"
+    },
+    "365": {
+      "split": "train_pool",
+      "group_id": "365",
+      "domain_id": "D4"
+    },
+    "367": {
+      "split": "eval_main",
+      "group_id": "367",
+      "domain_id": "D4"
+    },
+    "368": {
+      "split": "train_pool",
+      "group_id": "368",
+      "domain_id": "D4"
+    },
+    "369": {
+      "split": "train_pool",
+      "group_id": "369",
+      "domain_id": "D4"
+    },
+    "37": {
+      "split": "train_pool",
+      "group_id": "37",
+      "domain_id": "D1"
+    },
+    "370": {
+      "split": "eval_main",
+      "group_id": "370",
+      "domain_id": "D4"
+    },
+    "373": {
+      "split": "train_pool",
+      "group_id": "373",
+      "domain_id": "D4"
+    },
+    "375": {
+      "split": "train_pool",
+      "group_id": "375",
+      "domain_id": "D4"
+    },
+    "376": {
+      "split": "train_pool",
+      "group_id": "376",
+      "domain_id": "D4"
+    },
+    "377": {
+      "split": "train_pool",
+      "group_id": "377",
+      "domain_id": "D4"
+    },
+    "378": {
+      "split": "eval_main",
+      "group_id": "378",
+      "domain_id": "D4"
+    },
+    "380": {
+      "split": "train_pool",
+      "group_id": "380",
+      "domain_id": "D4"
+    },
+    "384": {
+      "split": "train_pool",
+      "group_id": "384",
+      "domain_id": "D4"
+    },
+    "387": {
+      "split": "train_pool",
+      "group_id": "387",
+      "domain_id": "D4"
+    },
+    "389": {
+      "split": "eval_main",
+      "group_id": "389",
+      "domain_id": "D4"
+    },
+    "39": {
+      "split": "eval_main",
+      "group_id": "39",
+      "domain_id": "D1"
+    },
+    "390": {
+      "split": "train_pool",
+      "group_id": "390",
+      "domain_id": "D4"
+    },
+    "391": {
+      "split": "eval_main",
+      "group_id": "391",
+      "domain_id": "D4"
+    },
+    "392": {
+      "split": "train_pool",
+      "group_id": "392",
+      "domain_id": "D4"
+    },
+    "396": {
+      "split": "train_pool",
+      "group_id": "396",
+      "domain_id": "D4"
+    },
+    "399": {
+      "split": "train_pool",
+      "group_id": "399",
+      "domain_id": "D4"
+    },
+    "4": {
+      "split": "eval_main",
+      "group_id": "4",
+      "domain_id": "D1"
+    },
+    "40": {
+      "split": "train_pool",
+      "group_id": "40",
+      "domain_id": "D1"
+    },
+    "401": {
+      "split": "train_pool",
+      "group_id": "401",
+      "domain_id": "D5"
+    },
+    "403": {
+      "split": "train_pool",
+      "group_id": "403",
+      "domain_id": "D5"
+    },
+    "404": {
+      "split": "eval_main",
+      "group_id": "404",
+      "domain_id": "D5"
+    },
+    "405": {
+      "split": "train_pool",
+      "group_id": "405",
+      "domain_id": "D5"
+    },
+    "406": {
+      "split": "train_pool",
+      "group_id": "406",
+      "domain_id": "D5"
+    },
+    "408": {
+      "split": "eval_main",
+      "group_id": "408",
+      "domain_id": "D5"
+    },
+    "409": {
+      "split": "train_pool",
+      "group_id": "409",
+      "domain_id": "D5"
+    },
+    "41": {
+      "split": "eval_main",
+      "group_id": "41",
+      "domain_id": "D1"
+    },
+    "410": {
+      "split": "eval_main",
+      "group_id": "410",
+      "domain_id": "D6"
+    },
+    "411": {
+      "split": "train_pool",
+      "group_id": "411",
+      "domain_id": "D5"
+    },
+    "412": {
+      "split": "train_pool",
+      "group_id": "412",
+      "domain_id": "D5"
+    },
+    "413": {
+      "split": "eval_main",
+      "group_id": "413",
+      "domain_id": "D5"
+    },
+    "414": {
+      "split": "train_pool",
+      "group_id": "414",
+      "domain_id": "D6"
+    },
+    "415": {
+      "split": "eval_main",
+      "group_id": "415",
+      "domain_id": "D5"
+    },
+    "416": {
+      "split": "train_pool",
+      "group_id": "416",
+      "domain_id": "D5"
+    },
+    "417": {
+      "split": "eval_main",
+      "group_id": "417",
+      "domain_id": "D5"
+    },
+    "418": {
+      "split": "eval_main",
+      "group_id": "418",
+      "domain_id": "D1"
+    },
+    "419": {
+      "split": "train_pool",
+      "group_id": "419",
+      "domain_id": "D5"
+    },
+    "42": {
+      "split": "train_pool",
+      "group_id": "42",
+      "domain_id": "D1"
+    },
+    "426": {
+      "split": "train_pool",
+      "group_id": "426",
+      "domain_id": "D5"
+    },
+    "43": {
+      "split": "train_pool",
+      "group_id": "43",
+      "domain_id": "D1"
+    },
+    "430": {
+      "split": "train_pool",
+      "group_id": "430",
+      "domain_id": "D6"
+    },
+    "431": {
+      "split": "train_pool",
+      "group_id": "431",
+      "domain_id": "D5"
+    },
+    "432": {
+      "split": "eval_main",
+      "group_id": "432",
+      "domain_id": "D5"
+    },
+    "434": {
+      "split": "train_pool",
+      "group_id": "434",
+      "domain_id": "D5"
+    },
+    "435": {
+      "split": "train_pool",
+      "group_id": "435",
+      "domain_id": "D5"
+    },
+    "436": {
+      "split": "train_pool",
+      "group_id": "436",
+      "domain_id": "D6"
+    },
+    "437": {
+      "split": "train_pool",
+      "group_id": "437",
+      "domain_id": "D5"
+    },
+    "438": {
+      "split": "train_pool",
+      "group_id": "438",
+      "domain_id": "D1"
+    },
+    "439": {
+      "split": "train_pool",
+      "group_id": "439",
+      "domain_id": "D1"
+    },
+    "44": {
+      "split": "eval_main",
+      "group_id": "44",
+      "domain_id": "D1"
+    },
+    "441": {
+      "split": "train_pool",
+      "group_id": "441",
+      "domain_id": "D3"
+    },
+    "442": {
+      "split": "train_pool",
+      "group_id": "442",
+      "domain_id": "D4"
+    },
+    "443": {
+      "split": "train_pool",
+      "group_id": "443",
+      "domain_id": "D4"
+    },
+    "444": {
+      "split": "train_pool",
+      "group_id": "444",
+      "domain_id": "D1"
+    },
+    "445": {
+      "split": "train_pool",
+      "group_id": "445",
+      "domain_id": "D4"
+    },
+    "446": {
+      "split": "eval_main",
+      "group_id": "446",
+      "domain_id": "D4"
+    },
+    "447": {
+      "split": "train_pool",
+      "group_id": "447",
+      "domain_id": "D4"
+    },
+    "448": {
+      "split": "train_pool",
+      "group_id": "448",
+      "domain_id": "D5"
+    },
+    "449": {
+      "split": "eval_main",
+      "group_id": "449",
+      "domain_id": "D5"
+    },
+    "45": {
+      "split": "train_pool",
+      "group_id": "45",
+      "domain_id": "D1"
+    },
+    "450": {
+      "split": "eval_main",
+      "group_id": "450",
+      "domain_id": "D5"
+    },
+    "451": {
+      "split": "eval_main",
+      "group_id": "451",
+      "domain_id": "D5"
+    },
+    "452": {
+      "split": "train_pool",
+      "group_id": "452",
+      "domain_id": "D4"
+    },
+    "453": {
+      "split": "eval_main",
+      "group_id": "453",
+      "domain_id": "D5"
+    },
+    "454": {
+      "split": "train_pool",
+      "group_id": "454",
+      "domain_id": "D5"
+    },
+    "455": {
+      "split": "eval_main",
+      "group_id": "455",
+      "domain_id": "D6"
+    },
+    "456": {
+      "split": "train_pool",
+      "group_id": "456",
+      "domain_id": "D5"
+    },
+    "457": {
+      "split": "eval_main",
+      "group_id": "457",
+      "domain_id": "D5"
+    },
+    "458": {
+      "split": "train_pool",
+      "group_id": "458",
+      "domain_id": "D5"
+    },
+    "459": {
+      "split": "train_pool",
+      "group_id": "459",
+      "domain_id": "D5"
+    },
+    "46": {
+      "split": "train_pool",
+      "group_id": "46",
+      "domain_id": "D1"
+    },
+    "460": {
+      "split": "train_pool",
+      "group_id": "460",
+      "domain_id": "D5"
+    },
+    "461": {
+      "split": "train_pool",
+      "group_id": "461",
+      "domain_id": "D5"
+    },
+    "462": {
+      "split": "train_pool",
+      "group_id": "462",
+      "domain_id": "D5"
+    },
+    "463": {
+      "split": "train_pool",
+      "group_id": "463",
+      "domain_id": "D5"
+    },
+    "464": {
+      "split": "train_pool",
+      "group_id": "464",
+      "domain_id": "D6"
+    },
+    "466": {
+      "split": "eval_main",
+      "group_id": "466",
+      "domain_id": "D5"
+    },
+    "467": {
+      "split": "eval_main",
+      "group_id": "467",
+      "domain_id": "D5"
+    },
+    "468": {
+      "split": "train_pool",
+      "group_id": "468",
+      "domain_id": "D5"
+    },
+    "469": {
+      "split": "train_pool",
+      "group_id": "469",
+      "domain_id": "D6"
+    },
+    "47": {
+      "split": "eval_main",
+      "group_id": "47",
+      "domain_id": "D1"
+    },
+    "471": {
+      "split": "train_pool",
+      "group_id": "471",
+      "domain_id": "D5"
+    },
+    "473": {
+      "split": "train_pool",
+      "group_id": "473",
+      "domain_id": "D5"
+    },
+    "474": {
+      "split": "train_pool",
+      "group_id": "474",
+      "domain_id": "D5"
+    },
+    "475": {
+      "split": "eval_main",
+      "group_id": "475",
+      "domain_id": "D5"
+    },
+    "476": {
+      "split": "train_pool",
+      "group_id": "476",
+      "domain_id": "D5"
+    },
+    "477": {
+      "split": "train_pool",
+      "group_id": "477",
+      "domain_id": "D5"
+    },
+    "478": {
+      "split": "eval_main",
+      "group_id": "478",
+      "domain_id": "D5"
+    },
+    "479": {
+      "split": "train_pool",
+      "group_id": "479",
+      "domain_id": "D6"
+    },
+    "48": {
+      "split": "train_pool",
+      "group_id": "48",
+      "domain_id": "D1"
+    },
+    "480": {
+      "split": "train_pool",
+      "group_id": "480",
+      "domain_id": "D5"
+    },
+    "481": {
+      "split": "train_pool",
+      "group_id": "481",
+      "domain_id": "D5"
+    },
+    "482": {
+      "split": "train_pool",
+      "group_id": "482",
+      "domain_id": "D6"
+    },
+    "483": {
+      "split": "eval_main",
+      "group_id": "483",
+      "domain_id": "D5"
+    },
+    "484": {
+      "split": "train_pool",
+      "group_id": "484",
+      "domain_id": "D5"
+    },
+    "485": {
+      "split": "train_pool",
+      "group_id": "485",
+      "domain_id": "D5"
+    },
+    "486": {
+      "split": "train_pool",
+      "group_id": "486",
+      "domain_id": "D5"
+    },
+    "487": {
+      "split": "train_pool",
+      "group_id": "487",
+      "domain_id": "D6"
+    },
+    "488": {
+      "split": "eval_main",
+      "group_id": "488",
+      "domain_id": "D6"
+    },
+    "489": {
+      "split": "eval_main",
+      "group_id": "489",
+      "domain_id": "D5"
+    },
+    "490": {
+      "split": "train_pool",
+      "group_id": "490",
+      "domain_id": "D5"
+    },
+    "491": {
+      "split": "train_pool",
+      "group_id": "491",
+      "domain_id": "D5"
+    },
+    "492": {
+      "split": "eval_main",
+      "group_id": "492",
+      "domain_id": "D5"
+    },
+    "493": {
+      "split": "train_pool",
+      "group_id": "493",
+      "domain_id": "D5"
+    },
+    "494": {
+      "split": "train_pool",
+      "group_id": "494",
+      "domain_id": "D6"
+    },
+    "495": {
+      "split": "train_pool",
+      "group_id": "495",
+      "domain_id": "D5"
+    },
+    "496": {
+      "split": "train_pool",
+      "group_id": "496",
+      "domain_id": "D5"
+    },
+    "497": {
+      "split": "eval_main",
+      "group_id": "497",
+      "domain_id": "D5"
+    },
+    "498": {
+      "split": "train_pool",
+      "group_id": "498",
+      "domain_id": "D5"
+    },
+    "499": {
+      "split": "train_pool",
+      "group_id": "499",
+      "domain_id": "D5"
+    },
+    "5": {
+      "split": "train_pool",
+      "group_id": "5",
+      "domain_id": "D1"
+    },
+    "500": {
+      "split": "train_pool",
+      "group_id": "500",
+      "domain_id": "D5"
+    },
+    "53": {
+      "split": "train_pool",
+      "group_id": "53",
+      "domain_id": "D1"
+    },
+    "54": {
+      "split": "train_pool",
+      "group_id": "54",
+      "domain_id": "D1"
+    },
+    "557": {
+      "split": "train_pool",
+      "group_id": "557",
+      "domain_id": "D5"
+    },
+    "559": {
+      "split": "train_pool",
+      "group_id": "559",
+      "domain_id": "D6"
+    },
+    "56": {
+      "split": "train_pool",
+      "group_id": "56",
+      "domain_id": "D1"
+    },
+    "560": {
+      "split": "eval_main",
+      "group_id": "560",
+      "domain_id": "D4"
+    },
+    "561": {
+      "split": "train_pool",
+      "group_id": "561",
+      "domain_id": "D5"
+    },
+    "58": {
+      "split": "train_pool",
+      "group_id": "58",
+      "domain_id": "D3"
+    },
+    "582": {
+      "split": "train_pool",
+      "group_id": "582",
+      "domain_id": "D4"
+    },
+    "59": {
+      "split": "train_pool",
+      "group_id": "59",
+      "domain_id": "D1"
+    },
+    "590": {
+      "split": "eval_main",
+      "group_id": "590",
+      "domain_id": "D4"
+    },
+    "593": {
+      "split": "train_pool",
+      "group_id": "593",
+      "domain_id": "D6"
+    },
+    "594": {
+      "split": "eval_main",
+      "group_id": "594",
+      "domain_id": "D4"
+    },
+    "6": {
+      "split": "train_pool",
+      "group_id": "6",
+      "domain_id": "D1"
+    },
+    "60": {
+      "split": "train_pool",
+      "group_id": "60",
+      "domain_id": "D1"
+    },
+    "601": {
+      "split": "eval_main",
+      "group_id": "601",
+      "domain_id": "D1"
+    },
+    "602": {
+      "split": "train_pool",
+      "group_id": "602",
+      "domain_id": "D1"
+    },
+    "603": {
+      "split": "train_pool",
+      "group_id": "603",
+      "domain_id": "D3"
+    },
+    "604": {
+      "split": "eval_main",
+      "group_id": "604",
+      "domain_id": "D3"
+    },
+    "606": {
+      "split": "train_pool",
+      "group_id": "606",
+      "domain_id": "D3"
+    },
+    "608": {
+      "split": "train_pool",
+      "group_id": "608",
+      "domain_id": "D3"
+    },
+    "609": {
+      "split": "train_pool",
+      "group_id": "609",
+      "domain_id": "D3"
+    },
+    "610": {
+      "split": "eval_main",
+      "group_id": "610",
+      "domain_id": "D3"
+    },
+    "612": {
+      "split": "train_pool",
+      "group_id": "612",
+      "domain_id": "D1"
+    },
+    "613": {
+      "split": "train_pool",
+      "group_id": "613",
+      "domain_id": "D1"
+    },
+    "615": {
+      "split": "train_pool",
+      "group_id": "615",
+      "domain_id": "D3"
+    },
+    "617": {
+      "split": "train_pool",
+      "group_id": "617",
+      "domain_id": "D4"
+    },
+    "618": {
+      "split": "eval_main",
+      "group_id": "618",
+      "domain_id": "D3"
+    },
+    "619": {
+      "split": "eval_main",
+      "group_id": "619",
+      "domain_id": "D1"
+    },
+    "621": {
+      "split": "eval_main",
+      "group_id": "621",
+      "domain_id": "D3"
+    },
+    "622": {
+      "split": "train_pool",
+      "group_id": "622",
+      "domain_id": "D1"
+    },
+    "623": {
+      "split": "train_pool",
+      "group_id": "623",
+      "domain_id": "D1"
+    },
+    "625": {
+      "split": "train_pool",
+      "group_id": "625",
+      "domain_id": "D4"
+    },
+    "626": {
+      "split": "train_pool",
+      "group_id": "626",
+      "domain_id": "D4"
+    },
+    "627": {
+      "split": "train_pool",
+      "group_id": "627",
+      "domain_id": "D1"
+    },
+    "628": {
+      "split": "eval_main",
+      "group_id": "628",
+      "domain_id": "D4"
+    },
+    "63": {
+      "split": "eval_main",
+      "group_id": "63",
+      "domain_id": "D3"
+    },
+    "632": {
+      "split": "train_pool",
+      "group_id": "632",
+      "domain_id": "D1"
+    },
+    "633": {
+      "split": "train_pool",
+      "group_id": "633",
+      "domain_id": "D3"
+    },
+    "634": {
+      "split": "train_pool",
+      "group_id": "634",
+      "domain_id": "D1"
+    },
+    "636": {
+      "split": "train_pool",
+      "group_id": "636",
+      "domain_id": "D1"
+    },
+    "64": {
+      "split": "train_pool",
+      "group_id": "64",
+      "domain_id": "D1"
+    },
+    "640": {
+      "split": "train_pool",
+      "group_id": "640",
+      "domain_id": "D1"
+    },
+    "641": {
+      "split": "eval_main",
+      "group_id": "641",
+      "domain_id": "D1"
+    },
+    "643": {
+      "split": "train_pool",
+      "group_id": "643",
+      "domain_id": "D1"
+    },
+    "645": {
+      "split": "train_pool",
+      "group_id": "645",
+      "domain_id": "D3"
+    },
+    "647": {
+      "split": "train_pool",
+      "group_id": "647",
+      "domain_id": "D1"
+    },
+    "649": {
+      "split": "train_pool",
+      "group_id": "649",
+      "domain_id": "D1"
+    },
+    "65": {
+      "split": "eval_main",
+      "group_id": "65",
+      "domain_id": "D1"
+    },
+    "652": {
+      "split": "train_pool",
+      "group_id": "652",
+      "domain_id": "D1"
+    },
+    "653": {
+      "split": "train_pool",
+      "group_id": "653",
+      "domain_id": "D1"
+    },
+    "655": {
+      "split": "eval_main",
+      "group_id": "655",
+      "domain_id": "D3"
+    },
+    "66": {
+      "split": "train_pool",
+      "group_id": "66",
+      "domain_id": "D1"
+    },
+    "660": {
+      "split": "train_pool",
+      "group_id": "660",
+      "domain_id": "D3"
+    },
+    "661": {
+      "split": "train_pool",
+      "group_id": "661",
+      "domain_id": "D1"
+    },
+    "665": {
+      "split": "train_pool",
+      "group_id": "665",
+      "domain_id": "D1"
+    },
+    "666": {
+      "split": "eval_main",
+      "group_id": "666",
+      "domain_id": "D1"
+    },
+    "667": {
+      "split": "eval_main",
+      "group_id": "667",
+      "domain_id": "D1"
+    },
+    "668": {
+      "split": "eval_main",
+      "group_id": "668",
+      "domain_id": "D1"
+    },
+    "669": {
+      "split": "train_pool",
+      "group_id": "669",
+      "domain_id": "D3"
+    },
+    "67": {
+      "split": "eval_main",
+      "group_id": "67",
+      "domain_id": "D1"
+    },
+    "670": {
+      "split": "train_pool",
+      "group_id": "670",
+      "domain_id": "D3"
+    },
+    "671": {
+      "split": "train_pool",
+      "group_id": "671",
+      "domain_id": "D1"
+    },
+    "674": {
+      "split": "train_pool",
+      "group_id": "674",
+      "domain_id": "D1"
+    },
+    "678": {
+      "split": "train_pool",
+      "group_id": "678",
+      "domain_id": "D1"
+    },
+    "679": {
+      "split": "train_pool",
+      "group_id": "679",
+      "domain_id": "D1"
+    },
+    "68": {
+      "split": "train_pool",
+      "group_id": "68",
+      "domain_id": "D1"
+    },
+    "680": {
+      "split": "train_pool",
+      "group_id": "680",
+      "domain_id": "D1"
+    },
+    "682": {
+      "split": "eval_main",
+      "group_id": "682",
+      "domain_id": "D1"
+    },
+    "684": {
+      "split": "eval_main",
+      "group_id": "684",
+      "domain_id": "D1"
+    },
+    "688": {
+      "split": "eval_main",
+      "group_id": "688",
+      "domain_id": "D1"
+    },
+    "689": {
+      "split": "train_pool",
+      "group_id": "689",
+      "domain_id": "D3"
+    },
+    "691": {
+      "split": "eval_main",
+      "group_id": "691",
+      "domain_id": "D1"
+    },
+    "692": {
+      "split": "train_pool",
+      "group_id": "692",
+      "domain_id": "D1"
+    },
+    "694": {
+      "split": "train_pool",
+      "group_id": "694",
+      "domain_id": "D3"
+    },
+    "695": {
+      "split": "train_pool",
+      "group_id": "695",
+      "domain_id": "D1"
+    },
+    "696": {
+      "split": "eval_main",
+      "group_id": "696",
+      "domain_id": "D1"
+    },
+    "699": {
+      "split": "train_pool",
+      "group_id": "699",
+      "domain_id": "D1"
+    },
+    "7": {
+      "split": "train_pool",
+      "group_id": "7",
+      "domain_id": "D1"
+    },
+    "70": {
+      "split": "train_pool",
+      "group_id": "70",
+      "domain_id": "D1"
+    },
+    "700": {
+      "split": "eval_main",
+      "group_id": "700",
+      "domain_id": "D1"
+    },
+    "701": {
+      "split": "train_pool",
+      "group_id": "701",
+      "domain_id": "D5"
+    },
+    "703": {
+      "split": "train_pool",
+      "group_id": "703",
+      "domain_id": "D6"
+    },
+    "704": {
+      "split": "train_pool",
+      "group_id": "704",
+      "domain_id": "D6"
+    },
+    "705": {
+      "split": "train_pool",
+      "group_id": "705",
+      "domain_id": "D5"
+    },
+    "706": {
+      "split": "eval_main",
+      "group_id": "706",
+      "domain_id": "D5"
+    },
+    "707": {
+      "split": "train_pool",
+      "group_id": "707",
+      "domain_id": "D6"
+    },
+    "708": {
+      "split": "train_pool",
+      "group_id": "708",
+      "domain_id": "D5"
+    },
+    "709": {
+      "split": "eval_main",
+      "group_id": "709",
+      "domain_id": "D6"
+    },
+    "71": {
+      "split": "eval_main",
+      "group_id": "71",
+      "domain_id": "D1"
+    },
+    "710": {
+      "split": "train_pool",
+      "group_id": "710",
+      "domain_id": "D6"
+    },
+    "711": {
+      "split": "train_pool",
+      "group_id": "711",
+      "domain_id": "D5"
+    },
+    "712": {
+      "split": "train_pool",
+      "group_id": "712",
+      "domain_id": "D6"
+    },
+    "718": {
+      "split": "train_pool",
+      "group_id": "718",
+      "domain_id": "D6"
+    },
+    "719": {
+      "split": "train_pool",
+      "group_id": "719",
+      "domain_id": "D6"
+    },
+    "72": {
+      "split": "train_pool",
+      "group_id": "72",
+      "domain_id": "D1"
+    },
+    "720": {
+      "split": "train_pool",
+      "group_id": "720",
+      "domain_id": "D6"
+    },
+    "722": {
+      "split": "train_pool",
+      "group_id": "722",
+      "domain_id": "D5"
+    },
+    "723": {
+      "split": "eval_main",
+      "group_id": "723",
+      "domain_id": "D6"
+    },
+    "724": {
+      "split": "train_pool",
+      "group_id": "724",
+      "domain_id": "D4"
+    },
+    "73": {
+      "split": "train_pool",
+      "group_id": "73",
+      "domain_id": "D1"
+    },
+    "730": {
+      "split": "eval_main",
+      "group_id": "730",
+      "domain_id": "D3"
+    },
+    "732": {
+      "split": "train_pool",
+      "group_id": "732",
+      "domain_id": "D3"
+    },
+    "739": {
+      "split": "train_pool",
+      "group_id": "739",
+      "domain_id": "D5"
+    },
+    "74": {
+      "split": "eval_main",
+      "group_id": "74",
+      "domain_id": "D1"
+    },
+    "740": {
+      "split": "train_pool",
+      "group_id": "740",
+      "domain_id": "D6"
+    },
+    "741": {
+      "split": "train_pool",
+      "group_id": "741",
+      "domain_id": "D6"
+    },
+    "742": {
+      "split": "train_pool",
+      "group_id": "742",
+      "domain_id": "D6"
+    },
+    "744": {
+      "split": "eval_main",
+      "group_id": "744",
+      "domain_id": "D6"
+    },
+    "745": {
+      "split": "eval_main",
+      "group_id": "745",
+      "domain_id": "D6"
+    },
+    "746": {
+      "split": "train_pool",
+      "group_id": "746",
+      "domain_id": "D5"
+    },
+    "748": {
+      "split": "train_pool",
+      "group_id": "748",
+      "domain_id": "D6"
+    },
+    "749": {
+      "split": "eval_main",
+      "group_id": "749",
+      "domain_id": "D6"
+    },
+    "75": {
+      "split": "eval_main",
+      "group_id": "75",
+      "domain_id": "D1"
+    },
+    "751": {
+      "split": "train_pool",
+      "group_id": "751",
+      "domain_id": "D6"
+    },
+    "752": {
+      "split": "train_pool",
+      "group_id": "752",
+      "domain_id": "D5"
+    },
+    "755": {
+      "split": "eval_main",
+      "group_id": "755",
+      "domain_id": "D6"
+    },
+    "756": {
+      "split": "train_pool",
+      "group_id": "756",
+      "domain_id": "D5"
+    },
+    "758": {
+      "split": "train_pool",
+      "group_id": "758",
+      "domain_id": "D6"
+    },
+    "759": {
+      "split": "train_pool",
+      "group_id": "759",
+      "domain_id": "D6"
+    },
+    "76": {
+      "split": "train_pool",
+      "group_id": "76",
+      "domain_id": "D1"
+    },
+    "760": {
+      "split": "train_pool",
+      "group_id": "760",
+      "domain_id": "D6"
+    },
+    "761": {
+      "split": "train_pool",
+      "group_id": "761",
+      "domain_id": "D6"
+    },
+    "762": {
+      "split": "eval_main",
+      "group_id": "762",
+      "domain_id": "D6"
+    },
+    "763": {
+      "split": "train_pool",
+      "group_id": "763",
+      "domain_id": "D6"
+    },
+    "764": {
+      "split": "train_pool",
+      "group_id": "764",
+      "domain_id": "D6"
+    },
+    "765": {
+      "split": "train_pool",
+      "group_id": "765",
+      "domain_id": "D6"
+    },
+    "766": {
+      "split": "train_pool",
+      "group_id": "766",
+      "domain_id": "D6"
+    },
+    "767": {
+      "split": "train_pool",
+      "group_id": "767",
+      "domain_id": "D4"
+    },
+    "768": {
+      "split": "train_pool",
+      "group_id": "768",
+      "domain_id": "D4"
+    },
+    "769": {
+      "split": "eval_main",
+      "group_id": "769",
+      "domain_id": "D6"
+    },
+    "772": {
+      "split": "train_pool",
+      "group_id": "772",
+      "domain_id": "D6"
+    },
+    "775": {
+      "split": "train_pool",
+      "group_id": "775",
+      "domain_id": "D5"
+    },
+    "776": {
+      "split": "eval_main",
+      "group_id": "776",
+      "domain_id": "D5"
+    },
+    "777": {
+      "split": "train_pool",
+      "group_id": "777",
+      "domain_id": "D5"
+    },
+    "778": {
+      "split": "eval_main",
+      "group_id": "778",
+      "domain_id": "D5"
+    },
+    "779": {
+      "split": "train_pool",
+      "group_id": "779",
+      "domain_id": "D4"
+    },
+    "78": {
+      "split": "train_pool",
+      "group_id": "78",
+      "domain_id": "D1"
+    },
+    "780": {
+      "split": "train_pool",
+      "group_id": "780",
+      "domain_id": "D4"
+    },
+    "781": {
+      "split": "eval_main",
+      "group_id": "781",
+      "domain_id": "D4"
+    },
+    "782": {
+      "split": "train_pool",
+      "group_id": "782",
+      "domain_id": "D4"
+    },
+    "783": {
+      "split": "train_pool",
+      "group_id": "783",
+      "domain_id": "D4"
+    },
+    "785": {
+      "split": "train_pool",
+      "group_id": "785",
+      "domain_id": "D6"
+    },
+    "786": {
+      "split": "eval_main",
+      "group_id": "786",
+      "domain_id": "D6"
+    },
+    "789": {
+      "split": "eval_main",
+      "group_id": "789",
+      "domain_id": "D5"
+    },
+    "79": {
+      "split": "train_pool",
+      "group_id": "79",
+      "domain_id": "D1"
+    },
+    "791": {
+      "split": "train_pool",
+      "group_id": "791",
+      "domain_id": "D6"
+    },
+    "792": {
+      "split": "train_pool",
+      "group_id": "792",
+      "domain_id": "D6"
+    },
+    "794": {
+      "split": "eval_main",
+      "group_id": "794",
+      "domain_id": "D5"
+    },
+    "795": {
+      "split": "train_pool",
+      "group_id": "795",
+      "domain_id": "D6"
+    },
+    "798": {
+      "split": "train_pool",
+      "group_id": "798",
+      "domain_id": "D6"
+    },
+    "799": {
+      "split": "eval_main",
+      "group_id": "799",
+      "domain_id": "D5"
+    },
+    "8": {
+      "split": "train_pool",
+      "group_id": "8",
+      "domain_id": "D1"
+    },
+    "80": {
+      "split": "eval_main",
+      "group_id": "80",
+      "domain_id": "D1"
+    },
+    "800": {
+      "split": "train_pool",
+      "group_id": "800",
+      "domain_id": "D6"
+    },
+    "81": {
+      "split": "eval_main",
+      "group_id": "81",
+      "domain_id": "D1"
+    },
+    "82": {
+      "split": "train_pool",
+      "group_id": "82",
+      "domain_id": "D1"
+    },
+    "83": {
+      "split": "train_pool",
+      "group_id": "83",
+      "domain_id": "D1"
+    },
+    "84": {
+      "split": "train_pool",
+      "group_id": "84",
+      "domain_id": "D1"
+    },
+    "85": {
+      "split": "train_pool",
+      "group_id": "85",
+      "domain_id": "D1"
+    },
+    "86": {
+      "split": "train_pool",
+      "group_id": "86",
+      "domain_id": "D1"
+    },
+    "87": {
+      "split": "eval_main",
+      "group_id": "87",
+      "domain_id": "D1"
+    },
+    "88": {
+      "split": "train_pool",
+      "group_id": "88",
+      "domain_id": "D1"
+    },
+    "89": {
+      "split": "eval_main",
+      "group_id": "89",
+      "domain_id": "D1"
+    },
+    "895": {
+      "split": "train_pool",
+      "group_id": "895",
+      "domain_id": "D1"
+    },
+    "9": {
+      "split": "train_pool",
+      "group_id": "9",
+      "domain_id": "D1"
+    },
+    "90": {
+      "split": "train_pool",
+      "group_id": "90",
+      "domain_id": "D1"
+    },
+    "91": {
+      "split": "train_pool",
+      "group_id": "91",
+      "domain_id": "D1"
+    },
+    "92": {
+      "split": "train_pool",
+      "group_id": "92",
+      "domain_id": "D1"
+    },
+    "923": {
+      "split": "train_pool",
+      "group_id": "923",
+      "domain_id": "D4"
+    },
+    "94": {
+      "split": "train_pool",
+      "group_id": "94",
+      "domain_id": "D1"
+    },
+    "95": {
+      "split": "eval_main",
+      "group_id": "95",
+      "domain_id": "D1"
+    },
+    "958": {
+      "split": "train_pool",
+      "group_id": "958",
+      "domain_id": "D4"
+    },
+    "959": {
+      "split": "train_pool",
+      "group_id": "959",
+      "domain_id": "D4"
+    },
+    "96": {
+      "split": "train_pool",
+      "group_id": "96",
+      "domain_id": "D1"
+    },
+    "97": {
+      "split": "train_pool",
+      "group_id": "97",
+      "domain_id": "D1"
+    },
+    "98": {
+      "split": "train_pool",
+      "group_id": "98",
+      "domain_id": "D1"
+    },
+    "99": {
+      "split": "train_pool",
+      "group_id": "99",
+      "domain_id": "D1"
+    },
+    "993": {
+      "split": "train_pool",
+      "group_id": "993",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0246-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0246-01",
+      "domain_id": "D6"
+    },
+    "CSJUR-R-0288-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0288-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0428-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0428-01",
+      "domain_id": "D5"
+    },
+    "CSJUR-R-0574-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0574-01",
+      "domain_id": "D1"
+    },
+    "CSJUR-R-0585-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0585-01",
+      "domain_id": "D5"
+    },
+    "CSJUR-R-0598-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0598-01",
+      "domain_id": "D1"
+    },
+    "CSJUR-R-0874-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0874-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0878-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0878-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0897-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0897-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0900-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0900-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0904-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0904-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0933-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0933-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0955-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0955-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0956-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0956-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0964-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0964-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0984-01": {
+      "split": "eval_main",
+      "group_id": "CSJUR-R-0984-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0992-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0992-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-R-0998-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0998-01",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0001": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0001",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0002": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0002",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0003": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0003",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0004": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0004",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0005": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0005",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0006": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0006",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0007": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0007",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0008": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0008",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0009": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0009",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0010": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0010",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0011": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0011",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0012": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0012",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0013": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0013",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0014": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0014",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0015": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0015",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0016": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0016",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0017": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0017",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0018": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0018",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0019": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0019",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0020": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0020",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0021": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0021",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0022": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0022",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0023": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0023",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0024": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0024",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0025": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0025",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0026": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0026",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0027": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0027",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0028": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0028",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0029": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0029",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0030": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0030",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0031": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0031",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0032": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0032",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0033": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0033",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0034": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0034",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0035": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0035",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0036": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0036",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0037": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0037",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0038": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0038",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0039": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0039",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0040": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0040",
+      "domain_id": "D6"
+    },
+    "CSJUR-V3-0041": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0041",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0042": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0042",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0043": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0043",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0044": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0044",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0045": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0045",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0046": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0046",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0047": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0047",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0048": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0048",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0049": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0049",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0050": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0050",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0051": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0051",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0052": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0052",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0053": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0053",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0054": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0054",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0055": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0055",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0056": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0056",
+      "domain_id": "D2"
+    },
+    "CSJUR-V3-0057": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0057",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0058": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0058",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0059": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0059",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0060": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0060",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0061": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0061",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0062": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0062",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0063": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0063",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0064": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0064",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0065": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0065",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0066": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0066",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0067": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0067",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0068": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0068",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0069": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0069",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0070": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0070",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0071": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0071",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0072": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0072",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0073": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0073",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0074": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0074",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0075": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0075",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0076": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0076",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0077": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0077",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0078": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0078",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0079": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0079",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0080": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0080",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0081": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0081",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0082": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0082",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0083": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0083",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0084": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0084",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0085": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0085",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0086": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0086",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0087": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0087",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0088": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0088",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0089": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0089",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0090": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0090",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0091": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0091",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0092": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0092",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0093": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0093",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0094": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0094",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0095": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0095",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0096": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0096",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0097": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0097",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0098": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0098",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0099": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0099",
+      "domain_id": "D4"
+    },
+    "CSJUR-V3-0100": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0100",
+      "domain_id": "D4"
+    },
+    "CSJUR-V4-0001": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0001",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0002": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0002",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0003": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0003",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0004": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0004",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0005": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0005",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0006": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0006",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0007": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0007",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0008": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0008",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0009": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0009",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0010": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0010",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0011": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0011",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0012": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0012",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0013": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0013",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0014": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0014",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0015": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0015",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0016": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0016",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0017": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0017",
+      "domain_id": "D2"
+    },
+    "CSJUR-V4-0018": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0018",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0019": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0019",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0020": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0020",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0021": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0021",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0022": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0022",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0023": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0023",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0024": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0024",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0025": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0025",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0026": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0026",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0027": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0027",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0028": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0028",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0029": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0029",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0030": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0030",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0031": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0031",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0032": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0032",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0033": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0033",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0034": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0034",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0035": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0035",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0036": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0036",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0037": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0037",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0038": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0038",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0039": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0039",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0040": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0040",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0041": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0041",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0042": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0042",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0043": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0043",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0044": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0044",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0045": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0045",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0046": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0046",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0047": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0047",
+      "domain_id": "D3"
+    },
+    "CSJUR-V4-0048": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0048",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0049": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0049",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0050": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0050",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0051": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0051",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0052": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0052",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0053": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0053",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0054": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0054",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0055": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0055",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0056": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0056",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0057": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0057",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0058": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0058",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0059": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0059",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0060": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0060",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0061": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0061",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0062": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0062",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0063": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0063",
+      "domain_id": "D5"
+    },
+    "CSJUR-V4-0064": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0064",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0065": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0065",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0066": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0066",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0067": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0067",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0068": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0068",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0069": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0069",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0070": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0070",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0071": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0071",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0072": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0072",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0073": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0073",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0074": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0074",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0075": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0075",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0076": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0076",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0077": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0077",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0078": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0078",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0079": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0079",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0080": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0080",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0081": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0081",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0082": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0082",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0083": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0083",
+      "domain_id": "D6"
+    },
+    "CSJUR-V4-0084": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0084",
+      "domain_id": "D6"
+    }
+  },
+  "meta": {
+    "scheme": "main",
+    "seed": 42,
+    "method": "group-level, domain-stratified (largest-remainder quotas), numpy default_rng(seed).permutation over sorted groups per sorted domain",
+    "eval_size_requested": 200,
+    "holdout_domains": [],
+    "eval_quota_by_domain": {
+      "D1": 35,
+      "D2": 31,
+      "D3": 33,
+      "D4": 34,
+      "D6": 35,
+      "D5": 32
+    },
+    "size_adjustments": {},
+    "multi_domain_groups": [],
+    "dataset_version": "final-692-b11d22b34008",
+    "counts": {
+      "eval_main": {
+        "total": 200,
+        "D1": 35,
+        "D2": 31,
+        "D3": 33,
+        "D4": 34,
+        "D5": 32,
+        "D6": 35
+      },
+      "train_pool": {
+        "total": 492,
+        "D1": 87,
+        "D2": 77,
+        "D3": 79,
+        "D4": 84,
+        "D5": 80,
+        "D6": 85
+      }
+    },
+    "n_families": 692,
+    "split_id": "9451ca61d16575fb",
+    "created_utc": "2026-09-26T12:09:39.376284+00:00"
+  }
+}
