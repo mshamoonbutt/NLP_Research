@@ -122,6 +122,13 @@ def test_full_wiring(env, monkeypatch):
                       "--n-per-model-condition", "3", "--out-dir", str(sd)]) == 0
     sman = json.loads((sd / "sample_manifest.json").read_text(encoding="utf-8"))
     assert sman["n_items"] == 24 and (sd / "rater1.csv").exists()
+    # resume: same plan -> zero new generations; different plan -> refused
+    FakeRunner.calls = 0
+    assert exp1.main(["--exp0-dir", exp0_dir, "--role", "validation", "--models", "qwen25", "phi3",
+                      "--n-per-model-condition", "3", "--out-dir", str(sd)]) == 0
+    assert FakeRunner.calls == 0
+    assert exp1.main(["--exp0-dir", exp0_dir, "--role", "validation", "--models", "qwen25", "phi3",
+                      "--n-per-model-condition", "4", "--out-dir", str(sd)]) == 1
     split = json.loads((env["exp0"] / "split_manifest.json").read_text(encoding="utf-8"))
     assert all(split["assignments"][f]["split"] == "train_pool" for f in sman["families"])
 

@@ -39,6 +39,15 @@ models:
     gpu_memory_utilization: 0.80
     notes: "~3.2B. Gated on HF (HF_TOKEN). Template inserts a knowledge-cutoff/date system header by default -- recorded via the template probe."
 
+# CPU fallback (csjail/ollama_backend.py): 8-bit GGUF builds of the same models
+# served by a local Ollama. DEVELOPMENT/DEBUG ONLY -- not the pinned bf16 weights,
+# never used for Exp 2 production or (without an explicit override) for the
+# Exp 1 validation sample. Records carry the Ollama digest + quantization.
+ollama_fallback:
+  qwen25: qwen2.5:1.5b-instruct-q8_0
+  phi3: phi3:3.8b-mini-4k-instruct-q8_0
+  llama32: llama3.2:3b-instruct-q8_0
+
 # Exp 5 (SLM vs LLM) is CUT; kept only for historical reproduction.
 reference_llms:
   llama3_8b:
