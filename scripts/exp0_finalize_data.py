@@ -20,6 +20,11 @@ Steps
  7. Everything is written to a temp dir and only moved to
     outputs/exp0/<dataset_version>/ (+ LATEST.json) if every gate passes.
     Failures leave outputs/exp0/FAILED-*/ marked DIAGNOSTIC_ONLY.
+
+On another machine with a committed finalized dir (the dataset JSONL itself
+is gitignored), recreate it with the same command plus --restore; it is
+copied in only if its sha256 and split_id match the committed manifest.
+Files are written with LF line endings so hashes match across OSes.
 """
 from __future__ import annotations
 
@@ -48,7 +53,7 @@ from csjail.splits import (  # noqa: E402
     attach_heuristic_features, build_groups, dataset_stats, extend_split,
     load_duplicate_decisions, load_manifest, make_splits, pairwise_agreement, verify_split,
 )
-from csjail.utils.io import sha256_file, write_jsonl  # noqa: E402
+from csjail.utils.io import sha256_file, write_jsonl, write_text_lf  # noqa: E402
 
 QA_LEDGER_FIELDS = ["family_id", "dataset_version", "reviewer", "review_date",
                     "harmful_eligible", "semantic_equivalence", "condition_validity",
@@ -85,6 +90,9 @@ def main(argv=None) -> int:
     ap.add_argument("--out-root", default=str(EXP0_ROOT))
     ap.add_argument("--overwrite", action="store_true",
                     help="replace an existing finalized dir for the same version")
+    ap.add_argument("--restore", action="store_true",
+                    help="regenerate the gitignored dataset file into an existing (committed) "
+                         "finalized dir; succeeds only if its sha256 and split_id match")
     ap.add_argument("--no-latest", action="store_true",
                     help="do not update LATEST.json (e.g. fixtures/smoke runs)")
     args = ap.parse_args(argv)
@@ -100,9 +108,8 @@ def main(argv=None) -> int:
     def fail(msg: str, code: int) -> int:
         report["gates"] = gates
         report["failure"] = msg
-        (tmp / "DIAGNOSTIC_ONLY").write_text(msg + "\n", encoding="utf-8")
-        (tmp / "exp0_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),
-                                              encoding="utf-8")
+        write_text_lf(tmp / "DIAGNOSTIC_ONLY", msg + "\n")
+        write_text_lf(tmp / "exp0_report.json", json.dumps(report, ensure_ascii=False, indent=2))
         dest = out_root / f"FAILED-{stamp}"
         tmp.rename(dest)
         print(f"[exp0] GATE FAIL: {msg}\n[exp0] diagnostics -> {dest}", file=sys.stderr)
@@ -146,18 +153,19 @@ def main(argv=None) -> int:
         "ru_possible_english_clause": ru_english_flags(rows),
         "ru_loanword_inventory": ru_loanword_inventory(rows),
     }
-    (tmp / "qa_review_flags.json").write_text(json.dumps(flags, ensure_ascii=False, indent=2),
-                                              encoding="utf-8")
+    write_text_lf(tmp / "qa_review_flags.json", json.dumps(flags, ensure_ascii=False, indent=2))
     decisions = load_duplicate_decisions(args.duplicate_decisions)
     with (tmp / "duplicate_candidates.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["family_a", "family_b", "condition", "method",
-                                          "score", "threshold", "decision"])
+                                          "score", "threshold", "decision"],
+                           lineterminator="\n")
         w.writeheader()
         for c in cands:
             w.writerow({**c, "decision": decisions.get(tuple(sorted((c["family_a"],
                                                                       c["family_b"]))), "")})
     report["qa_flag_counts"] = flag_counts({"review_flags": flags})
-    report["qa_flag_counts"]["ru_items_with_technical_loans"] =         flags["ru_loanword_inventory"]["n_ru_items_with_technical_loans"]
+    report["qa_flag_counts"]["ru_items_with_technical_loans"] = \
+        flags["ru_loanword_inventory"]["n_ru_items_with_technical_loans"]
 
     # 4. groups
     fam_to_group, group_report = build_groups(
@@ -178,8 +186,7 @@ def main(argv=None) -> int:
         }
     if args.independent_annotations:
         qa_summary["agreement"] = pairwise_agreement(args.independent_annotations)
-    (tmp / "qa_summary.json").write_text(json.dumps(qa_summary, ensure_ascii=False, indent=2),
-                                         encoding="utf-8")
+    write_text_lf(tmp / "qa_summary.json", json.dumps(qa_summary, ensure_ascii=False, indent=2))
 
     # 6. split
     try:
@@ -202,15 +209,14 @@ def main(argv=None) -> int:
         gates["split"] = "FAIL"
         return fail(f"split verification: {errs[:3]}", 3)
     gates["split"] = "PASS"
-    (tmp / "split_manifest.json").write_text(json.dumps(split, ensure_ascii=False, indent=2),
-                                             encoding="utf-8")
+    write_text_lf(tmp / "split_manifest.json", json.dumps(split, ensure_ascii=False, indent=2))
 
     # 7. dataset + manifest
     ds_name = "dataset_final.jsonl"
     write_jsonl(tmp / ds_name, [r.model_dump() for r in rows])
-    (tmp / "dataset_stats.json").write_text(
+    write_text_lf(tmp / "dataset_stats.json",
         json.dumps({"summary": summarize(rows), "stats": dataset_stats(rows)},
-                   ensure_ascii=False, indent=2), encoding="utf-8")
+                   ensure_ascii=False, indent=2))
     manifest = {
         "dataset_version": dataset_version,
         "schema_version": SCHEMA_VERSION,
@@ -230,14 +236,26 @@ def main(argv=None) -> int:
         "notes": ["no dataset-level kappa gate (docs/PROTOCOL.md §3.3)",
                   "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"],
     }
-    (tmp / "dataset_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2),
-                                               encoding="utf-8")
+    write_text_lf(tmp / "dataset_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
     report["gates"] = gates
-    (tmp / "exp0_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2),
-                                          encoding="utf-8")
-    (tmp / FINALIZED_MARKER).write_text(stamp + "\n", encoding="utf-8")
+    write_text_lf(tmp / "exp0_report.json", json.dumps(report, ensure_ascii=False, indent=2))
+    write_text_lf(tmp / FINALIZED_MARKER, stamp + "\n")
 
     dest = out_root / dataset_version
+    if dest.exists() and args.restore:
+        old = json.loads((dest / "dataset_manifest.json").read_text(encoding="utf-8"))
+        same = (old["dataset_file_sha256"] == manifest["dataset_file_sha256"]
+                and old["split_id"] == manifest["split_id"])
+        if same:
+            shutil.copyfile(tmp / ds_name, dest / ds_name)
+        shutil.rmtree(tmp)
+        if not same:
+            print(f"[exp0] RESTORE FAIL: regenerated dataset/split do not match {dest} "
+                  f"(sha {manifest['dataset_file_sha256'][:12]} vs {old['dataset_file_sha256'][:12]}, "
+                  f"split {manifest['split_id']} vs {old['split_id']})", file=sys.stderr)
+            return 5
+        print(f"[exp0] restored {ds_name} into {dest} (sha256 and split_id verified)")
+        return 0
     if dest.exists():
         if not args.overwrite:
             shutil.rmtree(tmp)
@@ -248,8 +266,7 @@ def main(argv=None) -> int:
     tmp.rename(dest)
     if not args.no_latest:
         rel = os.path.relpath(dest, ROOT).replace("\\", "/")
-        (out_root / "LATEST.json").write_text(json.dumps({"dir": rel}, indent=2) + "\n",
-                                              encoding="utf-8")
+        write_text_lf(out_root / "LATEST.json", json.dumps({"dir": rel}, indent=2) + "\n")
 
     m = split["meta"]
     print(f"[exp0] dataset_version: {dataset_version}")

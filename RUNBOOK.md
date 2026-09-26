@@ -27,6 +27,9 @@ python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv 
 #   -> outputs/exp0/final-692-b11d22b34008/  (FINALIZED; split 9451ca61d16575fb: 200 eval / 492 train)
 #   Frozen: re-running refuses to overwrite; add data later with
 #   --extend-split outputs/exp0/<version>/split_manifest.json (append-only)
+# On another machine (GPU host), the committed dir lacks the gitignored dataset
+# file; recreate it from the same CSV and verify it against the manifest:
+python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv --restore
 python scripts/dry_run_report.py
 ```
 Review `qa_review_flags.json`. It lists 60 UR items with Latin letters and

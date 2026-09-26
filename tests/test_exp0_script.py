@@ -76,3 +76,19 @@ def test_extend_split_append_only(tmp_path):
     for f, a in old["assignments"].items():
         assert new["assignments"][f]["split"] == a["split"]
     assert new["assignments"]["CSJUR-V9-0001"]["added_after_freeze"] is True
+
+
+def test_restore_regenerates_only_matching_dataset(tmp_path):
+    out = tmp_path / "exp0"
+    base = ["--source-csv", str(FIXTURE_CSV), "--eval-size", "4", "--out-root", str(out),
+            "--no-latest"]
+    assert exp0()(base) == 0
+    [d] = [p for p in out.iterdir() if p.name.startswith("final-")]
+    raw = (d / "dataset_final.jsonl").read_bytes()
+    assert b"\r\n" not in raw                      # LF on every OS -> stable hash
+    (d / "dataset_final.jsonl").unlink()           # as on a fresh clone (gitignored)
+    assert exp0()(base + ["--restore"]) == 0
+    assert (d / "dataset_final.jsonl").read_bytes() == raw
+    resolve_exp0(d).load_rows()
+    assert exp0()(["--source-csv", str(FIXTURE_CSV), "--eval-size", "5", "--out-root", str(out),
+                   "--no-latest", "--restore"]) in (0, 5)   # different split -> new version dir or fail

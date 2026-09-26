@@ -23,6 +23,7 @@ import yaml  # noqa: E402
 from csjail.artifacts import resolve_exp0  # noqa: E402
 from csjail.models import phase2_models  # noqa: E402
 from csjail.splits import EVAL, TRAIN  # noqa: E402
+from csjail.utils.io import write_text_lf  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -116,7 +117,7 @@ def main(argv=None) -> int:
             "target_pairs_cap": dcfg["prefdata"]["target_pairs"],
         }
     out = ROOT / "outputs" / "dry_run_report.json"
-    out.write_text(json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_text_lf(out, json.dumps(rep, ensure_ascii=False, indent=2))
     print(json.dumps(rep, ensure_ascii=False, indent=2))
     return 0
 

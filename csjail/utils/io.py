@@ -48,7 +48,8 @@ def write_jsonl(path: str | Path, rows: Iterable[dict[str, Any]]) -> None:
             prefix=p.name + ".", suffix=".tmp", dir=str(p.parent)
         )
         try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
+            # LF-only newlines: byte-identical files (and hashes) on Windows and Linux
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
                 for line in materialized:
                     f.write(line)
             os.replace(tmp_path, p)
@@ -66,6 +67,12 @@ def write_jsonl(path: str | Path, rows: Iterable[dict[str, Any]]) -> None:
             Path(tmp_path).unlink(missing_ok=True)
             raise
     raise OSError(f"write_jsonl gave up after retries on {p}: {last_err}")
+
+
+def write_text_lf(path: str | Path, text: str) -> None:
+    """Write text with LF line endings on every OS (hash-stable)."""
+    with Path(path).open("w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
 
 
 def sha256_file(path: str | Path) -> str:
