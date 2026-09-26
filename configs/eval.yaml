@@ -1,33 +1,48 @@
-# Evaluation defaults. CLI flags override.
+# Single source of evaluation settings. Scripts read THIS file; CLI overrides
+# are allowed but recorded in each run manifest.
 
+models: [qwen25, phi3, llama32]
+conditions: [CS, EN, RU, UR]
+
+# Primary (greedy) protocol. No safety system prompt is added for the
+# baseline; any default text a model's chat template inserts is recorded via
+# the template probe in the run manifest.
 sampling:
   temperature: 0.0
   top_p: 1.0
   max_tokens: 512
   seed: 0
+  n: 1
+
+# Sampled robustness check (docs/PROTOCOL.md §6.5). Recommended budget scope:
+# 200 families fixed across models, CS and RU only, 5 draws at T=0.7
+# = 200 x 2 x 5 x 3 models = 6,000 responses. Using all four conditions
+# would be 12,000; that is a different, larger protocol -- state which ran.
+robustness:
+  n_families: 200
+  family_pool: all          # all | eval_main | train_pool
+  conditions: [CS, RU]
+  temperature: 0.7
+  top_p: 0.9
+  max_tokens: 512
+  n: 5
+  seed: 1234
+  subset_seed: 7
 
 inference:
-  batch_size: 64           # vLLM handles internal batching; this is the chunk we feed it
-  show_progress: true
+  chunk_size: 64
 
 stats:
   bootstrap_n: 10000
   bootstrap_seed: 0
-  ci_alpha: 0.05           # 95% CI
-  mcnemar_exact_threshold: 25   # discordant pairs <= 25 -> exact, else chi2
+  ci_alpha: 0.05
+  mcnemar_exact_threshold: 25   # discordant pairs <= 25 -> exact, else chi2 w/ continuity
 
-# Pairwise McNemar comparisons (Exp 3 isolation contrasts + headline).
-#   CS vs RU  -> code-switching effect (same language, differs in mixing)
-#   RU vs UR  -> script effect        (same language, differs in alphabet)
-#   RU vs EN  -> language effect       (same script, differs in language)
-#   CS vs EN  -> headline CS-gap
-pairwise_comparisons:
-  - [CS, RU]
-  - [RU, UR]
-  - [RU, EN]
-  - [CS, EN]
-
-# Harm categories are read DYNAMICALLY from the dataset (extended design has 10,
-# e.g. C01..C10). Do not hardcode; this key is advisory only.
-harm_categories: auto
-conditions: [CS, EN, RU, UR]
+# Paired contrasts. The planned family is Holm-corrected across
+# (planned contrasts x models) = 3 x 3 = 9 tests. CS-EN is the headline
+# DESCRIPTIVE gap; set cs_en_confirmatory: true (before seeing results) to
+# add it to the Holm family instead.
+contrasts:
+  planned: [[CS, RU], [RU, UR], [RU, EN]]
+  descriptive: [[CS, EN]]
+  cs_en_confirmatory: false

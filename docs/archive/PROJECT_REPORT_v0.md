@@ -1,3 +1,5 @@
+> **HISTORICAL — v0 study (180 base prompts, EN/UR/CS/SM, H1–H5, old 0/1/2 judge rubric, English-only 30+30 judge check, results from 2026-06-01). These numbers are NOT evidence for the final 692-family dataset or the current protocol. Current protocol: docs/PROTOCOL.md.**
+
 # Lost in Switching
 ## Code-Switched Urdu-English Jailbreaking Vulnerabilities in Small Language Models
 
@@ -394,7 +396,6 @@ The work is **net-positive for safety**: characterizing which attack vectors fai
 - Pipeline tests, all passing: `tests/` (33 / 33 green)
 - Inference + judge + stats library: `csjail/`
 - One-command experiment runner: `scripts/run_all_baseline.sh`
-- Plan history: `C:\Users\271046574\.claude\plans\so-we-are-doing-crispy-pearl.md`
 
 ---
 

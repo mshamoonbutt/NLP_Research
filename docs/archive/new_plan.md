@@ -1,3 +1,5 @@
+> **HISTORICAL — August 2026 execution plan for the 1,000-prompt / 10-category design (ARR 3 Aug target). Superseded by docs/PROTOCOL.md (692 families, six domains, revised gates and splits).**
+
 # CS-Jail-UR: Research Execution Plan
 
 **A native Urdu–English code-switched safety benchmark for small language models, with preference-alignment mitigation.**

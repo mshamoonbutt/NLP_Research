@@ -12,10 +12,19 @@ Language tagging per token is heuristic and deliberately simple/transparent:
 - Other ASCII-alphabetic tokens          -> English.
 - Punctuation / digits / symbols         -> language-independent (excluded).
 
-The Roman-Urdu lexicon is intentionally small and swappable; replace
-`ROMAN_URDU_MARKERS` with a fuller lexicon for production analysis. The metric
-definitions are standard (Gambäck & Das, 2016) so they remain comparable even
-if the tagger is upgraded.
+The metric definitions are standard (Gambäck & Das, 2016) so they remain
+comparable if the tagger is upgraded.
+
+STATUS: HEURISTIC, UNVALIDATED. On the final dataset this tagger reports RU as
+*more* mixed than CS -- it treats unrecognized Roman-Urdu words as English and
+English words such as "is", "main", "me" as Urdu. Its outputs are therefore
+stored only as `*_heuristic` fields with `feature_method` /
+`feature_validation_status`, never as the validated `urdu_word_ratio` / `cmi`
+fields, and never used as an eligibility gate. Exp 4 must use a token-level
+tagger validated on bilingual-reviewed samples (names, loans, ambiguous
+tokens, spelling variants) or limit itself to supported analyses. A larger
+unvalidated lexicon would not fix this. Tokenizer fertility is a separate,
+tagger-free quantity (`tokenizer_fertility`).
 """
 from __future__ import annotations
 
@@ -113,3 +122,28 @@ def urdu_word_ratio(text: str) -> float:
 
 def cmi(text: str) -> float:
     return code_mix_stats(text).cmi
+
+
+FEATURE_METHOD = "roman-urdu-marker-lexicon-v0"
+FEATURE_VALIDATION_STATUS = "unvalidated-heuristic"
+
+
+def heuristic_features(text: str) -> dict:
+    """Heuristic diagnostics, explicitly labelled as such (see module doc)."""
+    st = code_mix_stats(text)
+    return {
+        "urdu_word_ratio_heuristic": st.urdu_word_ratio,
+        "cmi_heuristic": st.cmi,
+        "feature_method": FEATURE_METHOD,
+        "feature_validation_status": FEATURE_VALIDATION_STATUS,
+    }
+
+
+def tokenizer_fertility(tokenizer, text: str) -> float | None:
+    """Tokens per whitespace word under a (pinned) target-model tokenizer.
+    Tagger-free, so it does not depend on the unvalidated language tagger."""
+    words = text.split()
+    if not words:
+        return None
+    ids = tokenizer(text, add_special_tokens=False)["input_ids"]
+    return len(ids) / len(words)

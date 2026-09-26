@@ -1,39 +1,45 @@
 """Exp 6 — `chosen` refusal generation via a model DISTINCT from the judge.
 
-The `chosen` text is the DPO training target: a natural code-switched
-refusal that declines *and* briefly redirects. If the same model both writes
-`chosen` and judges whether a trained model's outputs look like a refusal,
-the pipeline is circular — the trained model is rewarded for producing
-judge-shaped refusals, evaluated by that same judge. `assert_distinct_from_judge`
-below is the guard against exactly that (see the experiment guide, Exp 6
-recommendation #2: "the fix costs nothing").
+`chosen` is the DPO target: a natural refusal that declines and briefly
+redirects -- code-switched Roman Urdu-English for CS pairs, English for the
+matched English control. Keeping the generator distinct from the judge
+(`assert_distinct_from_judge`) reduces judge self-preference; it does not
+remove all evaluator bias, so human naturalness review and post-training
+audits remain required.
 
-Few-shot prompted with hand-written exemplars (data/refusal_exemplars.jsonl).
-Provider is pluggable; Anthropic is the configured default in
-configs/dpo.yaml `prefdata.chosen_generator` specifically because it differs
-from the OpenAI judge.
+Few-shot exemplars: data/refusal_exemplars.jsonl (CS) and
+data/refusal_exemplars_en.jsonl (EN). Exemplars carry a domain_id so an
+unseen-domain ablation can exclude its held-out domain from ALL safety
+supervision, exemplars included. Out-of-taxonomy exemplars are skipped.
+Validation of each generated candidate lives in csjail.prefdata.validate_chosen.
 """
 from __future__ import annotations
 
 import asyncio
 import os
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
+from csjail.artifacts import sha256_text
 from csjail.utils.io import read_jsonl
 
 CONFIG_PATH = Path(__file__).parent.parent / "configs" / "dpo.yaml"
+EXEMPLAR_FILES = {"CS": "data/refusal_exemplars.jsonl", "EN": "data/refusal_exemplars_en.jsonl"}
 
-SYSTEM_PROMPT = (
-    "You write short, natural refusals in code-switched Urdu-English "
-    "(Roman script, casual register) for a safety-training dataset. Given a "
-    "harmful request, write a refusal that: (1) clearly declines, with no "
-    "hedging or partial compliance, (2) briefly explains why in one clause, "
-    "and (3) redirects to a safe alternative in one clause. 2-4 sentences. "
-    "Match the register and code-switching style of the examples exactly. "
-    "Output ONLY the refusal text, nothing else."
-)
+SYSTEM_PROMPTS = {
+    "CS": ("You write short, natural refusals in code-switched Urdu-English (Roman "
+           "script, casual register) for a safety-training dataset. Given a harmful "
+           "request, write a refusal that: (1) clearly declines, with no hedging and "
+           "no partial compliance, (2) briefly explains why in one clause, and (3) "
+           "redirects to a safe alternative in one clause. 2-4 sentences. Match the "
+           "register and code-switching style of the examples. Output ONLY the refusal."),
+    "EN": ("You write short, natural refusals in English for a safety-training dataset. "
+           "Given a harmful request, write a refusal that: (1) clearly declines, with no "
+           "hedging and no partial compliance, (2) briefly explains why in one clause, and "
+           "(3) redirects to a safe alternative in one clause. 2-4 sentences. Match the "
+           "style of the examples. Output ONLY the refusal."),
+}
 
 
 @dataclass
@@ -43,102 +49,82 @@ class GeneratorConfig:
     temperature: float = 0.7
     max_tokens: int = 300
 
+    def fingerprint(self, language: str, exemplar_ids: list[str]) -> dict:
+        return {**asdict(self), "language": language,
+                "system_sha256": sha256_text(SYSTEM_PROMPTS[language]),
+                "exemplar_ids": sorted(exemplar_ids)}
+
 
 def load_generator_config(path: str | Path = CONFIG_PATH) -> GeneratorConfig:
     import yaml
 
-    cfg = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    g = cfg["prefdata"]["chosen_generator"]
-    return GeneratorConfig(provider=g["provider"], model=g["model"])
+    g = yaml.safe_load(Path(path).read_text(encoding="utf-8"))["prefdata"]["chosen_generator"]
+    return GeneratorConfig(provider=g["provider"], model=g["model"],
+                           temperature=float(g.get("temperature", 0.7)),
+                           max_tokens=int(g.get("max_tokens", 300)))
 
 
 def assert_distinct_from_judge(gen_cfg: GeneratorConfig, judge_cfg) -> None:
-    """Raise if the chosen-generator and the judge would be the same model.
-
-    This is not a style preference — a reviewer will spot GPT-4o writing the
-    refusals GPT-4o then grades. Fail loud, at config-load time, not after
-    burning API budget.
-    """
-    if gen_cfg.provider == judge_cfg.provider and gen_cfg.model == judge_cfg.model:
+    same_provider = gen_cfg.provider == judge_cfg.provider
+    judge_model = getattr(judge_cfg, "model_id", judge_cfg.model)
+    if same_provider and gen_cfg.model in (judge_cfg.model, judge_model):
         raise ValueError(
-            f"chosen-generator ({gen_cfg.provider}/{gen_cfg.model}) must be "
-            f"DISTINCT from the judge ({judge_cfg.provider}/{judge_cfg.model}) "
-            "-- the judge would be grading its own refusal-writing style. "
-            "Set configs/dpo.yaml prefdata.chosen_generator.{provider,model} "
-            "to a different model."
-        )
+            f"chosen-generator ({gen_cfg.provider}/{gen_cfg.model}) must be DISTINCT from the "
+            f"judge ({judge_cfg.provider}/{judge_model}); set configs/dpo.yaml "
+            "prefdata.chosen_generator to a different model")
 
 
-def load_exemplars(path: str = "data/refusal_exemplars.jsonl") -> list[dict]:
-    return read_jsonl(path)
+def load_exemplars(language: str = "CS", *, exclude_domains: Iterable[str] = (),
+                   path: Optional[str] = None) -> list[dict]:
+    excl = set(exclude_domains)
+    rows = read_jsonl(path or EXEMPLAR_FILES[language])
+    return [r for r in rows if r.get("in_taxonomy", True) and r.get("domain_id") not in excl]
 
 
 def _build_user_prompt(prompt: str, exemplars: list[dict]) -> str:
-    lines = []
-    for ex in exemplars:
-        lines.append(f"REQUEST: {ex['prompt']}\nREFUSAL: {ex['chosen']}\n")
+    lines = [f"REQUEST: {ex['prompt']}\nREFUSAL: {ex['chosen']}\n" for ex in exemplars]
     lines.append(f"REQUEST: {prompt}\nREFUSAL:")
     return "\n".join(lines)
 
 
 class ChosenGenerator:
-    """Async few-shot refusal generator. Anthropic is the only provider
-    wired up (the point is only that it differs from the OpenAI judge);
-    add another provider branch here if you swap the judge."""
+    """Async few-shot refusal generator (Anthropic provider)."""
 
-    def __init__(self, cfg: Optional[GeneratorConfig] = None):
+    def __init__(self, cfg: Optional[GeneratorConfig] = None, *, language: str = "CS"):
         self.cfg = cfg or load_generator_config()
+        self.language = language
         if self.cfg.provider != "anthropic":
-            raise NotImplementedError(
-                f"provider={self.cfg.provider} not implemented in this slice"
-            )
+            raise NotImplementedError(f"provider={self.cfg.provider} not implemented")
         try:
             from anthropic import AsyncAnthropic  # noqa: WPS433
         except ImportError as e:
-            raise RuntimeError(
-                "anthropic package not installed. pip install anthropic"
-            ) from e
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
+            raise RuntimeError("anthropic package not installed: pip install -e '.[judge]'") from e
+        key = os.environ.get("ANTHROPIC_API_KEY")
+        if not key:
             raise RuntimeError("ANTHROPIC_API_KEY env var is required")
-        self._client = AsyncAnthropic(api_key=api_key)
+        self._client = AsyncAnthropic(api_key=key)
 
-    async def _one(self, prompt: str, exemplars: list[dict]) -> str:
-        resp = await self._client.messages.create(
-            model=self.cfg.model,
-            max_tokens=self.cfg.max_tokens,
-            temperature=self.cfg.temperature,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user",
-                      "content": _build_user_prompt(prompt, exemplars)}],
-        )
-        return "".join(
-            block.text for block in resp.content if block.type == "text"
-        ).strip()
+    async def _one(self, prompt: str, exemplars: list[dict]) -> Optional[str]:
+        delay = 1.0
+        for _attempt in range(5):
+            try:
+                resp = await self._client.messages.create(
+                    model=self.cfg.model, max_tokens=self.cfg.max_tokens,
+                    temperature=self.cfg.temperature, system=SYSTEM_PROMPTS[self.language],
+                    messages=[{"role": "user", "content": _build_user_prompt(prompt, exemplars)}])
+                return "".join(b.text for b in resp.content if b.type == "text").strip()
+            except Exception:  # broad: SDK raises many types; missing stays missing
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, 30.0)
+        return None
 
-    async def generate_many(
-        self, prompts: list[str], exemplars: list[dict], *, concurrency: int = 8,
-    ) -> list[str]:
-        sem = asyncio.Semaphore(concurrency)
+    def generate_sync(self, prompts: list[str], exemplars: list[dict], *,
+                      concurrency: int = 8) -> list[Optional[str]]:
+        async def _all():
+            sem = asyncio.Semaphore(concurrency)
 
-        async def _bounded(p: str) -> str:
-            async with sem:
-                return await self._one(p, exemplars)
-
-        return await asyncio.gather(*(_bounded(p) for p in prompts))
-
-    def generate_sync(self, prompts: list[str], exemplars: list[dict]) -> list[str]:
-        return asyncio.run(self.generate_many(prompts, exemplars))
-
-
-def is_clean_refusal(judge_label: Optional[int]) -> bool:
-    """The 'clean refusal' criterion (guide Exp 6 recommendation #8).
-
-    A hedged/partial refusal (judge label 2) is exactly the "boundary
-    refusal" pattern that arXiv 2602.11157 found increases jailbreak success
-    by up to 16.6pp when distilled into a student model. Reuse the existing
-    3-class judge rubric as the clean-refusal check: only label 0 (REFUSAL)
-    passes; label 2 (PARTIAL/hedged) or 1 (FULL_COMPLY, i.e. the generator
-    failed to refuse) are rejected.
-    """
-    return judge_label == 0
+            async def _b(p):
+                async with sem:
+                    return await self._one(p, exemplars)
+            return await asyncio.gather(*(_b(p) for p in prompts))
+        return asyncio.run(_all())

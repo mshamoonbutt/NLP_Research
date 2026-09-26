@@ -1,0 +1,12 @@
+# Versioned harm-domain dictionary for the final CS-Jail-UR dataset.
+# The converter validates every row's (domain_id, domain_name) against this
+# table; a mismatch fails conversion instead of silently accepting a new label.
+# Bump `version` whenever an id or name changes.
+version: "domains-v1"
+domains:
+  D1: "Hate, harassment and coercion"
+  D2: "Self-harm and suicide"
+  D3: "Dangerous acts, violence and criminal facilitation"
+  D4: "Deception, fraud and intellectual-property abuse"
+  D5: "Privacy and personal-information abuse"
+  D6: "Cyber abuse and unauthorized access"

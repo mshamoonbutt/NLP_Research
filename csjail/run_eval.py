@@ -1,16 +1,22 @@
-"""End-to-end eval: one (model x condition) -> one JSONL of judgments.
+"""Exp 2 — primary evaluation sweep (and the shared evaluation engine).
 
-Each call writes a single file at --out with:
-  Line 1: provenance header (model rev, judge, dataset hash, args, git sha, ...)
-  Lines 2..N: one JSON object per prompt with prompt, response, judgment, ...
+    python -m csjail.run_eval --out-dir outputs/exp2/main
+    python -m csjail.run_eval --models phi3 --conditions CS RU --max-families 10 \
+        --out-dir outputs/exp2/debug --allow-unvalidated-judge --allow-unpinned-models
 
-Run this once per (model, condition). `scripts/run_all_baseline.sh` calls it
-3 SLMs * 4 conditions = 12 times.
-
-Usage:
-    python -m csjail.run_eval --model qwen25 --condition EN \\
-        --dataset data/csjail_v0.jsonl \\
-        --out results/qwen25_EN.jsonl
+- Inputs: the FINALIZED Exp 0 artifact (dataset + frozen split manifest,
+  hash-checked) and configs/eval.yaml (single settings source; CLI overrides
+  are recorded).
+- Each model is loaded ONCE and generates all requested conditions.
+- Stage 1 generation is persisted incrementally (out_dir/generations.jsonl)
+  before stage 2 judging (out_dir/judgments.jsonl); re-running resumes.
+- Judging requires a PASS judge-validation manifest for the exact current
+  judge fingerprint. `--allow-unvalidated-judge` is a debug bypass that marks
+  the run `debug: true`; aggregation rejects debug runs by default.
+- results.jsonl: one record per (model, arm, row, sample) with model identity,
+  family, domain, condition, split + split id, dataset version, prompt and
+  response hashes, response, finish reason, token counts, generation status,
+  judge status and validated judge fields.
 """
 from __future__ import annotations
 
@@ -18,203 +24,166 @@ import argparse
 import json
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
-from csjail.asr import aggregate_by_category, compute_asr
-from csjail.data import filter_prompts, load_dataset, summarize
-from csjail.judge import Judge, load_judge_config
-from csjail.models import SamplingConfig, resolve, runtime_info
+import yaml
+
+from csjail.artifacts import resolve_exp0, sha256_json
+from csjail.data import CONDITIONS, filter_prompts
+from csjail.pipeline import JsonlCache, merge_results, run_generation, run_judging
 from csjail.utils.io import sha256_file, write_jsonl
-from csjail.utils.seeding import set_global_seed
+
+ROOT = Path(__file__).resolve().parent.parent
+EVAL_CFG = ROOT / "configs" / "eval.yaml"
+DEFAULT_JUDGE_MANIFEST = ROOT / "outputs" / "exp1" / "judge_validation_manifest.json"
 
 
-def _git_sha() -> str:
+def git_sha() -> str:
     try:
-        out = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=Path(__file__).parent.parent,
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
+                             text=True, timeout=5)
         return out.stdout.strip() if out.returncode == 0 else "not-a-repo"
     except Exception:
         return "unknown"
 
 
-def _provenance(args, model_spec, dataset_path: Path, n_prompts: int) -> dict[str, Any]:
-    judge_cfg = load_judge_config()
-    return {
-        "kind": "provenance",
-        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "args": vars(args),
-        "model": {
-            "key": model_spec.key,
-            "hf_id": model_spec.hf_id,
-            "dtype": model_spec.dtype,
-            "max_model_len": model_spec.max_model_len,
-        },
-        "judge": {
-            "provider": judge_cfg.provider,
-            "model": judge_cfg.model,
-            "temperature": judge_cfg.temperature,
-        },
-        "dataset": {
-            "path": str(dataset_path),
-            "sha256": sha256_file(dataset_path),
-            "n_prompts_for_this_condition": n_prompts,
-        },
-        "runtime": runtime_info(),
-        "git_sha": _git_sha(),
-    }
+def load_eval_config(path: str | Path = EVAL_CFG) -> dict:
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+
+
+def select_families(split: dict, which: str) -> Optional[set[str]]:
+    if which == "all":
+        return None
+    return {f for f, a in split["assignments"].items() if a["split"] == which}
+
+
+def prepare_judge(kind: str, manifest_path: Optional[str], allow_unvalidated: bool):
+    """Return (judge, validation_manifest_or_None, debug_flag)."""
+    from csjail.judge import Judge, load_judge_config
+    from csjail.judge_validation import UnvalidatedJudgeError, require_validated_judge
+
+    cfg = load_judge_config()
+    fp = cfg.fingerprint(kind)
+    try:
+        man = require_validated_judge(manifest_path, fp)
+        debug = False
+    except UnvalidatedJudgeError as e:
+        if not allow_unvalidated:
+            raise
+        print(f"[eval] WARNING (debug run): {e}", file=sys.stderr)
+        man, debug = None, True
+    return Judge(cfg, kind=kind), man, debug
+
+
+def evaluate_system(*, runner, rows, arm: str, sampling: dict, system: Optional[str],
+                    out_dir: Path, judge, split: dict, chunk_size: int,
+                    skip_judge: bool = False) -> list[dict]:
+    """Generate (cached) + judge (cached) one model/arm over `rows`."""
+    from csjail.models import ModelIdentity, SamplingConfig
+
+    identity = ModelIdentity.from_runner(runner, arm=arm, system=system).as_dict()
+    sc = SamplingConfig(**sampling)
+    gens = run_generation(
+        lambda ps: runner.generate(ps, sc, system=system, show_progress=True),
+        rows, identity=identity, sampling=sc.as_dict(),
+        cache=JsonlCache(out_dir / "generations.jsonl", "gen_key"),
+        split_lookup=split["assignments"], split_id=split["meta"]["split_id"],
+        chunk_size=chunk_size)
+    judgments, fp_id = {}, None
+    if not skip_judge:
+        fp_id = judge.fingerprint["fingerprint_id"]
+        judgments = run_judging(judge, gens, {r.id: r.prompt for r in rows},
+                                cache=JsonlCache(out_dir / "judgments.jsonl", "judge_key"))
+    return merge_results(gens, judgments, judge_fingerprint_id=fp_id)
 
 
 def main(argv: list[str] | None = None) -> int:
+    cfg = load_eval_config()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True, help="model key (configs/models.yaml)")
-    ap.add_argument("--condition", required=True,
-                    choices=["CS", "EN", "RU", "UR", "SM"])
-    ap.add_argument("--dataset", required=True, type=str)
-    ap.add_argument("--out", required=True, type=str)
-    # Categories are dynamic (extended design has 10, e.g. C01..C10); validated
-    # against the dataset rather than a fixed choices list.
-    ap.add_argument("--harm-category", default=None)
-    ap.add_argument("--min-cs-authenticity", type=int, default=None)
-    ap.add_argument("--max-prompts", type=int, default=None,
-                    help="cap N prompts (debug)")
-    ap.add_argument("--temperature", type=float, default=0.0)
-    ap.add_argument("--max-tokens", type=int, default=512)
-    ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--bootstrap-n", type=int, default=10_000)
-    ap.add_argument("--system", default=None, help="optional system prompt")
-    ap.add_argument("--skip-judge", action="store_true",
-                    help="generate responses only; write labels=null (debug)")
+    ap.add_argument("--models", nargs="+", default=cfg["models"])
+    ap.add_argument("--conditions", nargs="+", default=cfg["conditions"], choices=list(CONDITIONS))
+    ap.add_argument("--families", default="all", choices=["all", "eval_main", "train_pool"],
+                    help="Phase 1 descriptive sweep uses all families")
+    ap.add_argument("--exp0-dir", default=None)
+    ap.add_argument("--split-manifest", default=None)
+    ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--judge-manifest", default=str(DEFAULT_JUDGE_MANIFEST))
+    ap.add_argument("--temperature", type=float, default=None)
+    ap.add_argument("--max-tokens", type=int, default=None)
+    ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument("--max-families", type=int, default=None, help="debug cap")
+    ap.add_argument("--skip-judge", action="store_true")
+    ap.add_argument("--allow-unvalidated-judge", action="store_true", help="DEBUG ONLY")
+    ap.add_argument("--allow-unpinned-models", action="store_true", help="DEBUG ONLY")
+    ap.add_argument("--allow-fallback-template", action="store_true", help="DEBUG ONLY")
     args = ap.parse_args(argv)
 
-    set_global_seed(args.seed)
-    dataset_path = Path(args.dataset)
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    sampling = dict(cfg["sampling"])
+    overrides = {k: v for k, v in (("temperature", args.temperature),
+                                   ("max_tokens", args.max_tokens), ("seed", args.seed))
+                 if v is not None}
+    sampling.update(overrides)
 
-    # 1) Load + filter dataset
-    rows = load_dataset(dataset_path)
-    summary = summarize(rows)
-    print(f"[eval] dataset summary: {json.dumps(summary, ensure_ascii=False)}")
-    filt = filter_prompts(
-        rows,
-        condition=args.condition,
-        harm_category=args.harm_category,
-        min_cs_authenticity=args.min_cs_authenticity,
-    )
-    if args.max_prompts:
-        filt = filt[: args.max_prompts]
-    if not filt:
-        print(f"[eval] FAIL: 0 prompts after filtering", file=sys.stderr)
-        return 2
-    print(f"[eval] {len(filt)} prompts for model={args.model} condition={args.condition}")
+    art = resolve_exp0(args.exp0_dir, split_path=args.split_manifest)
+    rows = art.load_rows()
+    fams = select_families(art.split, args.families)
+    if args.max_families:
+        pool = sorted(fams if fams is not None else {r.base_id for r in rows})
+        fams = set(pool[: args.max_families])
+    rows = [r for r in rows if r.condition in args.conditions
+            and (fams is None or r.base_id in fams)]
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 2) Load model
-    spec = resolve(args.model)
-    print(f"[eval] loading {spec.hf_id} ...")
-    t0 = time.time()
-    from csjail.models import SLMRunner
-
-    runner = SLMRunner(spec)
-    print(f"[eval] model load: {time.time() - t0:.1f}s")
-
-    # 3) Generate
-    sampling = SamplingConfig(
-        temperature=args.temperature,
-        max_tokens=args.max_tokens,
-        seed=args.seed,
-    )
-    t0 = time.time()
-    responses = runner.generate(
-        [r.prompt for r in filt],
-        sampling=sampling,
-        system=args.system,
-        show_progress=True,
-    )
-    gen_dt = time.time() - t0
-    print(f"[eval] generate: {gen_dt:.1f}s ({gen_dt / len(filt):.2f}s/prompt)")
-    runner.shutdown()
-
-    # 4) Judge
-    if args.skip_judge:
-        judgments = [None] * len(filt)
-        print("[eval] --skip-judge: writing labels=null")
-    else:
-        judge = Judge()
-        pairs = list(zip(
-            [r.prompt for r in filt], responses, strict=True,
-        ))
-        t0 = time.time()
-        judgments = judge.score_sync(pairs, show_progress=True)
-        print(f"[eval] judge: {time.time() - t0:.1f}s")
-
-    # 5) Assemble per-prompt records
-    records: list[dict[str, Any]] = []
-    for prompt_obj, resp, j in zip(filt, responses, judgments, strict=True):
-        records.append({
-            "kind": "prompt_eval",
-            "id": prompt_obj.id,
-            "base_id": prompt_obj.base_id,
-            "harm_category": prompt_obj.harm_category,
-            "condition": prompt_obj.condition,
-            "cs_style": prompt_obj.cs_style,
-            "cs_authenticity": prompt_obj.cs_authenticity,
-            "harm_severity": prompt_obj.harm_severity,
-            "prompt": prompt_obj.prompt,
-            "response": resp,
-            "judge_label": (j.label if j is not None else None),
-            "judge_parse_ok": (j.parse_ok if j is not None else None),
-            "judge_rationale": (j.rationale if j is not None else None),
-            "judge_error": (j.error if j is not None else None),
-        })
-
-    # 6) Inline summary stats per harm category
+    judge, judge_man, debug = (None, None, False)
     if not args.skip_judge:
-        cat_rows = [
-            {
-                "base_id": r["base_id"],
-                "harm_category": r["harm_category"],
-                "label": r["judge_label"],
-                "severity": r["harm_severity"],
-            }
-            for r in records
-        ]
-        per_cat = aggregate_by_category(cat_rows, bootstrap_n=args.bootstrap_n,
-                                        seed=args.seed)
-        overall = compute_asr(
-            [r["judge_label"] for r in records],
-            [r["base_id"] for r in records],
-            bootstrap_n=args.bootstrap_n, seed=args.seed,
-        )
-        summary_record = {
-            "kind": "summary",
-            "n": overall.n,
-            "asr": overall.asr,
-            "ci_lo": overall.ci_lo,
-            "ci_hi": overall.ci_hi,
-            "n_full_comply": overall.n_full_comply,
-            "n_partial": overall.n_partial,
-            "n_refuse": overall.n_refuse,
-            "n_parse_fail": overall.n_parse_fail,
-            "per_harm_category": per_cat,
-        }
-        print(f"[eval] OVERALL ASR for {args.model}/{args.condition}: "
-              f"{overall.asr:.3f} (95% CI {overall.ci_lo:.3f}-{overall.ci_hi:.3f}, "
-              f"n={overall.n})")
-    else:
-        summary_record = {"kind": "summary", "note": "skipped: --skip-judge"}
+        judge, judge_man, debug = prepare_judge("harm", args.judge_manifest,
+                                                args.allow_unvalidated_judge)
+    debug = debug or args.allow_unpinned_models or args.allow_fallback_template \
+        or bool(args.max_families) or args.skip_judge
 
-    # 7) Write JSONL (header, summary, then per-prompt records)
-    header = _provenance(args, spec, dataset_path, len(filt))
-    write_jsonl(out_path, [header, summary_record, *records])
-    print(f"[eval] wrote {len(records) + 2} lines -> {out_path}")
+    from csjail.models import SLMRunner, resolve
+
+    all_results, model_prov = [], {}
+    for model in args.models:
+        runner = SLMRunner(resolve(model), require_pinned=not args.allow_unpinned_models,
+                           allow_fallback_template=args.allow_fallback_template)
+        try:
+            model_prov[model] = runner.provenance()
+            for cond in args.conditions:  # one load, all conditions
+                sub = filter_prompts(rows, condition=cond)
+                all_results += evaluate_system(
+                    runner=runner, rows=sub, arm="A", sampling=sampling, system=None,
+                    out_dir=out_dir, judge=judge, split=art.split,
+                    chunk_size=int(cfg["inference"]["chunk_size"]), skip_judge=args.skip_judge)
+        finally:
+            runner.shutdown()
+
+    for r in all_results:
+        r["run_debug"] = debug
+    write_jsonl(out_dir / "results.jsonl", all_results)
+    manifest: dict[str, Any] = {
+        "kind": "eval_run_manifest", "experiment": "exp2_primary",
+        "created_utc": datetime.now(timezone.utc).isoformat(), "git_sha": git_sha(),
+        "debug": debug, "args": vars(args), "sampling": sampling, "sampling_overrides": overrides,
+        "eval_config_sha256": sha256_file(EVAL_CFG),
+        "dataset_version": art.dataset_version, "dataset_manifest": art.manifest,
+        "split_id": art.split_id, "split_scheme": art.split["meta"]["scheme"],
+        "families_selector": args.families, "n_rows": len(rows),
+        "judge_fingerprint": judge.fingerprint if judge else None,
+        "judge_validation_manifest_sha256": (sha256_file(args.judge_manifest)
+                                             if judge_man else None),
+        "models": model_prov,
+        "results_sha256": sha256_json([r.get("gen_key") for r in all_results]),
+        "planned_primary_responses": len(rows) * len(args.models),
+    }
+    (out_dir / "run_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2),
+                                               encoding="utf-8")
+    print(f"[eval] {len(all_results)} result records -> {out_dir / 'results.jsonl'}"
+          + ("  [DEBUG RUN]" if debug else ""))
+    print(f"[eval] summarize: python -m csjail.aggregate {out_dir}")
     return 0
 
 

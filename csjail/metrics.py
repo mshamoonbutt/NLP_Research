@@ -1,16 +1,13 @@
-"""Higher-level statistics for the extended design.
+"""Higher-level statistics: GEE, Holm, Phase-2 metrics, Wilson intervals.
 
-ASR + cluster-bootstrap CI + McNemar live in `asr.py` (reused as-is). This
-module adds:
-  - `gee_logit`: clustered logistic regression (omnibus condition effect),
-  - `holm_bonferroni`: multiple-comparison correction across contrasts,
-  - `over_refusal_rate` / `capability_retention`: Phase-2 acceptance metrics.
-
-statsmodels is required (already a project dep). matplotlib is NOT imported
-here; plotting lives in the experiment scripts.
+All functions are null-safe: undefined quantities return None (NA), never a
+flattering default (no ORR 0 for an all-missing probe, no capability
+retention 1.0 at zero baseline accuracy, no relative reduction at zero
+baseline ASR).
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Optional, Sequence
 
@@ -25,114 +22,96 @@ class GEEResult:
     pvalues: dict[str, float]
     n_obs: int
     n_clusters: int
+    n_dropped_missing: int
+    formula: str
     summary_text: str
 
 
-def gee_logit(
-    df,
-    *,
-    outcome: str = "harmful",
-    baseline_condition: str = "EN",
-    cluster: str = "base_id",
-    formula: Optional[str] = None,
-):
-    """Clustered logistic regression of a binary outcome on condition (+ optional
-    category, model), clustered on base prompt via GEE with an exchangeable
-    working correlation. `EN` is the reference level by default.
-
-    `df` is a pandas DataFrame with columns: outcome (0/1), 'condition',
-    optionally 'category' and 'model', and the cluster column. Returns GEEResult
-    with exp(params) as odds ratios.
-    """
+def gee_logit(df, *, outcome: str = "unsafe", baseline_condition: str = "EN",
+              cluster: str = "base_id", formula: Optional[str] = None) -> GEEResult:
+    """Clustered logistic regression (GEE, exchangeable) of the binary outcome
+    on condition (+ domain, + model when >1), clustered on family. Rows with a
+    missing outcome are DROPPED and counted -- never coerced to 0."""
     import statsmodels.api as sm
     import statsmodels.formula.api as smf
 
+    n0 = len(df)
+    df = df[df[outcome].notna()].copy()
+    df[outcome] = df[outcome].astype(int)
     cols = set(df.columns)
     if formula is None:
         rhs = [f"C(condition, Treatment('{baseline_condition}'))"]
-        if "category" in cols:
-            rhs.append("C(category)")
+        for c in ("domain", "category"):
+            if c in cols and df[c].nunique() > 1:
+                rhs.append(f"C({c})")
+                break
         if "model" in cols and df["model"].nunique() > 1:
             rhs.append("C(model)")
         formula = f"{outcome} ~ " + " + ".join(rhs)
-
-    model = smf.gee(
-        formula,
-        groups=cluster,
-        data=df,
-        family=sm.families.Binomial(),
-        cov_struct=sm.cov_struct.Exchangeable(),
-    )
-    fit = model.fit()
-    params = fit.params
+    fit = smf.gee(formula, groups=cluster, data=df, family=sm.families.Binomial(),
+                  cov_struct=sm.cov_struct.Exchangeable()).fit()
     ci = fit.conf_int()
-    ors = {k: float(np.exp(v)) for k, v in params.items()}
-    cis = {k: (float(np.exp(ci.loc[k, 0])), float(np.exp(ci.loc[k, 1])))
-           for k in params.index}
-    pvals = {k: float(fit.pvalues[k]) for k in params.index}
     return GEEResult(
-        terms=list(params.index),
-        odds_ratios=ors,
-        conf_int=cis,
-        pvalues=pvals,
-        n_obs=int(fit.nobs),
-        n_clusters=int(df[cluster].nunique()),
-        summary_text=str(fit.summary()),
+        terms=list(fit.params.index),
+        odds_ratios={k: float(np.exp(v)) for k, v in fit.params.items()},
+        conf_int={k: (float(np.exp(ci.loc[k, 0])), float(np.exp(ci.loc[k, 1])))
+                  for k in fit.params.index},
+        pvalues={k: float(fit.pvalues[k]) for k in fit.params.index},
+        n_obs=int(fit.nobs), n_clusters=int(df[cluster].nunique()),
+        n_dropped_missing=n0 - len(df), formula=formula, summary_text=str(fit.summary()),
     )
 
 
-def holm_bonferroni(
-    pvalues: Sequence[float], *, alpha: float = 0.05
-) -> list[dict]:
-    """Holm-Bonferroni step-down correction.
-
-    Returns a list (aligned to input order) of
-    {index, p, p_adjusted, reject}. p_adjusted is the standard step-down
-    adjusted p-value (monotone-enforced, capped at 1.0).
-    """
-    m = len(pvalues)
-    if m == 0:
-        return []
-    order = sorted(range(m), key=lambda i: pvalues[i])
-    adjusted = [0.0] * m
-    running_max = 0.0
-    for rank, i in enumerate(order):
-        adj = (m - rank) * pvalues[i]
-        adj = min(adj, 1.0)
-        running_max = max(running_max, adj)  # enforce monotonicity
-        adjusted[i] = running_max
-    return [
-        {
-            "index": i,
-            "p": float(pvalues[i]),
-            "p_adjusted": float(adjusted[i]),
-            "reject": bool(adjusted[i] < alpha),
-        }
-        for i in range(m)
-    ]
+def holm_bonferroni(pvalues: Sequence[Optional[float]], *, alpha: float = 0.05) -> list[dict]:
+    """Holm step-down over the declared family. A None p-value (untestable
+    contrast) stays None and is excluded from m."""
+    idx = [i for i, p in enumerate(pvalues) if p is not None]
+    m = len(idx)
+    adjusted: dict[int, float] = {}
+    running = 0.0
+    for rank, i in enumerate(sorted(idx, key=lambda i: pvalues[i])):
+        running = max(running, min((m - rank) * pvalues[i], 1.0))
+        adjusted[i] = running
+    return [{"index": i, "p": pvalues[i], "p_adjusted": adjusted.get(i),
+             "reject": (adjusted[i] < alpha) if i in adjusted else None,
+             "family_size": m} for i in range(len(pvalues))]
 
 
-def over_refusal_rate(refused_flags: Sequence[Optional[int]]) -> float:
-    """ORR = fraction of benign probe prompts wrongly refused.
-
-    `refused_flags`: 1 = refused (bad), 0 = complied (good), None = parse fail
-    (excluded from denominator).
-    """
-    kept = [f for f in refused_flags if f is not None]
-    if not kept:
-        return 0.0
-    return sum(1 for f in kept if f == 1) / len(kept)
+def over_refusal_rate(refused: Sequence[Optional[bool]]) -> dict:
+    """ORR over scored benign items; None when nothing was scored."""
+    kept = [r for r in refused if r is not None]
+    return {"orr": (sum(kept) / len(kept)) if kept else None, "n_planned": len(refused),
+            "n_scored": len(kept), "n_missing": len(refused) - len(kept)}
 
 
-def capability_retention(post_accuracy: float, pre_accuracy: float) -> float:
-    """post/pre accuracy ratio; 1.0 if pre == 0 to avoid div-by-zero."""
-    if pre_accuracy <= 0:
-        return 1.0
-    return post_accuracy / pre_accuracy
+def capability_retention(post: Optional[float], pre: Optional[float]) -> Optional[float]:
+    if post is None or pre is None or pre <= 0:
+        return None
+    return post / pre
 
 
-def relative_reduction(asr_before: float, asr_after: float) -> float:
-    """(before - after) / before; 0.0 if before == 0."""
-    if asr_before <= 0:
-        return 0.0
-    return (asr_before - asr_after) / asr_before
+def relative_reduction(before: Optional[float], after: Optional[float]) -> Optional[float]:
+    """(before - after) / before; None (NA) when before is 0 or missing --
+    report absolute_pp_difference instead."""
+    if before is None or after is None or before <= 0:
+        return None
+    return (before - after) / before
+
+
+def absolute_pp_difference(before: Optional[float], after: Optional[float]) -> Optional[float]:
+    if before is None or after is None:
+        return None
+    return (after - before) * 100.0
+
+
+def wilson_ci(k: int, n: int, alpha: float = 0.05) -> tuple[Optional[float], Optional[float]]:
+    if n == 0:
+        return None, None
+    from scipy.stats import norm
+
+    z = float(norm.ppf(1 - alpha / 2))
+    p = k / n
+    den = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / den
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
+    return max(0.0, centre - half), min(1.0, centre + half)

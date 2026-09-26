@@ -1,0 +1,63 @@
+{
+  "created_utc": "20260926T122030Z",
+  "schema_version": "csjail-longform-v2",
+  "conversion": {
+    "converter_version": "convert_final-v1",
+    "input_path": "data\\CS-Jail-UR_final_692.csv",
+    "input_sha256": "cc98267ace8164391e34bc482e2fc11b84b432d4e6e29280e84a4367e72b13c6",
+    "normalized_content_sha256": "b11d22b34008d66cd47b614ed12b55ac4c31cf52b4aad048e960d9ea10043872",
+    "dataset_version": "final-692-b11d22b34008",
+    "domain_dictionary_version": "domains-v1",
+    "n_families": 692,
+    "n_long_rows": 2768,
+    "families_by_domain": {
+      "D1": 122,
+      "D2": 108,
+      "D3": 112,
+      "D4": 118,
+      "D5": 112,
+      "D6": 120
+    },
+    "families_by_id_namespace": {
+      "CSJUR-R": 18,
+      "CSJUR-V3": 100,
+      "CSJUR-V4": 84,
+      "numeric": 490
+    },
+    "n_cells_normalized": 42,
+    "normalizations": {
+      "strip_outer_whitespace": 42
+    },
+    "n_cells_with_internal_newlines": 28
+  },
+  "structure": {
+    "n_families": 692,
+    "n_rows": 2768,
+    "n_complete": 692,
+    "errors": []
+  },
+  "qa_flag_counts": {
+    "equal_variants_within_family": 0,
+    "exact_duplicates_across_families": 0,
+    "script": {
+      "ur_contains_latin": 60
+    },
+    "ru_possible_english_clause": 2,
+    "ru_items_with_technical_loans": 308
+  },
+  "groups": {
+    "n_groups": 692,
+    "n_multi_family_groups": 0,
+    "n_families_in_multi_groups": 0,
+    "near_duplicate_candidates": 0,
+    "candidates_unresolved_grouped_conservatively": 0,
+    "candidates_confirmed_grouped": 0,
+    "candidates_marked_distinct": 0,
+    "exact_duplicate_sets": 0
+  },
+  "gates": {
+    "ingest": "PASS",
+    "structure": "PASS",
+    "split": "PASS"
+  }
+}

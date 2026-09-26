@@ -1,169 +1,174 @@
-"""Tests for Exp-0 finalize/split logic (splits.py)."""
+"""Grouping, frozen splits, append-only extension, ablation (checks 4-5)."""
 from __future__ import annotations
 
-from csjail.data import CONDITIONS, Prompt
+import json
+import os
+import subprocess
+import sys
+
+import pytest
+
+from csjail.qa import exact_duplicate_groups, token_jaccard_candidates
 from csjail.splits import (
-    attach_features,
-    cohens_kappa,
-    condition_parity,
-    dataset_stats,
-    find_near_duplicates,
-    inter_annotator_agreement,
-    make_splits,
-    proportional_stratified_indices,
+    DOMAIN_HOLDOUT, DOMAIN_SUPPLEMENTARY, EVAL, QUARANTINE, TRAIN, assert_trainable,
+    build_groups, cohens_kappa, extend_split, make_domain_ablation, make_splits,
+    pairwise_agreement, proportional_stratified_indices, verify_split,
 )
+from tests.conftest import ROOT, family
 
 
-def _mk(base_id: str, cat: str, cond: str, text: str) -> Prompt:
-    kw = {}
-    if cond in ("CS", "SM"):
-        kw = {"cs_style": "A", "cs_authenticity": 3}
-    return Prompt(
-        id=f"{base_id}-{cond}", base_id=base_id, harm_category=cat,
-        condition=cond, prompt=text, harm_severity=2, **kw,
-    )
-
-
-def _dataset(n_per_cat: dict[str, int]) -> list[Prompt]:
-    rows: list[Prompt] = []
-    for cat, n in n_per_cat.items():
-        for i in range(n):
-            bid = f"{cat}-{i:03d}"
-            for cond in CONDITIONS:
-                rows.append(_mk(bid, cat, cond, f"{cond} prompt mujhe batao {i}"))
+def many(n_per_dom: int = 10) -> list:
+    rows = []
+    for d in ("D1", "D2", "D3", "D4", "D5", "D6"):
+        for i in range(n_per_dom):
+            rows += family(f"{d}-{i:03d}", d, tag=f"topic{d}{i}")
     return rows
 
 
-def test_attach_features_fills_missing():
-    rows = _dataset({"C01": 2})
-    assert all(r.cmi is None for r in rows)
-    out = attach_features(rows)
-    assert all(r.cmi is not None and r.urdu_word_ratio is not None for r in out)
+def test_main_split_counts_and_all_domains_trainable():
+    rows = many()
+    s = make_splits(rows, eval_size=12, seed=42)
+    c = s["meta"]["counts"]
+    assert c[EVAL]["total"] == 12 and c[TRAIN]["total"] == 48
+    assert set(c[TRAIN]) - {"total"} == {"D1", "D2", "D3", "D4", "D5", "D6"}
+    assert s["meta"]["holdout_domains"] == [] and DOMAIN_HOLDOUT not in c
 
 
-def test_condition_parity_complete():
-    rows = _dataset({"C01": 3, "C02": 3})
-    rep = condition_parity(rows)
-    assert rep.n_base_ids == 6
-    assert rep.n_complete == 6
-    assert rep.parity_rate == 1.0
+def test_split_deterministic_and_order_independent():
+    rows = many()
+    a = make_splits(rows, eval_size=12, seed=7)
+    b = make_splits(list(reversed(rows)), eval_size=12, seed=7)
+    assert a["assignments"] == b["assignments"]
+    assert a["meta"]["split_id"] == b["meta"]["split_id"]
 
 
-def test_condition_parity_detects_incomplete():
-    rows = _dataset({"C01": 2})
-    rows = [r for r in rows if not (r.base_id == "C01-000" and r.condition == "RU")]
-    rep = condition_parity(rows)
-    assert rep.parity_rate < 1.0
-    assert "C01-000" in rep.incomplete
+def test_split_reproducible_across_processes():
+    code = ("import sys; sys.path.insert(0, r'%s'); from tests.test_splits import many; "
+            "from csjail.splits import make_splits; "
+            "print(make_splits(many(), eval_size=12, seed=3)['meta']['split_id'])" % ROOT)
+    ids = set()
+    for seed in ("0", "12345"):
+        env = {**os.environ, "PYTHONHASHSEED": seed}
+        out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                             env=env, cwd=ROOT)
+        assert out.returncode == 0, out.stderr
+        ids.add(out.stdout.strip())
+    assert len(ids) == 1
 
 
-def test_make_splits_exact_size_and_determinism():
-    rows = _dataset({"C01": 10, "C02": 10, "C03": 10})
-    s1 = make_splits(rows, eval_holdout=9, n_held_out_categories=1, seed=42)
-    s2 = make_splits(rows, eval_holdout=9, n_held_out_categories=1, seed=42)
-    assert s1["meta"]["eval_holdout_actual"] == 9
-    assert s1["assignments"] == s2["assignments"]  # deterministic
-    n_eval = sum(1 for v in s1["assignments"].values() if v["split"] == "eval")
-    assert n_eval == 9
+def test_domain_holdout_requires_explicit_domains_and_is_exclusive():
+    rows = many()
+    with pytest.raises(ValueError):
+        make_splits(rows, scheme="domain_holdout")
+    with pytest.raises(ValueError):
+        make_splits(rows, holdout_domains=["D2"])  # scheme main forbids it
+    s = make_splits(rows, eval_size=12, scheme="domain_holdout", holdout_domains=["D2"])
+    a = s["assignments"]
+    assert all(v["split"] == DOMAIN_HOLDOUT for v in a.values() if v["domain_id"] == "D2")
+    assert not any(v["domain_id"] == "D2" for v in a.values() if v["split"] != DOMAIN_HOLDOUT)
 
 
-def test_make_splits_stratified_across_categories():
-    rows = _dataset({"C01": 10, "C02": 10, "C03": 10})
-    s = make_splits(rows, eval_holdout=9, n_held_out_categories=1, seed=1)
-    # 9 eval over 3 equal categories -> ~3 each; every category represented.
-    by_cat = s["meta"]["eval_by_category"]
-    assert set(by_cat) == {"C01", "C02", "C03"}
-    assert all(v >= 1 for v in by_cat.values())
+def test_exact_and_unresolved_near_duplicates_never_straddle():
+    rows = many()
+    # make D1-000 an exact duplicate of D1-001 in CS, and D1-002 near-identical to D1-003
+    rows = [r.model_copy(update={"prompt": "same text"}) if r.condition == "CS"
+            and r.base_id in ("D1-000", "D1-001") else r for r in rows]
+    rows = [r.model_copy(update={"prompt": "a b c d e f g h i j k l m n o p q r s t u v w x y z"})
+            if r.condition == "EN" and r.base_id in ("D1-002", "D1-003") else r for r in rows]
+    exact = exact_duplicate_groups(rows)
+    cands = token_jaccard_candidates(rows)
+    groups, rep = build_groups(rows, exact_duplicates=exact, near_duplicate_candidates=cands)
+    assert groups["D1-000"] == groups["D1-001"]
+    assert groups["D1-002"] == groups["D1-003"]
+    assert rep["candidates_unresolved_grouped_conservatively"] >= 1
+    for seed in range(20):
+        s = make_splits(rows, fam_to_group=groups, eval_size=12, seed=seed)
+        a = s["assignments"]
+        assert a["D1-000"]["split"] == a["D1-001"]["split"]
+        assert a["D1-002"]["split"] == a["D1-003"]["split"]
+        assert verify_split(s, rows) == []
 
 
-def test_held_out_categories_marked():
-    rows = _dataset({"C01": 4, "C02": 10, "C03": 10})
-    s = make_splits(rows, eval_holdout=6, n_held_out_categories=1, seed=0)
-    # smallest category (C01) should be the held-out one
-    assert s["meta"]["held_out_categories"] == ["C01"]
-    c01 = [v for k, v in s["assignments"].items() if k.startswith("C01")]
-    assert all(v["held_out_category"] for v in c01)
+def test_distinct_decision_separates_candidates():
+    rows = many()
+    rows = [r.model_copy(update={"prompt": "a b c d e f g h i j k l m n o p q r s t u v w x y z"})
+            if r.condition == "EN" and r.base_id in ("D1-002", "D1-003") else r for r in rows]
+    cands = token_jaccard_candidates(rows)
+    groups, _ = build_groups(rows, exact_duplicates=[], near_duplicate_candidates=cands,
+                             decisions={("D1-002", "D1-003"): "distinct"})
+    assert groups["D1-002"] != groups["D1-003"]
 
 
-def test_find_near_duplicates():
-    rows = _dataset({"C01": 1})
-    en_row = [r for r in rows if r.condition == "EN"][0]
-    # add an exact-duplicate of the EN prompt under a new base_id (same condition)
-    dup = _mk("C01-999", "C01", "EN", en_row.prompt)
-    dups = find_near_duplicates(rows + [dup], threshold=0.9)
-    assert any(dup.id in (a, b) for a, b, _ in dups)
+def test_extension_is_append_only_and_quarantines_eval_relatives():
+    rows = many()
+    frozen = make_splits(rows, eval_size=12, seed=1)
+    eval_fam = sorted(f for f, a in frozen["assignments"].items() if a["split"] == EVAL)[0]
+    new = rows + family("NEW-1", "D3") + family("NEW-2", "D4")
+    groups = {f: frozen["assignments"].get(f, {}).get("group_id", f) for f in {r.base_id for r in new}}
+    groups["NEW-2"] = frozen["assignments"][eval_fam]["group_id"]   # relative of an eval family
+    ext = extend_split(frozen, new, fam_to_group=groups)
+    for f, a in frozen["assignments"].items():
+        assert ext["assignments"][f]["split"] == a["split"]
+    assert ext["assignments"]["NEW-1"]["split"] == TRAIN
+    assert ext["assignments"]["NEW-2"]["split"] == QUARANTINE
 
 
-def test_dataset_stats_shape():
-    rows = attach_features(_dataset({"C01": 2, "C02": 2}))
-    st = dataset_stats(rows)
-    assert set(st["by_condition"]) == set(CONDITIONS)
-    assert st["cmi"]["n"] == len(rows)
+def test_domain_ablation_manifest():
+    rows = many()
+    main = make_splits(rows, eval_size=12, seed=1)
+    with pytest.raises(ValueError):
+        make_domain_ablation(main, "D2", attested_before_outcomes=False)
+    abl = make_domain_ablation(main, "D2", attested_before_outcomes=True)
+    for f, a in abl["assignments"].items():
+        m = main["assignments"][f]
+        if m["domain_id"] == "D2" and m["split"] == TRAIN:
+            assert a["split"] == DOMAIN_SUPPLEMENTARY
+        else:
+            assert a["split"] == m["split"]
+    assert abl["meta"]["parent_split_id"] == main["meta"]["split_id"]
+    assert abl["meta"]["split_id"] != main["meta"]["split_id"]
 
 
-def test_cohens_kappa_perfect_agreement():
-    assert cohens_kappa([1, 2, 3, 1, 2], [1, 2, 3, 1, 2]) == 1.0
+def test_assert_trainable_blocks_eval_and_relatives():
+    rows = many()
+    groups = {r.base_id: r.base_id for r in rows}
+    groups["D1-000"] = groups["D1-001"] = "grp:D1-000"
+    s = make_splits(rows, fam_to_group=groups, eval_size=12, seed=2)
+    ev = next(f for f, a in s["assignments"].items() if a["split"] == EVAL)
+    with pytest.raises(ValueError, match="not in the training pool"):
+        assert_trainable(s, [ev])
+    tr = [f for f, a in s["assignments"].items() if a["split"] == TRAIN]
+    assert_trainable(s, tr)
 
 
-def test_cohens_kappa_chance_level():
-    # Two raters splitting 3/3 with no correlation between them -> ~0 kappa.
-    a = [1, 1, 1, 2, 2, 2]
-    b = [1, 2, 1, 2, 1, 2]
-    k = cohens_kappa(a, b)
-    assert -0.5 < k < 0.5
+def test_stratified_indices_exact_and_deterministic():
+    keys = ["a"] * 50 + ["b"] * 30 + ["c"] * 20
+    i1 = proportional_stratified_indices(keys, 10, seed=5)
+    assert len(i1) == 10 and i1 == proportional_stratified_indices(keys, 10, seed=5)
+    assert sum(keys[i] == "a" for i in i1) == 5
 
 
-def test_cohens_kappa_systematic_disagreement_is_negative():
-    a = [1, 1, 2, 2]
-    b = [2, 2, 1, 1]
-    assert cohens_kappa(a, b) < 0
+def test_kappa_undefined_is_none_not_one():
+    assert cohens_kappa([1, 1, 1], [1, 1, 1]) is None
+    assert cohens_kappa([], []) is None
+    assert cohens_kappa([1, 0, 1, 0], [1, 0, 1, 0]) == pytest.approx(1.0)
 
 
-def test_proportional_stratified_indices_hits_exact_n():
-    keys = ["A"] * 70 + ["B"] * 20 + ["C"] * 10
-    idx = proportional_stratified_indices(keys, 20, seed=0)
-    assert len(idx) == 20
-    assert len(set(idx)) == 20  # no duplicates
-    assert all(0 <= i < len(keys) for i in idx)
+def test_pairwise_agreement_descriptive(tmp_path):
+    p = tmp_path / "ann.csv"
+    p.write_text("family_id,rater1_equivalence,rater2_equivalence\n1,yes,yes\n2,yes,no\n3,no,no\n4,,yes\n",
+                 encoding="utf-8")
+    rep = pairwise_agreement(p)
+    f = rep["fields"]["equivalence"]
+    assert f["n"] == 3 and f["n_missing"] == 1 and f["raw_agreement"] == pytest.approx(2 / 3)
+    assert "not a dataset validity gate" in rep["note"]
 
 
-def test_proportional_stratified_indices_proportional_by_group():
-    keys = ["A"] * 80 + ["B"] * 20
-    idx = proportional_stratified_indices(keys, 50, seed=0)
-    n_a = sum(1 for i in idx if keys[i] == "A")
-    n_b = sum(1 for i in idx if keys[i] == "B")
-    # ~80/20 split of 50 -> ~40/10; allow rounding slack.
-    assert 35 <= n_a <= 45
-    assert 5 <= n_b <= 15
-
-
-def test_proportional_stratified_indices_deterministic():
-    keys = ["A"] * 30 + ["B"] * 30 + ["C"] * 30
-    a = proportional_stratified_indices(keys, 15, seed=7)
-    b = proportional_stratified_indices(keys, 15, seed=7)
-    assert a == b
-
-
-def test_proportional_stratified_indices_n_gte_total_returns_all():
-    keys = ["A", "B", "C"]
-    idx = proportional_stratified_indices(keys, 10, seed=0)
-    assert idx == [0, 1, 2]
-
-
-def test_proportional_stratified_indices_empty():
-    assert proportional_stratified_indices([], 10, seed=0) == []
-    assert proportional_stratified_indices(["A", "B"], 0, seed=0) == []
-
-
-def test_inter_annotator_agreement_reads_real_csv(tmp_path):
-    csv_path = tmp_path / "iaa.csv"
-    csv_path.write_text(
-        "authenticity_score1,authenticity_score2,harm_severity_score1,harm_severity_score2\n"
-        "3,3,2,2\n3,3,1,1\n3,2,2,2\n2,2,3,3\n3,3,2,1\n",
-        encoding="utf-8",
-    )
-    report = inter_annotator_agreement(csv_path, threshold=0.70)
-    assert report.n == 5
-    assert report.min_kappa == min(report.kappa_authenticity,
-                                   report.kappa_harm_severity)
-    assert report.passed == (report.min_kappa >= 0.70)
+def test_committed_split_manifest_matches_counts():
+    latest = ROOT / "outputs" / "exp0" / "LATEST.json"
+    if not latest.exists():
+        pytest.skip("no finalized Exp 0 artifact")
+    d = ROOT / json.loads(latest.read_text())["dir"]
+    man = json.loads((d / "split_manifest.json").read_text(encoding="utf-8"))
+    c = man["meta"]["counts"]
+    assert c[EVAL]["total"] + c[TRAIN]["total"] == man["meta"]["n_families"]

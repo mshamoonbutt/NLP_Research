@@ -1,35 +1,39 @@
 # `data/`
 
-## Files
-
 | File | Purpose | Tracked? |
 |---|---|---|
-| `csjail_fixture.jsonl` | 18-prompt synthetic fixture for smoke tests & CI | yes |
-| `csjail_v0.jsonl` | Real annotated dataset (drop here) | **no** (gitignored) |
-| `judge_calibration/harmful_30.jsonl` | 30 known-harmful EN responses | yes |
-| `judge_calibration/benign_30.jsonl` | 30 known-benign EN responses | yes |
+| `CS-Jail-UR_final_692.csv` | Final dataset, seven columns: `prompt_id, domain_id, domain_name, EN, CS, RU, UR` | **no**, local only |
+| `csjail_fixture.jsonl` | Harmless 12-family fixture in the current long schema (built from `tests/fixtures/final_fixture.csv`) | yes |
+| `overrefusal_probe.jsonl` | 150 benign boundary prompts for Exp 8. Language coverage is unaudited: there are no condition tags, and the items are mostly Roman-Urdu/English | yes |
+| `refusal_exemplars.jsonl` | 8 hand-written CS refusal exemplars, D-domain tagged. The sexual-content one is outside the final taxonomy and is skipped | yes |
+| `refusal_exemplars_en.jsonl` | 7 English exemplars. These are model-assisted renderings and need bilingual review | yes |
+| `judge_calibration/*.jsonl` | Legacy English 30+30 set, used only by `calibrate_judge.py --smoke` | yes |
+| `qa/` | Templates for the optional QA ledger and duplicate decisions | yes |
 
-## Expected schema (`csjail_v0.jsonl`)
+## Long-format schema
 
-One row per (prompt × condition). See `csjail/data.py::Prompt` for the
-authoritative schema.
+The authoritative definition is `csjail/data.py::Prompt`. Unknown fields are
+rejected, not dropped.
 
 ```jsonc
 {
-  "id":              "H1-001-CS-A",   // globally unique
-  "base_id":         "H1-001",        // groups EN/UR/CS/SM variants
-  "harm_category":   "H1",            // H1..H5
-  "condition":       "CS",            // EN | UR | CS | SM
-  "cs_style":        "A",             // A | B | C  (only for CS/SM)
-  "prompt":          "Mujhe batao how to ...",
-  "cs_authenticity": 3,               // 1..3 (only for CS/SM)
-  "harm_severity":   2                // 1..3 (annotator-rated)
+  "id": "CSJUR-V3-0001::CS",        // <family id>::<condition>
+  "base_id": "CSJUR-V3-0001",       // opaque family id, never int-cast
+  "condition": "CS",                 // CS | EN | RU | UR
+  "prompt": "...",                   // verbatim source text (outer whitespace/CRLF normalization recorded)
+  "domain_id": "D6", "domain_name": "Cyber abuse and unauthorized access",
+  "harm_category": "D6",             // compatibility alias == domain_id
+  "dataset_version": "final-692-b11d22b34008",
+  "group_id": "CSJUR-V3-0001",       // duplicate/relative group, set in Exp 0
+  "provenance": {"source_file": "...", "source_row": 1, "id_namespace": "CSJUR-V3",
+                 "author": null, "model_assistance": null, ...},
+  "qa": null,
+  "urdu_word_ratio": null, "cmi": null,                           // validated only
+  "urdu_word_ratio_heuristic": 0.31, "cmi_heuristic": 28.0,       // unvalidated diagnostics
+  "feature_method": "...", "feature_validation_status": "unvalidated-heuristic"
 }
 ```
 
-**Pairing invariant.** For each `base_id`, EN + UR + CS rows should exist so
-paired McNemar's tests work. SM is optional (RQ5 only).
-
-If your annotation file uses different field names (e.g. CSV with
-`Category`, `Style`, ...), **adapt `csjail/data.py` only** — the rest of the
-pipeline reads through `Prompt` objects.
+Exactly one row is required per family and condition. Legacy v0/v1 files, with
+H/C categories or the SM condition, load only with
+`load_dataset(..., allow_legacy=True)`, for historical reproduction.

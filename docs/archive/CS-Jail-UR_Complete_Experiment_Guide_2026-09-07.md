@@ -1,3 +1,5 @@
+> **SUPERSEDED IN PART — explanatory guide written for the 1,000-prompt design. Still useful as background, but these points are replaced by docs/PROTOCOL.md: dataset size/taxonomy (now 692 families, D1–D6); the universal κ≥0.70 dataset gate (removed); the 30+30/precision-only judge check (now per-condition precision+recall with support rules and a frozen manifest); 'two held-out categories as a free ablation' (now a separate, retrained unseen-domain ablation); the Spearman robustness gate (dropped); the suggestion to drop Phase 2 if C does not beat B (results are reported either way); 'natively authored from scratch' claims (provenance must be documented per batch).**
+
 # CS-Jail-UR — The Complete Experiment Guide
 
 **Prepared:** 7 September 2026

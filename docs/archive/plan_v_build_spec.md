@@ -1,3 +1,5 @@
+> **HISTORICAL — original pipeline build spec (1,000 prompts, 10 categories, eval_holdout 300, target_pairs 800, universal kappa gate, Spearman robustness gate). Superseded by docs/PROTOCOL.md.**
+
 # CS-Jail-UR — Experiment Pipeline Build Specification
 
 **This document is a build spec for a coding assistant.** You (the assistant reading this) have no prior context on this project — everything you need is here. Your job is to generate a complete, runnable Python pipeline that executes the experiments below. Build modularly, validate on a tiny sample end-to-end before running at full scale, and log everything for reproducibility.

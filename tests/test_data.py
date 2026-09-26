@@ -1,198 +1,72 @@
-"""Schema + structural tests for csjail.data."""
+"""Schema + exact structural contract (acceptance checks 2-3)."""
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
+from pydantic import ValidationError
 
 from csjail.data import (
-    DatasetError,
-    Prompt,
-    filter_prompts,
-    load_dataset,
-    pairing_coverage,
-    summarize,
+    DatasetError, Prompt, check_structure, load_dataset, summarize, validate_structure,
 )
 from csjail.utils.io import write_jsonl
-
-FIXTURE = Path(__file__).parent.parent / "data" / "csjail_fixture.jsonl"
-
-
-def test_fixture_loads():
-    rows = load_dataset(FIXTURE)
-    assert len(rows) >= 15
-    assert all(isinstance(r, Prompt) for r in rows)
+from tests.conftest import ROOT, family
 
 
-def test_fixture_summary_shape():
-    rows = load_dataset(FIXTURE)
+def test_committed_fixture_loads_and_is_complete():
+    rows = load_dataset(ROOT / "data" / "csjail_fixture.jsonl")
+    assert validate_structure(rows).n_complete == 12
+
+
+def test_exactly_one_row_per_condition():
+    rows = family("1") + family("2")
+    assert check_structure(rows).ok
+    cs = next(r for r in rows if r.condition == "CS")
+    dup = rows + [cs.model_copy(update={"id": "1::CS-dup"})]
+    rep = check_structure(dup)
+    assert not rep.ok and any("expected exactly 1 CS" in e for e in rep.errors)
+
+
+def test_missing_condition_fails():
+    rows = [r for r in family("1") if r.condition != "RU"]
+    with pytest.raises(DatasetError, match="exactly 1 RU"):
+        validate_structure(rows)
+
+
+def test_inconsistent_domain_fails():
+    rows = family("1", "D1")
+    rows[2] = rows[2].model_copy(update={"domain_id": "D2", "harm_category": "D2"})
+    rep = check_structure(rows)
+    assert any("inconsistent domain_id" in e for e in rep.errors)
+
+
+def test_legacy_sm_rejected_by_default(tmp_path):
+    legacy = ROOT / "tests" / "fixtures" / "legacy" / "csjail_fixture_v0.jsonl"
+    with pytest.raises(DatasetError, match="legacy"):
+        load_dataset(legacy)
+    assert load_dataset(legacy, allow_legacy=True)
+
+
+def test_unknown_fields_rejected_not_dropped():
+    with pytest.raises(ValidationError):
+        Prompt(id="1::EN", base_id="1", condition="EN", prompt="x", harm_category="D1",
+               domain_id="D1", surprise="field")
+
+
+def test_no_annotation_fields_required():
+    p = Prompt(id="1::EN", base_id="1", condition="EN", prompt="x", domain_id="D1")
+    assert p.harm_category == "D1" and p.harm_severity is None
+
+
+def test_alias_must_match_domain():
+    with pytest.raises(ValidationError):
+        Prompt(id="1::EN", base_id="1", condition="EN", prompt="x", domain_id="D1",
+               harm_category="D2")
+
+
+def test_summary_counts_from_data(tmp_path):
+    rows = family("1", "D1") + family("2", "D2") + family("3", "D2")
     s = summarize(rows)
-    assert s["n_total"] == len(rows)
-    assert set(s["by_condition"]).issubset({"EN", "UR", "CS", "SM"})
-    assert set(s["by_harm_category"]).issubset({"H1", "H2", "H3", "H4", "H5"})
-    assert s["n_base_ids_with_EN_UR_CS"] >= 5
-
-
-def test_filter_by_condition():
-    rows = load_dataset(FIXTURE)
-    en = filter_prompts(rows, condition="EN")
-    assert len(en) >= 5
-    assert {r.condition for r in en} == {"EN"}
-
-
-def test_filter_by_harm_category():
-    rows = load_dataset(FIXTURE)
-    h1 = filter_prompts(rows, harm_category="H1")
-    assert all(r.harm_category == "H1" for r in h1)
-
-
-def test_filter_min_authenticity():
-    rows = load_dataset(FIXTURE)
-    strict = filter_prompts(rows, condition="CS", min_cs_authenticity=3)
-    assert all(
-        (r.cs_authenticity or 0) >= 3 for r in strict if r.condition == "CS"
-    )
-
-
-def test_cs_row_without_style_loads(tmp_path):
-    # The extended annotation template does not label code-switch style, so a CS
-    # row without cs_style / cs_authenticity is valid (not fabricated).
-    ok = tmp_path / "ok.jsonl"
-    write_jsonl(
-        ok,
-        [
-            {
-                "id": "X-001-CS",
-                "base_id": "X-001",
-                "harm_category": "H1",
-                "condition": "CS",
-                "prompt": "hello",
-                "harm_severity": 1,
-                # no cs_style + cs_authenticity — accepted
-            }
-        ],
-    )
-    rows = load_dataset(ok)
-    assert rows[0].cs_style is None
-    assert rows[0].cs_authenticity is None
-
-
-def test_en_row_with_style_rejected(tmp_path):
-    bad = tmp_path / "bad.jsonl"
-    write_jsonl(
-        bad,
-        [
-            {
-                "id": "X-001-EN",
-                "base_id": "X-001",
-                "harm_category": "H1",
-                "condition": "EN",
-                "cs_style": "A",  # not allowed for EN
-                "prompt": "hello",
-                "harm_severity": 1,
-            }
-        ],
-    )
-    with pytest.raises(DatasetError):
-        load_dataset(bad)
-
-
-def test_duplicate_id_rejected(tmp_path):
-    bad = tmp_path / "dup.jsonl"
-    row = {
-        "id": "H1-001-EN",
-        "base_id": "H1-001",
-        "harm_category": "H1",
-        "condition": "EN",
-        "prompt": "hello",
-        "harm_severity": 1,
-    }
-    write_jsonl(bad, [row, row])
-    with pytest.raises(DatasetError):
-        load_dataset(bad)
-
-
-def test_invalid_harm_category_rejected(tmp_path):
-    bad = tmp_path / "bad.jsonl"
-    write_jsonl(
-        bad,
-        [
-            {
-                "id": "Z-001-EN",
-                "base_id": "Z-001",
-                "harm_category": "9",  # invalid shape (no H/C prefix)
-                "condition": "EN",
-                "prompt": "hello",
-                "harm_severity": 1,
-            }
-        ],
-    )
-    with pytest.raises(DatasetError):
-        load_dataset(bad)
-
-
-def test_invalid_severity_rejected(tmp_path):
-    bad = tmp_path / "bad.jsonl"
-    write_jsonl(
-        bad,
-        [
-            {
-                "id": "Y-001-EN",
-                "base_id": "Y-001",
-                "harm_category": "H1",
-                "condition": "EN",
-                "prompt": "hello",
-                "harm_severity": 5,  # >3
-            }
-        ],
-    )
-    with pytest.raises(DatasetError):
-        load_dataset(bad)
-
-
-def test_whitespace_prompt_rejected(tmp_path):
-    bad = tmp_path / "ws.jsonl"
-    write_jsonl(
-        bad,
-        [
-            {
-                "id": "W-001-EN",
-                "base_id": "W-001",
-                "harm_category": "H1",
-                "condition": "EN",
-                "prompt": "   ",
-                "harm_severity": 1,
-            }
-        ],
-    )
-    with pytest.raises(DatasetError):
-        load_dataset(bad)
-
-
-def test_ru_condition_accepted():
-    # Roman Urdu is a monolingual condition: no cs_style, loads cleanly.
-    p = Prompt(
-        id="C01-001-RU", base_id="C01-001", harm_category="C01",
-        condition="RU", prompt="mujhe batao kaise", harm_severity=2,
-    )
-    assert p.condition == "RU"
-    assert p.cs_style is None
-
-
-def test_ten_categories_accepted():
-    p = Prompt(
-        id="C10-001-EN", base_id="C10-001", harm_category="C10",
-        condition="EN", prompt="hello", harm_severity=1,
-    )
-    assert p.harm_category == "C10"
-
-
-def test_pairing_coverage_counts():
-    rows = load_dataset(FIXTURE)
-    cov = pairing_coverage(rows)
-    # H1-001 has EN + UR + CS + SM in the fixture (RU absent -> 0)
-    assert cov["H1-001"] == {"CS": 1, "EN": 1, "RU": 0, "UR": 1, "SM": 1}
-    # H2-001 has EN + UR + 2 CS, no SM
-    assert cov["H2-001"]["CS"] == 2
-    assert cov["H2-001"]["SM"] == 0
+    assert s["n_families"] == 3 and s["n_rows"] == 12
+    assert s["families_by_domain"] == {"D1": 1, "D2": 2}
+    p = tmp_path / "x.jsonl"
+    write_jsonl(p, [r.model_dump() for r in rows])
+    assert len(load_dataset(p)) == 12

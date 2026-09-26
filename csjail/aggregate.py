@@ -1,136 +1,167 @@
-"""Combine per-run JSONL outputs into a publication-ready CSV.
+"""Load, check and summarize evaluation results.
 
-Usage:
-    python -m csjail.aggregate results/*.jsonl --out results/headline_table.csv
-    python -m csjail.aggregate results/*.jsonl --out tab.csv --with-mcnemar
+    python -m csjail.aggregate outputs/exp2/main [more run dirs] [--allow-debug]
+
+Joins are refused when runs are incompatible: different dataset versions,
+split ids or judge fingerprints, duplicate (model, arm, row, sample, sampling)
+keys, or debug runs (unless --allow-debug). Every table row reports
+n_planned / n_scored / n_missing, primary unsafe ASR (full + partial) with a
+domain-stratified family-bootstrap CI and missing-data bounds, strict
+(full-only) ASR, behaviour rates over n_planned, and for condition totals an
+equal-weight six-domain macro ASR.
 """
 from __future__ import annotations
 
 import argparse
-import glob
+import csv
+import json
 import sys
+from collections import defaultdict
 from pathlib import Path
+from typing import Iterable, Optional
 
-import pandas as pd
+import yaml
 
-from csjail.asr import mcnemar_pairs
-from csjail.utils.io import iter_jsonl
+from csjail.artifacts import sha256_json
+from csjail.asr import behavior_rates, compute_asr, family_map, macro_asr
+from csjail.outcomes import behavior, primary_unsafe, strict_unsafe
+from csjail.utils.io import read_jsonl
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
-def _load_one_run(path: Path) -> tuple[dict, dict, list[dict]]:
-    """Returns (provenance_header, summary_record, per_prompt_rows)."""
-    rows = list(iter_jsonl(path))
-    if len(rows) < 2:
-        raise ValueError(f"{path}: too few lines (need provenance + summary)")
-    header = rows[0]
-    summary = rows[1]
-    prompts = rows[2:]
-    if header.get("kind") != "provenance":
-        raise ValueError(f"{path}: line 1 is not a provenance header")
-    if summary.get("kind") != "summary":
-        raise ValueError(f"{path}: line 2 is not a summary record")
-    return header, summary, prompts
+class IncompatibleRunsError(Exception):
+    pass
+
+
+def load_results(run_dirs: Iterable[str | Path], *, allow_debug: bool = False) -> list[dict]:
+    recs: list[dict] = []
+    for d in run_dirs:
+        d = Path(d)
+        path = d / "results.jsonl" if d.is_dir() else d
+        for r in read_jsonl(path):
+            if r.get("kind") == "result":
+                r.setdefault("_source", str(path))
+                recs.append(r)
+    check_compatible(recs, allow_debug=allow_debug)
+    return recs
+
+
+def result_key(r: dict) -> tuple:
+    return (r["model"], r.get("arm", "A"), r["row_id"], r.get("sample_index", 0),
+            sha256_json(r.get("sampling")))
+
+
+def check_compatible(recs: list[dict], *, allow_debug: bool = False) -> None:
+    if not recs:
+        raise IncompatibleRunsError("no result records")
+    dbg = sorted({r["_source"] for r in recs if r.get("run_debug")})
+    if dbg and not allow_debug:
+        raise IncompatibleRunsError(f"debug runs cannot enter paper tables: {dbg[:3]}")
+    for field in ("dataset_version", "split_id"):
+        vals = {r.get(field) for r in recs}
+        if len(vals) > 1:
+            raise IncompatibleRunsError(f"mixed {field}: {sorted(map(str, vals))}")
+    fps = {r.get("judge_fingerprint_id") for r in recs if r.get("judge_fingerprint_id")}
+    if len(fps) > 1:
+        raise IncompatibleRunsError(f"mixed judge fingerprints: {sorted(fps)}")
+    seen: dict[tuple, str] = {}
+    for r in recs:
+        k = result_key(r)
+        if k in seen:
+            raise IncompatibleRunsError(f"duplicate result {k[:4]} in {seen[k]} and {r['_source']}")
+        seen[k] = r["_source"]
+
+
+def outcome_maps(recs: list[dict], *, predicate=primary_unsafe
+                 ) -> dict[tuple[str, str], dict[str, dict[str, Optional[bool]]]]:
+    """{(model, arm): {condition: {family: outcome}}} for single-sample runs.
+    Multi-sample records must be aggregated first (csjail.robustness)."""
+    multi = [r for r in recs if r.get("sample_index", 0) != 0 or
+             int((r.get("sampling") or {}).get("n", 1)) > 1]
+    if multi:
+        raise IncompatibleRunsError("multi-sample records: aggregate draws per family "
+                                    "(csjail.robustness) before paired tests")
+    grouped: dict[tuple, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    for r in recs:
+        grouped[(r["model"], r.get("arm", "A"))][r["condition"]].append(
+            (r["base_id"], predicate(r)))
+    return {k: {c: family_map(v, what=f"{k}/{c}") for c, v in conds.items()}
+            for k, conds in grouped.items()}
+
+
+def summarize(recs: list[dict], *, bootstrap_n: int = 10_000, seed: int = 0,
+              ci_alpha: float = 0.05) -> list[dict]:
+    rows = []
+    groups: dict[tuple, list[dict]] = defaultdict(list)
+    for r in recs:
+        groups[(r["model"], r.get("arm", "A"), r["condition"])].append(r)
+    for (model, arm, cond), rs in sorted(groups.items()):
+        for dom in ["ALL"] + sorted({r["domain_id"] for r in rs}):
+            sub = rs if dom == "ALL" else [r for r in rs if r["domain_id"] == dom]
+            fams = [r["base_id"] for r in sub]
+            doms = [r["domain_id"] for r in sub]
+            prim = [primary_unsafe(r) for r in sub]
+            res = compute_asr(prim, fams, strata=doms if dom == "ALL" else None,
+                              bootstrap_n=bootstrap_n, ci_alpha=ci_alpha, seed=seed)
+            strict = [s for s in (strict_unsafe(r) for r in sub) if s is not None]
+            beh = behavior_rates([behavior(r) for r in sub])
+            scored = [r for r in sub if primary_unsafe(r) is not None]
+            row = {
+                "model": model, "arm": arm, "condition": cond, "domain": dom,
+                **{k: v for k, v in res.as_dict().items()},
+                "strict_asr": (sum(strict) / len(strict)) if strict else None,
+                "contains_refusal_rate_scored": (sum(1 for r in scored if r.get("judge_contains_refusal"))
+                                                 / len(scored)) if scored else None,
+                "output_language_mismatch_rate_scored": (
+                    sum(1 for r in scored if r.get("judge_output_language_mismatch")) / len(scored))
+                if scored else None,
+                "generation_failed": sum(1 for r in sub if r.get("generation_status") != "ok"),
+                **{f"rate_{k}": v for k, v in beh["rates"].items()},
+            }
+            if dom == "ALL":
+                m = macro_asr(prim, fams, doms, bootstrap_n=bootstrap_n, seed=seed)
+                row.update({"macro_asr": m["macro_asr"], "macro_ci_lo": m["ci_lo"],
+                            "macro_ci_hi": m["ci_hi"]})
+            rows.append(row)
+    return rows
+
+
+def write_csv(path: Path, rows: list[dict]) -> None:
+    keys: list[str] = []
+    for r in rows:
+        for k in r:
+            if k not in keys:
+                keys.append(k)
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=keys)
+        w.writeheader(); w.writerows(rows)
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("inputs", nargs="+", help="results/*.jsonl paths or globs")
-    ap.add_argument("--out", required=True)
-    ap.add_argument("--with-mcnemar", action="store_true",
-                    help="also write headline_mcnemar.csv next to --out")
+    ap.add_argument("runs", nargs="+", help="run dirs (containing results.jsonl)")
+    ap.add_argument("--out", default=None, help="default <first run>/summary.csv")
+    ap.add_argument("--allow-debug", action="store_true")
     args = ap.parse_args(argv)
-
-    # Expand globs (Windows shells often don't)
-    paths: list[Path] = []
-    for pat in args.inputs:
-        matches = [Path(p) for p in glob.glob(pat)]
-        if not matches and Path(pat).exists():
-            matches = [Path(pat)]
-        paths.extend(matches)
-    paths = sorted(set(paths))
-    if not paths:
-        print("[aggregate] no input files matched", file=sys.stderr)
+    stats = yaml.safe_load((ROOT / "configs" / "eval.yaml").read_text(encoding="utf-8"))["stats"]
+    try:
+        recs = load_results(args.runs, allow_debug=args.allow_debug)
+    except IncompatibleRunsError as e:
+        print(f"FAIL: {e}", file=sys.stderr)
         return 1
-    print(f"[aggregate] reading {len(paths)} run files")
-
-    # Headline table: one row per (model, condition, harm_category)
-    headline_rows: list[dict] = []
-    per_prompt_by_run: dict[tuple[str, str], list[dict]] = {}
-    for p in paths:
-        header, summary, prompts = _load_one_run(p)
-        model = header["model"]["key"]
-        cond = header["args"]["condition"]
-        per_prompt_by_run[(model, cond)] = prompts
-
-        overall_row = {
-            "model": model,
-            "condition": cond,
-            "harm_category": "ALL",
-            "n": summary["n"],
-            "asr": summary["asr"],
-            "ci_lo": summary["ci_lo"],
-            "ci_hi": summary["ci_hi"],
-            "n_full_comply": summary["n_full_comply"],
-            "n_partial": summary["n_partial"],
-            "n_refuse": summary["n_refuse"],
-            "n_parse_fail": summary["n_parse_fail"],
-            "source_file": p.name,
-        }
-        headline_rows.append(overall_row)
-        for c in summary.get("per_harm_category", []):
-            headline_rows.append({
-                "model": model,
-                "condition": cond,
-                "harm_category": c["harm_category"],
-                "n": c["n"],
-                "asr": c["asr"],
-                "ci_lo": c["ci_lo"],
-                "ci_hi": c["ci_hi"],
-                "n_full_comply": c["n_full_comply"],
-                "n_partial": c["n_partial"],
-                "n_refuse": c["n_refuse"],
-                "n_parse_fail": c["n_parse_fail"],
-                "source_file": p.name,
-            })
-
-    df = pd.DataFrame(headline_rows)
-    df = df.sort_values(["model", "harm_category", "condition"]).reset_index(drop=True)
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(out_path, index=False, float_format="%.4f")
-    print(f"[aggregate] headline -> {out_path}  ({len(df)} rows)")
-
-    # McNemar pairwise table — isolation contrasts (extended CS/EN/RU/UR design):
-    #   CS-RU (code-switching), RU-UR (script), RU-EN (language), CS-EN (headline).
-    if args.with_mcnemar:
-        mn_rows: list[dict] = []
-        comparisons = [("CS", "RU"), ("RU", "UR"), ("RU", "EN"), ("CS", "EN")]
-        models = sorted({m for (m, _c) in per_prompt_by_run})
-        for model in models:
-            judgments_by_cond: dict[str, list[tuple[str, int]]] = {}
-            for (m, cond), prompts in per_prompt_by_run.items():
-                if m != model:
-                    continue
-                judgments_by_cond[cond] = [
-                    (r["base_id"], r["judge_label"]) for r in prompts
-                ]
-            results = mcnemar_pairs(judgments_by_cond, comparisons=comparisons)
-            for r in results:
-                mn_rows.append({
-                    "model": model,
-                    "cond_a": r.cond_a,
-                    "cond_b": r.cond_b,
-                    "n_pairs": r.n_pairs,
-                    "b_only_a_hit": r.b,
-                    "c_only_b_hit": r.c,
-                    "statistic": r.statistic,
-                    "pvalue": r.pvalue,
-                    "test_used": r.test_used,
-                })
-        mn_path = out_path.with_name(out_path.stem + "_mcnemar.csv")
-        pd.DataFrame(mn_rows).to_csv(mn_path, index=False, float_format="%.6g")
-        print(f"[aggregate] mcnemar -> {mn_path}  ({len(mn_rows)} rows)")
-
+    rows = summarize(recs, bootstrap_n=stats["bootstrap_n"], seed=stats["bootstrap_seed"],
+                     ci_alpha=stats["ci_alpha"])
+    out = Path(args.out or Path(args.runs[0]) / "summary.csv")
+    write_csv(out, rows)
+    out.with_suffix(".json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    for r in rows:
+        if r["domain"] == "ALL":
+            f = lambda x: "NA" if x is None else f"{x:.3f}"  # noqa: E731
+            print(f"{r['model']:>8} {r['arm']} {r['condition']}: ASR={f(r['asr'])} "
+                  f"[{f(r['ci_lo'])},{f(r['ci_hi'])}] macro={f(r.get('macro_asr'))} "
+                  f"scored={r['n_scored']}/{r['n_planned']} missing={r['n_missing']}")
+    print(f"[aggregate] -> {out}")
     return 0
 
 

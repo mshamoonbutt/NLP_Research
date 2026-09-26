@@ -1,133 +1,97 @@
-"""Stats correctness tests for csjail.asr."""
+"""Null-safe ASR, bounds, paired tests, GEE, Phase-2 metrics (check 8)."""
 from __future__ import annotations
 
-import math
-
 import numpy as np
+import pandas as pd
 import pytest
-from statsmodels.stats.contingency_tables import mcnemar as sm_mcnemar
+from statsmodels.stats.contingency_tables import mcnemar
 
-from csjail.asr import (
-    aggregate_by_category,
-    compute_asr,
-    mcnemar_pairs,
-    partial_compliance_rate,
-    severity_histogram,
+from csjail.asr import behavior_rates, compute_asr, family_map, macro_asr, mcnemar_paired
+from csjail.metrics import (
+    absolute_pp_difference, capability_retention, gee_logit, holm_bonferroni,
+    over_refusal_rate, relative_reduction, wilson_ci,
 )
 
 
-def test_asr_perfect_refusal():
-    labels = [0] * 10
-    bids = [f"b{i}" for i in range(10)]
-    r = compute_asr(labels, bids, bootstrap_n=500, seed=0)
-    assert r.asr == 0.0
-    assert r.ci_lo == 0.0
-    assert r.ci_hi == 0.0
-    assert r.n == 10
-    assert r.n_refuse == 10
+def test_asr_counts_and_bounds():
+    out = [True, False, None, True, False]
+    r = compute_asr(out, list("abcde"), bootstrap_n=200)
+    assert (r.n_planned, r.n_scored, r.n_missing, r.n_unsafe) == (5, 4, 1, 2)
+    assert r.asr == pytest.approx(0.5)
+    assert r.bound_lo == pytest.approx(2 / 5) and r.bound_hi == pytest.approx(3 / 5)
 
 
-def test_asr_perfect_compliance():
-    labels = [1] * 10
-    bids = [f"b{i}" for i in range(10)]
-    r = compute_asr(labels, bids, bootstrap_n=500, seed=0)
-    assert r.asr == 1.0
-    assert r.ci_lo == 1.0
-    assert r.ci_hi == 1.0
+def test_all_missing_is_na_not_zero():
+    r = compute_asr([None, None], ["a", "b"], bootstrap_n=50)
+    assert r.asr is None and r.ci_lo is None and r.n_missing == 2
+    assert over_refusal_rate([None, None])["orr"] is None
 
 
-def test_asr_mid_value_with_ci():
-    # 5 hits, 5 misses across 10 distinct clusters
-    labels = [1] * 5 + [0] * 5
-    bids = [f"b{i}" for i in range(10)]
-    r = compute_asr(labels, bids, bootstrap_n=2000, seed=0)
-    assert r.asr == 0.5
-    assert 0.0 <= r.ci_lo <= 0.5 <= r.ci_hi <= 1.0
-    # CI must be a true interval, not a point
-    assert r.ci_hi > r.ci_lo
-
-
-def test_asr_excludes_parse_failures_from_denominator():
-    labels = [1, None, 0, 1, None]
-    bids = ["b1", "b2", "b3", "b4", "b5"]
-    r = compute_asr(labels, bids, bootstrap_n=200, seed=0)
-    assert r.n == 3
-    assert r.n_parse_fail == 2
-    assert r.asr == pytest.approx(2 / 3)
-
-
-def test_partial_not_counted_as_asr_hit():
-    labels = [2, 2, 2, 0]
-    bids = [f"b{i}" for i in range(4)]
-    r = compute_asr(labels, bids, bootstrap_n=200, seed=0)
-    assert r.asr == 0.0
-    assert r.n_partial == 3
-
-
-def test_severity_histogram_only_for_hits():
-    labels = [1, 1, 2, 0, 1]
-    sev = [3, 1, 3, 1, 2]
-    hist = severity_histogram(labels, sev)
-    assert hist == {"sev1": 1, "sev2": 1, "sev3": 1}  # 3 hits: sev 3,1,2
-
-
-def test_partial_rate():
-    assert partial_compliance_rate([2, 2, 0, 1]) == pytest.approx(0.5)
-    assert partial_compliance_rate([None, None]) == 0.0
-
-
-def test_mcnemar_matches_statsmodels_exact():
-    # Construct a known table
+def test_bootstrap_seeded_and_stratified():
     rng = np.random.default_rng(0)
-    bids = [f"b{i}" for i in range(40)]
-    labels_a = rng.integers(0, 2, size=40).tolist()  # 0 or 1
-    labels_b = rng.integers(0, 2, size=40).tolist()
-    rows_a = list(zip(bids, labels_a))
-    rows_b = list(zip(bids, labels_b))
-    out = mcnemar_pairs(
-        {"EN": rows_a, "CS": rows_b},
-        comparisons=[("EN", "CS")],
-    )
-    assert len(out) == 1
-    r = out[0]
-    # Manual McNemar
-    n_b = sum(1 for la, lb in zip(labels_a, labels_b) if la == 1 and lb != 1)
-    n_c = sum(1 for la, lb in zip(labels_a, labels_b) if la != 1 and lb == 1)
-    assert r.b == n_b and r.c == n_c
-    # statsmodels exact, no continuity correction
-    table = np.array([[40 - n_b - n_c, n_b], [n_c, 0]])
-    expected = sm_mcnemar(table, exact=(n_b + n_c) <= 25,
-                          correction=(n_b + n_c) > 25)
-    assert r.pvalue == pytest.approx(float(expected.pvalue))
+    out = list(rng.random(120) < 0.3)
+    fams = [f"f{i}" for i in range(120)]
+    doms = [f"D{i % 6 + 1}" for i in range(120)]
+    a = compute_asr(out, fams, strata=doms, bootstrap_n=300, seed=1)
+    b = compute_asr(out, fams, strata=doms, bootstrap_n=300, seed=1)
+    assert (a.ci_lo, a.ci_hi) == (b.ci_lo, b.ci_hi) and a.ci_lo < a.asr < a.ci_hi
 
 
-def test_mcnemar_pairs_only_intersect_base_ids():
-    rows_a = [("b1", 1), ("b2", 0), ("b3", 1)]
-    rows_b = [("b2", 1), ("b3", 0), ("b4", 1)]   # b1 missing in b; b4 only in b
-    out = mcnemar_pairs(
-        {"EN": rows_a, "CS": rows_b},
-        comparisons=[("EN", "CS")],
-    )
-    assert out[0].n_pairs == 2  # only b2, b3 are shared
+def test_macro_asr_equal_weights():
+    out = [True] * 1 + [False] * 9 + [True] * 1          # D1: 1/10, D2: 1/1
+    doms = ["D1"] * 10 + ["D2"]
+    m = macro_asr(out, [f"f{i}" for i in range(11)], doms, bootstrap_n=100)
+    assert m["macro_asr"] == pytest.approx((0.1 + 1.0) / 2)
 
 
-def test_aggregate_by_category_splits():
-    rows = [
-        {"base_id": "b1", "harm_category": "H1", "label": 1, "severity": 2},
-        {"base_id": "b2", "harm_category": "H1", "label": 0, "severity": 1},
-        {"base_id": "b3", "harm_category": "H2", "label": 1, "severity": 3},
-        {"base_id": "b4", "harm_category": "H2", "label": 1, "severity": 3},
-    ]
-    out = aggregate_by_category(rows, bootstrap_n=300, seed=0)
-    h1 = next(o for o in out if o["harm_category"] == "H1")
-    h2 = next(o for o in out if o["harm_category"] == "H2")
-    assert h1["asr"] == 0.5 and h2["asr"] == 1.0
-    assert h2["severity_histogram_for_asr1"]["sev3"] == 2
+def test_mcnemar_matches_statsmodels_and_counts_missing():
+    a = {f"f{i}": v for i, v in enumerate([True] * 8 + [False] * 10 + [True, None])}
+    b = {f"f{i}": v for i, v in enumerate([False] * 6 + [True] * 2 + [False] * 8 + [True] * 2
+                                          + [True, True])}
+    m = mcnemar_paired(a, b, cond_a="CS", cond_b="RU", bootstrap_n=200)
+    assert m.n_shared == 20 and m.n_complete == 19 and m.n_missing_pairs == 1
+    ref = mcnemar(np.array([[m.both_unsafe, m.b], [m.c, m.both_safe]]), exact=True)
+    assert m.pvalue == pytest.approx(ref.pvalue)
+    assert m.diff == pytest.approx(m.asr_a - m.asr_b)
+    assert m.diff_ci_lo <= m.diff <= m.diff_ci_hi
 
 
-def test_bootstrap_is_seeded():
-    labels = [1, 0, 1, 0, 1, 0, 1, 0]
-    bids = [f"b{i}" for i in range(8)]
-    r1 = compute_asr(labels, bids, bootstrap_n=300, seed=42)
-    r2 = compute_asr(labels, bids, bootstrap_n=300, seed=42)
-    assert math.isclose(r1.ci_lo, r2.ci_lo) and math.isclose(r1.ci_hi, r2.ci_hi)
+def test_duplicate_family_rejected():
+    with pytest.raises(ValueError, match="duplicate family"):
+        family_map([("f1", True), ("f1", False)])
+
+
+def test_gee_drops_missing_never_coerces():
+    rng = np.random.default_rng(3)
+    rows = []
+    for i in range(150):
+        for cond, p in (("EN", 0.1), ("UR", 0.4)):
+            rows.append({"base_id": f"f{i}", "condition": cond, "domain": f"D{i % 3}",
+                         "unsafe": float(rng.random() < p)})
+    for r in rows[:10]:
+        r["unsafe"] = np.nan
+    g = gee_logit(pd.DataFrame(rows), outcome="unsafe", baseline_condition="EN")
+    assert g.n_dropped_missing == 10 and g.n_obs == len(rows) - 10
+    assert g.odds_ratios["C(condition, Treatment('EN'))[T.UR]"] > 1
+
+
+def test_phase2_metrics_na_rules():
+    assert capability_retention(0.5, 0.0) is None
+    assert capability_retention(None, 0.6) is None
+    assert capability_retention(0.57, 0.6) == pytest.approx(0.95)
+    assert relative_reduction(0.0, 0.0) is None
+    assert relative_reduction(0.4, 0.1) == pytest.approx(0.75)
+    assert absolute_pp_difference(0.4, 0.1) == pytest.approx(-30.0)
+
+
+def test_holm_with_untestable_contrast():
+    h = holm_bonferroni([0.01, None, 0.04])
+    assert h[1]["p_adjusted"] is None and h[0]["family_size"] == 2
+    assert h[0]["p_adjusted"] == pytest.approx(0.02) and h[2]["p_adjusted"] == pytest.approx(0.04)
+
+
+def test_wilson_and_behavior_rates():
+    lo, hi = wilson_ci(9, 10)
+    assert 0.5 < lo < 0.9 < hi <= 1.0 and wilson_ci(0, 0) == (None, None)
+    br = behavior_rates(["refusal", "refusal", "missing", "unintelligible"])
+    assert br["rates"]["missing"] == 0.25 and br["denominator"] == "n_planned"

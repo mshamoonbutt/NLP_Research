@@ -1,40 +1,59 @@
-# Model registry. Short keys used by --model on the CLI.
-# All three are SLMs (sub-4B). Llama-3-8B reference (RQ2) deferred to a later run.
+# Target-model registry. Short keys are used by --models on the CLI.
 #
-# Phase 2 (Exp 6-9, DPO training + post-eval) runs on 2 models only, not 3:
-# phi3 (documented safety post-training -> most interesting case) + llama32
-# (architecturally different family, most widely benchmarked). This halves
-# the cost of Exp 7/8, the most expensive part of the pipeline. qwen25 stays
-# in Phase 1 (main sweep + smoke tests) only.
+# Phase 1 evaluates all three SLMs (~1.5B-3.8B parameters; Phi-3-mini is
+# ~3.8B, so the set is not "1.5-3B only"). Phase 2 (Exp 6-9) trains on two:
+# phi3 (documented safety post-training) + llama32 (a different family).
+#
+# `revision` pins the exact Hugging Face commit. Values below are the `main`
+# commits resolved from the HF API on 2026-09-26; they have NOT yet been
+# exercised on the GPU host. Paper runs refuse unpinned models
+# (run_eval --allow-unpinned-models is a debug bypass). Changing a revision
+# changes the generation cache key, so old generations are not reused.
 phase2_models: [phi3, llama32]
 
 models:
   phi3:
     hf_id: microsoft/Phi-3-mini-4k-instruct
+    revision: f39ac1d28e925b323eae81227eaba4464caced4e
+    params_b: 3.8
     dtype: bfloat16
-    max_model_len: 2048              # 4080 (16 GB) headroom: 4096 is tight
+    max_model_len: 2048              # 16 GB headroom
     gpu_memory_utilization: 0.80
-    notes: "3.8B. Most studied SLM with explicit safety training."
+    notes: "~3.8B. Documented safety post-training. Uses FUSED qkv_proj / gate_up_proj (see train_dpo LoRA target resolution)."
 
   qwen25:
     hf_id: Qwen/Qwen2.5-1.5B-Instruct
+    revision: 989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+    params_b: 1.5
     dtype: bfloat16
     max_model_len: 4096
     gpu_memory_utilization: 0.80
-    notes: "1.5B. Best multilingual SLM for Urdu/Nastaliq. Smallest -> use for smoke tests."
+    notes: "1.5B. Its chat template inserts a DEFAULT system message when none is given -- recorded via the template probe."
 
   llama32:
     hf_id: meta-llama/Llama-3.2-3B-Instruct
+    revision: 0cb88a4f764b7a12671c53f0838cd831a0843b95
+    params_b: 3.2
     dtype: bfloat16
-    max_model_len: 3072              # 4080 (16 GB) headroom
+    max_model_len: 3072
     gpu_memory_utilization: 0.80
-    notes: "3B. Most widely benchmarked SLM. Gated on HF -> needs HF_TOKEN."
+    notes: "~3.2B. Gated on HF (HF_TOKEN). Template inserts a knowledge-cutoff/date system header by default -- recorded via the template probe."
 
-# Reference LLM for RQ2 (SLM-vs-LLM gap). Run in a separate sweep after the SLM headline.
+# CPU fallback (csjail/ollama_backend.py): 8-bit GGUF builds of the same models
+# served by a local Ollama. DEVELOPMENT/DEBUG ONLY -- not the pinned bf16 weights,
+# never used for Exp 2 production or (without an explicit override) for the
+# Exp 1 validation sample. Records carry the Ollama digest + quantization.
+ollama_fallback:
+  qwen25: qwen2.5:1.5b-instruct-q8_0
+  phi3: phi3:3.8b-mini-4k-instruct-q8_0
+  llama32: llama3.2:3b-instruct-q8_0
+
+# Exp 5 (SLM vs LLM) is CUT; kept only for historical reproduction.
 reference_llms:
   llama3_8b:
     hf_id: meta-llama/Meta-Llama-3-8B-Instruct
+    revision: null
     dtype: bfloat16
     max_model_len: 8192
     gpu_memory_utilization: 0.90
-    notes: "8B. LLM reference for RQ2 SLM-vs-LLM gap comparison. Deferred."
+    notes: "Exp 5 cut; not part of the current protocol."
