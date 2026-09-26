@@ -9,3 +9,6 @@
 *.png binary
 *.jpg binary
 *.pdf binary
+
+# Returned annotation files are preserved byte-for-byte (their SHA-256 is recorded).
+outputs/exp1/**/annotations/rater*_prefilled_*.csv -text
