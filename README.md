@@ -1,71 +1,60 @@
-# CS-Jail-UR — Code-Switched Urdu-English Jailbreak Eval for SLMs
+# CS-Jail-UR
 
-Track 2, slice 1: inference harness + ASR evaluation pipeline.
+A safety benchmark and preference-alignment study for small language models
+using code-switched Urdu-English. There are 692 harmful-request families in
+six domains (D1–D6), each written in four aligned variants: English (EN),
+code-switched (CS), Roman Urdu (RU), and Urdu in Perso-Arabic script (UR).
 
-## Quickstart (Linux A100 host)
+- **Phase 1** measures unsafe-response rates and paired contrasts across the
+  four conditions. It also checks comprehension.
+- **Phase 2** runs preference-alignment mitigation. Code-switched pairs are
+  compared against a matched English control, with generalization, utility
+  and error analysis.
 
-```bash
-# 1. Clone / sync
-git clone <repo> csjail && cd csjail
-
-# 2. One-shot host setup (installs vllm, checks API keys)
-bash scripts/setup_a100.sh
-
-# 3. Smoke test (<90s, runs Qwen2.5-1.5B on 10 fixture prompts)
-python scripts/smoke_test.py
-
-# 4. Judge calibration gate — MUST pass before any paper run
-python scripts/calibrate_judge.py
-#   exits 0 iff precision >= 0.90 on the 30+30 held-out set
-
-# 5. Drop the real dataset (JSONL) at data/csjail_v0.jsonl, then:
-python -m csjail.run_eval --model qwen25 --condition EN \
-    --dataset data/csjail_v0.jsonl \
-    --out results/qwen25_EN.jsonl
-
-# 6. Full baseline sweep (3 SLMs × 4 conditions, ~30-50 min)
-bash scripts/run_all_baseline.sh
-
-# 7. Aggregate to publication-ready CSV
-python -m csjail.aggregate results/*.jsonl --out results/headline_table.csv
-```
-
-## Required environment variables
-
-| Var | Where | Why |
-|---|---|---|
-| `OPENAI_API_KEY` | A100 host | LLM-as-Judge (gpt-4o-mini) |
-| `HF_TOKEN` | A100 host | Download Llama-3.2 / Phi-3 (gated) |
+**Protocol:** [`docs/PROTOCOL.md`](docs/PROTOCOL.md) is the single current
+protocol. **Commands:** [`RUNBOOK.md`](RUNBOOK.md). **History:**
+[`docs/archive/`](docs/archive/) holds the v0 report, earlier plans and the
+Sept-7 guide (superseded in part).
 
 ## Layout
 
 ```
-csjail/         # library code (data, models, judge, asr, run_eval)
-configs/        # YAML configs for models, judge, eval
-data/           # dataset + judge calibration set
-scripts/        # host setup + one-shot runners
-tests/          # pytest unit tests
-results/        # per-run JSONL outputs (gitignored)
+csjail/                    library
+  convert_final.py         final seven-column CSV -> long JSONL (active)
+  data.py                  schema + exact family/condition contract
+  qa.py                    script / loanword / duplicate audits (IDs only)
+  splits.py                groups, frozen split manifests, ablation manifest
+  artifacts.py             resolves + hash-checks finalized Exp 0 artifacts
+  judge.py, outcomes.py    versioned judge contract + the ONE unsafe predicate
+  judge_validation.py      Exp 1 gold/adjudication/metrics/manifest guard
+  models.py, pipeline.py   vLLM runner + persist-first resumable gen/judge caches
+  run_eval.py              Exp 2 engine (also used by Exp 8)
+  asr.py, metrics.py       null-safe ASR, bootstrap, McNemar, GEE, Holm
+  aggregate.py, robustness.py
+  comprehension.py         Exp 4b
+  prefdata.py, chosen_gen.py, train_dpo.py   Exp 6-7
+  convert_v1.py, convert_csv.py   LEGACY converters (historical reproduction only)
+configs/                   domains, eval, judge (+validation protocol), models (pinned), dpo, capability
+scripts/                   exp0 ... exp9 entry points, smoke tests, dry_run_report.py
+tests/                     CPU tests (harmless fixtures)
+data/                      fixtures, exemplars, benign probe, QA templates (dataset itself is local-only)
+outputs/exp0/<version>/    frozen ID-level manifests (dataset JSONL is gitignored)
 ```
 
-## Local Windows development
+## Quick start
 
-The full pipeline requires CUDA + vLLM and only runs on the Linux A100 host.
-For local editing, install the slim deps:
-
-```powershell
-pip install -e ".[local]"
-pytest tests/       # data + asr tests run anywhere; model/judge tests skip without env
+```bash
+pip install -e ".[dev]"                      # CPU: Exp 0, statistics, tests
+pytest tests -q
+python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv
+python scripts/dry_run_report.py
 ```
 
-## Reproducibility
+The GPU host additionally needs `pip install -e ".[train,judge]"`, plus
+`OPENAI_API_KEY`, `ANTHROPIC_API_KEY` and `HF_TOKEN`. See `RUNBOOK.md`.
 
-Every results file embeds a provenance header (model rev, vllm version, judge
-version, dataset SHA-256, CLI args, git commit). Bootstrap CIs and McNemar's
-p-values are seeded; rerunning with `--seed 0` reproduces exactly.
+## Data handling
 
-## Status
-
-- Track 2 slice 1 (this slice): inference + ASR — **in build**
-- Track 2 slice 2: DPO-LoRA mitigation — **deferred**
-- Track 3: RQ5 tokenizer fragmentation, MT-Bench, Urdu-QA — **deferred**
+The harmful dataset, and any file holding prompt or response text, stays
+local. Those files are gitignored and must not be run on shared notebooks.
+Only ID-level manifests (splits, QA flags, hashes) are committed.
