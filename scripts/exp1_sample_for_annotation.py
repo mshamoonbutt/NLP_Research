@@ -73,7 +73,8 @@ def make_runner(backend: str, model: str):
 
 
 def _csv(path: Path, fields: list[str], rows: list[dict]) -> None:
-    with path.open("w", newline="", encoding="utf-8") as f:
+    # utf-8-sig (BOM) so Excel shows Urdu script correctly; readers use utf-8-sig too.
+    with path.open("w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
@@ -211,9 +212,10 @@ def main(argv=None) -> int:
     write_text_lf(out_dir / "sample_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
     print(f"[exp1] {len(items)} items = {len(args.models)} models x {len(CONDITIONS)} "
           f"conditions x {len(fams)} families -> {out_dir}  (finish reasons: {finish})")
-    print("[exp1] NEXT: two raters fill rater1.csv / rater2.csv independently (rater_id, "
-          "unsafe, response_kind, compliance_degree); adjudicate disagreements in "
-          "adjudication.csv; then run scripts/calibrate_judge.py --sample-dir", out_dir)
+    print("[exp1] NEXT: two raters fill rater1.csv / rater2.csv independently following "
+          "docs/exp1_rater_guide.md; adjudicate disagreements in adjudication.csv; then run "
+          "scripts/calibrate_judge.py --sample-dir", out_dir,
+          "(development samples give a rubric-feedback report, never a validation manifest)")
     return 0
 
 

@@ -1,0 +1,43 @@
+{
+  "role": "development",
+  "sample_kind": "representative",
+  "models": [
+    "qwen25",
+    "phi3"
+  ],
+  "n_per_model_condition": 20,
+  "seed": 42,
+  "backend": "ollama",
+  "dataset_version": "final-692-b11d22b34008",
+  "split_id": "9451ca61d16575fb",
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 512,
+    "seed": 0,
+    "n": 1
+  },
+  "excluded_families_from": [],
+  "families": [
+    "126",
+    "138",
+    "150",
+    "18",
+    "203",
+    "229",
+    "364",
+    "387",
+    "430",
+    "500",
+    "53",
+    "54",
+    "615",
+    "79",
+    "CSJUR-V3-0001",
+    "CSJUR-V3-0014",
+    "CSJUR-V3-0074",
+    "CSJUR-V3-0081",
+    "CSJUR-V3-0083",
+    "CSJUR-V4-0075"
+  ]
+}

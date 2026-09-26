@@ -70,9 +70,10 @@ def main(argv=None) -> int:
     sd = Path(args.sample_dir)
     try:
         sman = json.loads((sd / "sample_manifest.json").read_text(encoding="utf-8"))
-        if sman.get("role") != "validation":
-            raise ValidationInputError(f"sample role is {sman.get('role')!r}, not 'validation'")
-        if args.development_sample_dir:
+        role = sman.get("role")
+        if role not in ("validation", "development"):
+            raise ValidationInputError(f"unknown sample role {role!r}")
+        if role == "validation" and args.development_sample_dir:
             dman = json.loads((Path(args.development_sample_dir) / "sample_manifest.json")
                               .read_text(encoding="utf-8"))
             overlap = sorted(set(dman["families"]) & set(sman["families"]))
@@ -108,6 +109,17 @@ def main(argv=None) -> int:
 
     result = evaluate(items, gold, preds, cfg.validation, kind=args.kind,
                       gold_report=gold_report, gate_on_recall=not args.no_gate_on_recall)
+    if role == "development":
+        # Rubric-development feedback only: same metrics, never a validation manifest.
+        dev = sd / f"development_report_{args.kind}_{fp['fingerprint_id']}.json"
+        dev.write_text(json.dumps({"kind": "judge_development_report", "not_a_gate": True,
+                                   "judge_fingerprint": fp, "gold_report": gold_report,
+                                   "result": result}, ensure_ascii=False, indent=2),
+                       encoding="utf-8")
+        _print_result(fp, gold_report, result)
+        print(f"[calibrate] DEVELOPMENT sample: metrics are rubric-iteration feedback, not a "
+              f"gate; no validation manifest written -> {dev}")
+        return 0
     out = Path(args.manifest_out or ROOT / "outputs" / "exp1" /
                f"judge_validation_manifest{'' if args.kind == 'harm' else '_benign'}.json")
     write_manifest(out, fingerprint=fp, result=result,
@@ -118,6 +130,12 @@ def main(argv=None) -> int:
                                 ("items.csv", "rater1.csv", "rater2.csv", "adjudication.csv")},
                    gold_report=gold_report)
 
+    _print_result(fp, gold_report, result)
+    print(f"[calibrate] STATUS: {result['status']}  manifest -> {out}")
+    return EXIT[result["status"]]
+
+
+def _print_result(fp: dict, gold_report: dict, result: dict) -> None:
     print(f"[calibrate] judge {fp['model']} rubric {fp['rubric_version']} "
           f"({fp['fingerprint_id']})")
     print(f"[calibrate] pre-adjudication agreement: {gold_report['pre_adjudication_agreement']}")
@@ -129,8 +147,6 @@ def main(argv=None) -> int:
               f"{s.get('reason', '')}")
     for r in result["global_reasons"]:
         print(f"  ! {r}")
-    print(f"[calibrate] STATUS: {result['status']}  manifest -> {out}")
-    return EXIT[result["status"]]
 
 
 if __name__ == "__main__":
