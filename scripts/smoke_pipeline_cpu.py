@@ -1,99 +1,152 @@
 #!/usr/bin/env python3
-"""End-to-end CPU smoke of the analysis chain — NO model, NO API.
+"""CPU smoke of the whole analysis chain on the harmless fixture -- no model,
+no API. Every GPU/API call is replaced by a deterministic stub:
 
-Proves the plumbing: dataset -> (stub) generate -> (stub) judge -> ASR +
-isolation McNemar + GEE -> mine rejected -> assemble preference pairs. Every
-GPU/API call is replaced by a deterministic stub so this runs anywhere.
+ fixture CSV -> convert_final -> groups + frozen split -> (stub) persist-first
+ generation (greedy + 5-draw sampled) -> (stub) judge with the real contract ->
+ aggregate (denominators, micro/macro ASR) -> paired McNemar + Holm + GEE ->
+ robustness ASR@5 -> mining + chosen validation + matched B/C + training-
+ boundary checks.
 
     python scripts/smoke_pipeline_cpu.py
 """
 from __future__ import annotations
 
+import hashlib
 import sys
+import tempfile
 import warnings
 from pathlib import Path
 
-# Toy stub data is perfectly separated -> statsmodels warns; irrelevant here.
 warnings.filterwarnings("ignore")
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import pandas as pd  # noqa: E402
+from csjail.aggregate import outcome_maps, summarize  # noqa: E402
+from csjail.asr import mcnemar_pairs  # noqa: E402
+from csjail.convert_final import convert  # noqa: E402
+from csjail.data import Prompt, filter_prompts  # noqa: E402
+from csjail.judge import parse_harm, rule_judgment  # noqa: E402
+from csjail.metrics import holm_bonferroni  # noqa: E402
+from csjail.models import GenOutput  # noqa: E402
+from csjail.outcomes import primary_unsafe  # noqa: E402
+from csjail.pipeline import JsonlCache, merge_results, run_generation, run_judging  # noqa: E402
+from csjail.prefdata import (  # noqa: E402
+    assert_pairs_trainable, matched_sets, mine_rejected, order_pairs, validate_chosen,
+)
+from csjail.qa import exact_duplicate_groups, token_jaccard_candidates  # noqa: E402
+from csjail.robustness import summarize as robust_summary  # noqa: E402
+from csjail.splits import build_groups, make_splits  # noqa: E402
 
-from csjail.asr import compute_asr, mcnemar_pairs  # noqa: E402
-from csjail.data import CONDITIONS, load_dataset  # noqa: E402
-from csjail.metrics import gee_logit  # noqa: E402
-from csjail.prefdata import assemble_pairs, mine_rejected  # noqa: E402
-from csjail.splits import attach_features, make_splits  # noqa: E402
+FIXTURE = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "final_fixture.csv"
 
 
-def stub_response(prompt: str, condition: str) -> str:
-    """Deterministic fake model output: 'complies' more in UR/CS/RU than EN."""
-    if condition == "EN":
-        return "I can't help with that."
-    if condition in ("UR", "RU", "CS"):
-        # simulate a jailbreak on the longer/dangerous prompts
-        return "Sure, here is the harmful content you asked for ..."
-    return "..."
+def _h(*parts) -> int:
+    return int(hashlib.sha256("|".join(map(str, parts)).encode()).hexdigest(), 16)
 
 
-def stub_label(response: str) -> int:
-    """Deterministic fake judge: harmful if it 'complied', else refusal."""
-    return 1 if response.startswith("Sure") else 0
+class StubJudge:
+    fingerprint = {"fingerprint_id": "stub-judge", "rubric_kind": "harm"}
+
+    def score_sync(self, pairs, show_progress=False):
+        out = []
+        for _p, resp in pairs:
+            ruled = rule_judgment(resp, "harm")
+            if ruled:
+                out.append(ruled)
+            elif resp.startswith("UNSAFE"):
+                out.append(parse_harm('{"unsafe": true, "response_kind": "harmful_compliance", '
+                                      '"compliance_degree": "partial", "contains_refusal": true, '
+                                      '"output_language_mismatch": false, "rationale": "stub"}'))
+            elif resp.startswith("GARBLE"):
+                out.append(parse_harm("not json at all"))           # -> missing, not safe
+            else:
+                out.append(parse_harm('{"unsafe": false, "response_kind": "refusal", '
+                                      '"compliance_degree": "none", "contains_refusal": true, '
+                                      '"output_language_mismatch": false, "rationale": "stub"}'))
+        return out
+
+
+def stub_generate(model: str, rows_by_prompt: dict, n: int):
+    def fn(prompts):
+        res = []
+        for p in prompts:
+            r = rows_by_prompt[p]
+            draws = []
+            for i in range(n):
+                v = _h(model, r.id, i) % 10
+                text = ("UNSAFE stub" if (r.condition != "EN" and v < 4) or v == 0
+                        else "GARBLE" if v == 9 else "I can't help with that.")
+                draws.append(GenOutput(text, i, "stop", 10, 5))
+            res.append(draws)
+        return res
+    return fn
 
 
 def main() -> int:
-    rows = attach_features(load_dataset("data/csjail_smoke4.jsonl"))
-    split = make_splits(rows, eval_holdout=2, n_held_out_categories=1, seed=42)
-    assign = split["assignments"]
+    long_rows, report = convert(FIXTURE)
+    rows = [Prompt.model_validate(r) for r in long_rows]
+    print(f"== converted: {report['n_families']} families / {report['n_long_rows']} rows")
+    groups, grep = build_groups(rows, exact_duplicates=exact_duplicate_groups(rows),
+                                near_duplicate_candidates=token_jaccard_candidates(rows))
+    split = make_splits(rows, fam_to_group=groups, eval_size=4, seed=42,
+                        dataset_version=rows[0].dataset_version)
+    print(f"== split {split['meta']['split_id']}: {split['meta']['counts']}")
+    by_prompt = {r.prompt: r for r in rows}
+    judge = StubJudge()
 
-    # ---- (stub) generate + judge -------------------------------------------
-    records = []
-    for r in rows:
-        resp = stub_response(r.prompt, r.condition)
-        label = stub_label(resp)
-        records.append({
-            "base_id": r.base_id, "condition": r.condition,
-            "harm_category": r.harm_category, "prompt": r.prompt,
-            "response": resp, "label": label, "severity": r.harm_severity,
-        })
+    with tempfile.TemporaryDirectory() as td:
+        results = {}
+        for label, n in (("greedy", 1), ("sampled", 5)):
+            recs = []
+            for model in ("modelA", "modelB"):
+                for cond in ("CS", "EN", "RU", "UR"):
+                    sub = filter_prompts(rows, condition=cond)
+                    ident = {"model_key": model, "arm": "A"}
+                    samp = {"temperature": 0.0 if n == 1 else 0.7, "n": n}
+                    gens = run_generation(stub_generate(model, by_prompt, n), sub, identity=ident,
+                                          sampling=samp,
+                                          cache=JsonlCache(Path(td) / label / "gen.jsonl", "gen_key"),
+                                          split_lookup=split["assignments"],
+                                          split_id=split["meta"]["split_id"], log=lambda s: None)
+                    js = run_judging(judge, gens, {r.id: r.prompt for r in sub},
+                                     cache=JsonlCache(Path(td) / label / "judge.jsonl", "judge_key"),
+                                     log=lambda s: None)
+                    recs += merge_results(gens, js, judge_fingerprint_id="stub-judge")
+            results[label] = recs
 
-    # ---- ASR per condition --------------------------------------------------
-    print("== ASR by condition (stubbed) ==")
-    for cond in CONDITIONS:
-        sub = [x for x in records if x["condition"] == cond]
-        res = compute_asr([x["label"] for x in sub], [x["base_id"] for x in sub],
-                          bootstrap_n=200, seed=0)
-        print(f"  {cond}: ASR={res.asr:.3f}  CI=({res.ci_lo:.2f},{res.ci_hi:.2f})  n={res.n}")
+    greedy = results["greedy"]
+    print("== aggregate (greedy) ==")
+    for r in summarize(greedy, bootstrap_n=200):
+        if r["domain"] == "ALL":
+            print(f"  {r['model']} {r['condition']}: ASR={r['asr']} scored={r['n_scored']}/"
+                  f"{r['n_planned']} missing={r['n_missing']} bounds=({r['bound_lo']:.2f},"
+                  f"{r['bound_hi']:.2f}) macro={r['macro_asr']}")
+    maps = outcome_maps(greedy)
+    tests = []
+    for (model, _arm), by_cond in sorted(maps.items()):
+        for m in mcnemar_pairs(by_cond, comparisons=[("CS", "RU"), ("RU", "UR"), ("RU", "EN")],
+                               bootstrap_n=200):
+            tests.append(m)
+            print(f"  {model} {m.cond_a}-{m.cond_b}: complete={m.n_complete}/{m.n_shared} "
+                  f"diff={m.diff} p={m.pvalue}")
+    print(f"== Holm over {len(tests)} tests: {[h['reject'] for h in holm_bonferroni([t.pvalue for t in tests])]}")
 
-    # ---- isolation McNemar contrasts ---------------------------------------
-    by_cond = {}
-    for x in records:
-        by_cond.setdefault(x["condition"], []).append((x["base_id"], x["label"]))
-    contrasts = [("CS", "RU"), ("RU", "UR"), ("RU", "EN"), ("CS", "EN")]
-    print("== isolation McNemar contrasts ==")
-    for m in mcnemar_pairs(by_cond, comparisons=contrasts):
-        print(f"  {m.cond_a} vs {m.cond_b}: n_pairs={m.n_pairs} b={m.b} c={m.c} "
-              f"p={m.pvalue:.4g} ({m.test_used})")
+    rob = robust_summary(results["sampled"], greedy, k=5, bootstrap_n=200)
+    print(f"== robustness ASR@5: {[(k, v['asr_at_5'], v['asr_at_5_n_unresolved']) for k, v in rob['per_model_condition'].items()][:4]}")
 
-    # ---- GEE omnibus --------------------------------------------------------
-    df = pd.DataFrame([{"harmful": x["label"], "condition": x["condition"],
-                        "category": x["harm_category"], "base_id": x["base_id"]}
-                       for x in records])
-    gee = gee_logit(df, baseline_condition="EN")
-    print("== GEE odds ratios (vs EN) ==")
-    for t in gee.terms:
-        if "condition" in t:
-            print(f"  {t}: OR={gee.odds_ratios[t]:.2f}  p={gee.pvalues[t]:.3g}")
-
-    # ---- Phase-2: mine rejected + assemble pairs ---------------------------
-    mined = mine_rejected(records, assign, condition="CS")
-    chosen = {m["base_id"]: "Main is mein madad nahi kar sakta. (I can't help.)"
-              for m in mined}
-    pairs, report = assemble_pairs(mined, chosen, target_pairs=100)
-    print("== preference pairs (CS, training pool) ==")
-    print(f"  mined={report.n_mined} with_chosen={report.n_with_chosen} "
-          f"final={report.n_final} len_ratio={report.length_ratio}")
+    mined, mrep = mine_rejected([r for r in greedy if r["model"] == "modelA"], split,
+                                model="modelA", condition="CS")
+    en_mined, _ = mine_rejected([r for r in greedy if r["model"] == "modelA"], split,
+                                model="modelA", condition="EN")
+    ok_j = StubJudge().score_sync([("", "I can't help with that.")])[0]
+    cs_pairs = [{**m, "prompt": "p", "chosen": "Mein is mein madad nahi kar sakta, maafi."}
+                for m in mined if validate_chosen("Mein is mein madad nahi kar sakta, maafi.", ok_j)[0]]
+    en_pairs = [{**m, "prompt": "p", "chosen": "I can't help with that request, sorry."}
+                for m in en_mined]
+    c, b, rep = matched_sets(order_pairs(cs_pairs, seed=1), order_pairs(en_pairs, seed=1), seed=1)
+    assert_pairs_trainable(c, split, model="modelA")
+    print(f"== mining {mrep['counts']}; matched B/C = {rep['n_matched']}")
+    assert all(primary_unsafe(r) is None for r in greedy if r["response"] == "GARBLE")
     print("SMOKE OK")
     return 0
 

@@ -1,4 +1,7 @@
-"""Convert the wide annotation CSV to the long JSONL the pipeline expects.
+"""LEGACY (v0 180-prompt study; historical reproduction only; not on the active
+run path). Output needs load_dataset(..., allow_legacy=True).
+
+Convert the wide annotation CSV to the long JSONL the pipeline expects.
 
 The annotator template is WIDE — one row per base prompt with EN, UR, and CS
 translations all in the same row, plus two reviewers' authenticity and harm

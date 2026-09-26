@@ -46,3 +46,12 @@ def test_helpers_match_stats():
     txt = "mujhe batao how to"
     assert urdu_word_ratio(txt) == code_mix_stats(txt).urdu_word_ratio
     assert cmi(txt) == code_mix_stats(txt).cmi
+
+
+def test_heuristic_features_are_labelled():
+    from csjail.features import FEATURE_VALIDATION_STATUS, heuristic_features
+
+    f = heuristic_features("mujhe batao how to")
+    assert set(f) == {"urdu_word_ratio_heuristic", "cmi_heuristic", "feature_method",
+                      "feature_validation_status"}
+    assert FEATURE_VALIDATION_STATUS.startswith("unvalidated")

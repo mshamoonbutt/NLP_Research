@@ -1,146 +1,153 @@
 #!/usr/bin/env python3
-"""Exp 6 — build DPO preference pairs (mostly CPU; `chosen` generation calls
-the Anthropic API).
+"""Exp 6 — build model-specific preference pairs (CPU + chosen-generator API).
 
-Pipeline:
-  1. Mine `rejected` — harmful (judge label==1) CS completions from the
-     Exp 2 judgment files, restricted to the training pool (excludes eval
-     holdout + held-out categories, so RQ4 stays uncontaminated).
-  2. Generate `chosen` — a natural code-switched refusal for each mined
-     prompt, via a model DISTINCT from the judge (Anthropic by default;
-     see csjail/chosen_gen.py — this is what keeps the pipeline
-     non-circular).
-  3. Clean-refusal filter — re-judge each (prompt, chosen) pair with the
-     SAME judge used everywhere else; drop any candidate the judge would
-     call PARTIAL/hedged (label 2) or that failed to refuse at all
-     (label 1). This is the "clean refusal" criterion (guide Exp 6 rec #8):
-     hedged teacher refusals are exactly what arXiv 2602.11157 found
-     increases downstream jailbreak success.
-  4. Assemble — dedup, length-balance, cap at `target_pairs` (250, not 800
-     — see configs/dpo.yaml prefdata comment for the arithmetic).
-  5. Export a 50-sample naturalness-rating CSV for a native speaker
-     (1-5 scale, gated at mean >= 4 — see --export-naturalness-sample).
+    python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main
+    python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main \
+        --split-manifest outputs/exp9/ablation_D2/split_manifest.json --tag ablation_D2
 
-Usage:
-    python scripts/exp6_build_prefdata.py \
-        --judgments "results/baseline_*/*_CS.jsonl" \
-        --model phi3 \
-        --splits outputs/exp0/splits.json \
-        --out outputs/pref_pairs_cs_phi3.jsonl
+For the target model, per language (CS, and EN for the matched control):
+ 1. mine `rejected` from that model's greedy Exp 2 results on eligible
+    train_pool families (primary unsafe, lineage kept) -- other models'
+    results are filtered out explicitly and reported;
+ 2. generate `chosen` with a model distinct from the judge;
+ 3. validate chosen (non-empty, judged not unsafe, genuine refusal);
+ 4. dedup, seeded domain-aware ordering (nested N-curve prefixes);
+ 5. matched sets: CS and EN restricted to families valid in BOTH.
+Writes, under outputs/exp6/<model>[_<tag>]/:
+  pairs_cs_all.jsonl, pairs_en_all.jsonl       all valid, ordered (text; gitignored)
+  pairs_cs_matched.jsonl, pairs_en_matched.jsonl  matched B/C sets (gitignored)
+  naturalness_sample.csv                       for native-speaker rating (gitignored)
+  pairs_manifest.json                          counts per stage/domain, budgets, lineage ids
 """
 from __future__ import annotations
 
 import argparse
 import csv
-import glob
 import json
+import random
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml  # noqa: E402
 
+from csjail.aggregate import load_results  # noqa: E402
+from csjail.artifacts import resolve_exp0  # noqa: E402
 from csjail.chosen_gen import (  # noqa: E402
-    ChosenGenerator,
-    assert_distinct_from_judge,
-    is_clean_refusal,
-    load_exemplars,
-    load_generator_config,
+    ChosenGenerator, assert_distinct_from_judge, load_exemplars, load_generator_config,
 )
 from csjail.judge import Judge, load_judge_config  # noqa: E402
-from csjail.prefdata import assemble_pairs, mine_rejected, write_pairs  # noqa: E402
-from csjail.utils.io import read_jsonl  # noqa: E402
+from csjail.judge_validation import require_validated_judge  # noqa: E402
+from csjail.prefdata import (  # noqa: E402
+    dedup, length_report, matched_sets, mine_rejected, order_pairs, pair_counts,
+    supported_budgets, validate_chosen, write_pairs,
+)
 
-DPO_CFG = Path(__file__).resolve().parent.parent / "configs" / "dpo.yaml"
+ROOT = Path(__file__).resolve().parent.parent
 
 
-def _load_judgment_rows(pattern: str) -> list[dict]:
-    """Read one or more run_eval.py JSONL outputs, keep only prompt_eval rows,
-    and rename judge_label -> label to match csjail.prefdata's schema."""
-    rows: list[dict] = []
-    for path in sorted(glob.glob(pattern)):
-        for r in read_jsonl(path):
-            if r.get("kind") != "prompt_eval":
-                continue
-            rows.append({**r, "label": r.get("judge_label")})
-    return rows
+def build_language(results, split, rows_by_id, *, model, lang, excl, gen_cfg, judge, seed, tol):
+    mined, mine_rep = mine_rejected(results, split, model=model, condition=lang,
+                                    exclude_domains=excl)
+    exemplars = load_exemplars(lang, exclude_domains=excl)
+    prompts = [rows_by_id[(m["base_id"], lang)] for m in mined]
+    cands = ChosenGenerator(gen_cfg, language=lang).generate_sync(prompts, exemplars) if mined else []
+    js = judge.score_sync([(p, c or "") for p, c in zip(prompts, cands)]) if mined else []
+    valid, reasons = [], {}
+    for m, p, c, j in zip(mined, prompts, cands, js):
+        ok, why = validate_chosen(c, j)
+        reasons[why] = reasons.get(why, 0) + 1
+        if ok:
+            valid.append({**m, "prompt": p, "chosen": c, "language": lang,
+                          "chosen_generator": gen_cfg.fingerprint(lang, [e["id"] for e in exemplars]),
+                          "chosen_judge_fingerprint_id": judge.fingerprint["fingerprint_id"]})
+    valid, n_dup = dedup(valid)
+    ordered = order_pairs(valid, seed=seed)
+    return ordered, {"mining": mine_rep, "chosen_validation": reasons, "n_duplicates_removed": n_dup,
+                     "quality_approved": pair_counts(ordered),
+                     "length": length_report(ordered, tol)}
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--judgments", required=True,
-                    help="glob pattern over run_eval.py JSONL outputs for "
-                         "condition=CS, e.g. 'results/baseline_*/phi3_CS.jsonl'")
-    ap.add_argument("--splits", default="outputs/exp0/splits.json")
-    ap.add_argument("--out", required=True)
-    ap.add_argument("--exemplars", default="data/refusal_exemplars.jsonl")
-    ap.add_argument("--naturalness-sample-out", default=None,
-                    help="if set, also write an N-row CSV for a native "
-                         "speaker to rate naturalness 1-5")
-    ap.add_argument("--naturalness-sample-size", type=int, default=50)
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--results", nargs="+", required=True, help="Exp 2 run dir(s)")
+    ap.add_argument("--exp0-dir", default=None)
+    ap.add_argument("--split-manifest", default=None, help="e.g. an Exp 9 ablation manifest")
+    ap.add_argument("--tag", default=None)
+    ap.add_argument("--judge-manifest",
+                    default=str(ROOT / "outputs" / "exp1" / "judge_validation_manifest.json"))
+    ap.add_argument("--languages", nargs="+", default=["CS", "EN"])
+    ap.add_argument("--out-dir", default=None, help="default outputs/exp6/<model>[_<tag>]")
+    ap.add_argument("--allow-debug", action="store_true")
     args = ap.parse_args(argv)
 
-    cfg = yaml.safe_load(DPO_CFG.read_text(encoding="utf-8"))
-    target_pairs = cfg["prefdata"]["target_pairs"]
-    length_tol = cfg["prefdata"]["length_balance_tolerance"]
-
-    gen_cfg = load_generator_config()
-    judge_cfg = load_judge_config()
+    cfg = yaml.safe_load((ROOT / "configs" / "dpo.yaml").read_text(encoding="utf-8"))["prefdata"]
+    gen_cfg, judge_cfg = load_generator_config(), load_judge_config()
     assert_distinct_from_judge(gen_cfg, judge_cfg)
-
-    assignments = json.loads(Path(args.splits).read_text(encoding="utf-8"))["assignments"]
-    judgment_rows = _load_judgment_rows(args.judgments)
-    mined = mine_rejected(judgment_rows, assignments, condition="CS")
-    print(f"[exp6] mined {len(mined)} harmful CS completions from the training pool")
-    if not mined:
-        print("FAIL: nothing mined — check --judgments glob and splits.json",
-              file=sys.stderr)
+    require_validated_judge(args.judge_manifest, judge_cfg.fingerprint("harm"))
+    art = resolve_exp0(args.exp0_dir, split_path=args.split_manifest)
+    rows = art.load_rows()
+    rows_by_id = {(r.base_id, r.condition): r.prompt for r in rows}
+    excl = [art.split["meta"]["ablation_domain"]] if art.split["meta"].get("ablation_domain") else []
+    all_results = load_results(args.results, allow_debug=args.allow_debug)
+    other = sorted({r["model"] for r in all_results} - {args.model})
+    results = [r for r in all_results if r["model"] == args.model]
+    if not results:
+        print(f"FAIL: no results for model {args.model}", file=sys.stderr)
         return 1
+    judge = Judge(judge_cfg, kind="harm")
 
-    exemplars = load_exemplars(args.exemplars)
-    generator = ChosenGenerator(gen_cfg)
-    candidates = generator.generate_sync([m["prompt"] for m in mined], exemplars)
+    out_dir = Path(args.out_dir or ROOT / "outputs" / "exp6" /
+                   (args.model + (f"_{args.tag}" if args.tag else "")))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    per_lang, reports = {}, {}
+    for lang in args.languages:
+        per_lang[lang], reports[lang] = build_language(
+            results, art.split, rows_by_id, model=args.model, lang=lang, excl=excl,
+            gen_cfg=gen_cfg, judge=judge, seed=int(cfg["selection_seed"]),
+            tol=float(cfg["length_balance_tolerance"]))
+        write_pairs(str(out_dir / f"pairs_{lang.lower()}_all.jsonl"), per_lang[lang])
+        print(f"[exp6] {args.model}/{lang}: {reports[lang]['mining']['counts']} -> "
+              f"{reports[lang]['quality_approved']}")
 
-    judge = Judge(judge_cfg)
-    judgments = judge.score_sync(
-        list(zip([m["prompt"] for m in mined], candidates, strict=True)))
+    matched = None
+    if "CS" in per_lang and "EN" in per_lang:
+        cs_m, en_m, rep = matched_sets(per_lang["CS"], per_lang["EN"],
+                                       seed=int(cfg["selection_seed"]))
+        write_pairs(str(out_dir / "pairs_cs_matched.jsonl"), cs_m)
+        write_pairs(str(out_dir / "pairs_en_matched.jsonl"), en_m)
+        matched = {**rep, "budgets": supported_budgets(len(cs_m), cfg["n_curve"])}
+        print(f"[exp6] matched B/C: {rep['n_matched']} families; budgets {matched['budgets']}")
 
-    chosen_by_base_id: dict[str, str] = {}
-    n_rejected_by_filter = 0
-    for m, cand, j in zip(mined, candidates, judgments, strict=True):
-        if is_clean_refusal(j.label):
-            chosen_by_base_id[m["base_id"]] = cand
-        else:
-            n_rejected_by_filter += 1
-    print(f"[exp6] clean-refusal filter: kept {len(chosen_by_base_id)}, "
-          f"dropped {n_rejected_by_filter} (hedged/partial/non-refusal)")
+    cs_pairs = per_lang.get("CS", [])
+    sample = random.Random(0).sample(cs_pairs, min(int(cfg["naturalness_sample_size"]), len(cs_pairs)))
+    with (out_dir / "naturalness_sample.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["base_id", "prompt", "chosen", "naturalness_1to5",
+                                          "clean_refusal_yes_no", "rater", "notes"])
+        w.writeheader()
+        w.writerows({"base_id": p["base_id"], "prompt": p["prompt"], "chosen": p["chosen"],
+                     "naturalness_1to5": "", "clean_refusal_yes_no": "", "rater": "",
+                     "notes": ""} for p in sample)
 
-    pairs, report = assemble_pairs(
-        mined, chosen_by_base_id,
-        target_pairs=target_pairs, length_tolerance=length_tol,
-    )
-    print(f"[exp6] {report}")
-    write_pairs(args.out, pairs)
-    print(f"[exp6] wrote {len(pairs)} pairs -> {args.out}")
-
-    if args.naturalness_sample_out:
-        import random
-
-        sample = random.sample(pairs, min(args.naturalness_sample_size, len(pairs)))
-        out_path = Path(args.naturalness_sample_out)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        with out_path.open("w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=["base_id", "prompt", "chosen",
-                                              "naturalness_1to5", "rater"])
-            w.writeheader()
-            for p in sample:
-                w.writerow({"base_id": p["base_id"], "prompt": p["prompt"],
-                           "chosen": p["chosen"], "naturalness_1to5": "",
-                           "rater": ""})
-        print(f"[exp6] wrote {len(sample)}-row naturalness sample -> {out_path}")
-        print("[exp6] NEXT: hand this to a native speaker, gate at mean >= 4 "
-              "before training Arm C/D")
+    manifest = {
+        "kind": "pairs_manifest", "created_utc": datetime.now(timezone.utc).isoformat(),
+        "model": args.model, "tag": args.tag, "dataset_version": art.dataset_version,
+        "split_id": art.split_id, "split_scheme": art.split["meta"]["scheme"],
+        "excluded_domains": excl, "results_models_ignored": other,
+        "judge_fingerprint": judge.fingerprint, "chosen_generator": gen_cfg.__dict__,
+        "target_pairs_cap": cfg["target_pairs"], "per_language": reports,
+        "budgets": {lang: supported_budgets(len(p), cfg["n_curve"]) for lang, p in per_lang.items()},
+        "matched": matched,
+        "families": {lang: [p["base_id"] for p in ps] for lang, ps in per_lang.items()},
+        "naturalness_gate": "PENDING: native speaker rates naturalness_sample.csv; mean >= 4 "
+                            "and clean_refusal=yes required before training C/D",
+    }
+    (out_dir / "pairs_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2),
+                                                 encoding="utf-8")
+    print(f"[exp6] wrote {out_dir}")
     return 0
 
 

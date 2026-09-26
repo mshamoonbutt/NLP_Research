@@ -74,7 +74,8 @@ def parse_choice(text: str, n_choices: int) -> Optional[int]:
 def score_predictions(
     pred_indices: list[Optional[int]], items: list[MCQItem]
 ) -> dict:
-    """Accuracy over items; unparseable predictions count as wrong."""
+    """Accuracy over items; unparseable predictions count as wrong. An empty
+    item set gives accuracy None (NA), never 0."""
     assert len(pred_indices) == len(items)
     correct = sum(
         1 for p, it in zip(pred_indices, items, strict=True)
@@ -83,7 +84,7 @@ def score_predictions(
     n = len(items)
     n_unparsed = sum(1 for p in pred_indices if p is None)
     return {
-        "accuracy": (correct / n) if n else 0.0,
+        "accuracy": (correct / n) if n else None,
         "n": n,
         "n_correct": correct,
         "n_unparsed": n_unparsed,
@@ -95,7 +96,7 @@ def evaluate_mcq(runner, items: list[MCQItem], *, max_tokens: int = 8) -> dict:
     from csjail.models import SamplingConfig
 
     prompts = [build_prompt(it) for it in items]
-    outputs = runner.generate(
+    outputs = runner.generate_text(
         prompts, SamplingConfig(temperature=0.0, max_tokens=max_tokens),
     )
     preds = [parse_choice(o, len(it.choices))

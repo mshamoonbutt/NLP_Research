@@ -1,4 +1,8 @@
-"""Convert the extended wide annotation template to the long JSONL the pipeline
+"""LEGACY (historical reproduction only; not on the active run path -- use
+csjail.convert_final for the final seven-column dataset). Output needs
+load_dataset(..., allow_legacy=True).
+
+Convert the extended wide annotation template to the long JSONL the pipeline
 expects (the CS/EN/RU/UR 10-category design).
 
 The extended template (`annotation_template.xlsx` / `.csv`) is WIDE — one row per

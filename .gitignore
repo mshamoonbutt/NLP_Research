@@ -40,17 +40,29 @@ hf_cache/
 ~/.cache/huggingface/
 
 # Harmful dataset + any file containing prompt text — KEEP LOCAL (ethics/AUP).
-# The pipeline rebuilds these locally from the annotation template.
+# The pipeline rebuilds these locally from the source CSV; only ID-level
+# manifests (splits, QA flags, hashes) are committed.
 data/csjail_v1.jsonl
 data/*_v1.jsonl
+data/csjail_final*.jsonl
+data/pref_pairs_*.jsonl
 outputs/**/dataset_with_features.jsonl
+outputs/**/dataset_final.jsonl
+outputs/exp0/.tmp-*/
+outputs/exp0/FAILED-*/
+outputs/archive/**/*.jsonl
 ubuntu-broken-backup.tar
 # Exp1 annotation CSVs (real prompts + SLM responses), Exp4b comprehension
 # rows (prompt + response + paraphrase), Exp6 naturalness samples (prompt +
 # chosen refusal) — same category as the dataset files above.
-outputs/exp1/*.csv
-outputs/exp4b/*.jsonl
-outputs/exp6/*.csv
+outputs/exp1/**/*.csv
+outputs/exp1/**/*.jsonl
+outputs/exp2/
+outputs/exp4b/
+outputs/exp6/**/*.jsonl
+outputs/exp6/**/*.csv
+outputs/exp8/
+outputs/models/
 
 # Secrets
 .env
