@@ -46,6 +46,7 @@ def test_no_fabricated_metadata(fixture_rows):
 def test_id_namespace_is_descriptive_only():
     assert id_namespace("42") == ("numeric", None)
     assert id_namespace("CSJUR-V4-0003") == ("CSJUR-V4", None)
+    assert id_namespace("CSJUR-X1-0062") == ("CSJUR-X1", None)
     ns, hint = id_namespace("CSJUR-R-0246-01")
     assert ns == "CSJUR-R" and hint == "id-references-replaced-prompt:0246"
 

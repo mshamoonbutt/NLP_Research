@@ -67,7 +67,7 @@ def id_namespace(pid: str) -> tuple[str, str | None]:
     m = re.fullmatch(r"CSJUR-R-(\d+)-(\d+)", pid)
     if m:
         return "CSJUR-R", f"id-references-replaced-prompt:{m.group(1)}"
-    m = re.fullmatch(r"(CSJUR-V\d+)-\d+", pid)
+    m = re.fullmatch(r"(CSJUR-[A-Z]+\d*)-\d+", pid)
     if m:
         return m.group(1), None
     return "other", None
