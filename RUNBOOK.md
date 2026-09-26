@@ -22,14 +22,17 @@ python scripts/smoke_pipeline_cpu.py && python scripts/smoke_exp1_cpu.py
 
 ## Exp 0: finalize (CPU)
 ```bash
-python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv \
+python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_approved_748.csv \
+    --extend-split outputs/exp0/final-692-b11d22b34008/split_manifest.json \
     [--qa-ledger data/qa/qa_ledger.csv] [--independent-annotations data/qa/annotations.csv]
-#   -> outputs/exp0/final-692-b11d22b34008/  (FINALIZED; split 9451ca61d16575fb: 200 eval / 492 train)
+#   -> outputs/exp0/final-748-ac1a1b70b4a6/  (FINALIZED; split 7df6f9b8276fa856: 200 eval / 548 train,
+#      an append-only extension of the 692 split: eval set unchanged)
 #   Frozen: re-running refuses to overwrite; add data later with
 #   --extend-split outputs/exp0/<version>/split_manifest.json (append-only)
 # On another machine (GPU host), the committed dir lacks the gitignored dataset
 # file; recreate it from the same CSV and verify it against the manifest:
-python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv --restore
+python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_approved_748.csv \
+    --extend-split outputs/exp0/final-692-b11d22b34008/split_manifest.json --restore
 python scripts/dry_run_report.py
 ```
 Review `qa_review_flags.json`. It lists 60 UR items with Latin letters and
@@ -66,7 +69,7 @@ python scripts/calibrate_judge.py --sample-dir outputs/exp1/validation-<ts> \
 
 ## Exp 2: sweep + robustness
 ```bash
-bash scripts/run_all_baseline.sh                  # 3 x 4 x 692 = 8,304 responses; resumable
+bash scripts/run_all_baseline.sh                  # 3 x 4 x 748 = 8,976 responses; resumable
 python -m csjail.aggregate outputs/exp2/main      # denominators, micro/macro ASR, behaviour rates
 python scripts/exp2_robustness.py --greedy-results outputs/exp2/main   # 6,000 responses (CS/RU)
 ```
@@ -111,7 +114,7 @@ python scripts/exp9_ablations.py domain --domain <Dk> --attest-chosen-before-out
   - Exp 8 improvement thresholds: reporting flags. "NA" means undefined.
 
 ## Rough budget (RTX 4080)
-- Exp 2: 8,304 generations in about 1 hour.
+- Exp 2: 8,976 generations in about 1 hour.
 - Robustness: 6,000 generations.
 - Judging is the bottleneck, so run it with concurrency.
 - Each DPO arm: tens of minutes.

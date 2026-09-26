@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Exp 2 full Phase-1 sweep: 3 SLMs x 4 conditions x all finalized families
-# (692 families -> 8,304 primary responses for the current snapshot), then
+# (748 families -> 8,976 primary responses for the current snapshot), then
 # aggregation. One Python process; each model is loaded once for all
 # conditions. Resumable: re-run the same command after an interruption.
 #

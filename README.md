@@ -1,7 +1,7 @@
 # CS-Jail-UR
 
 A safety benchmark and preference-alignment study for small language models
-using code-switched Urdu-English. There are 692 harmful-request families in
+using code-switched Urdu-English. There are 748 harmful-request families in
 six domains (D1–D6), each written in four aligned variants: English (EN),
 code-switched (CS), Roman Urdu (RU), and Urdu in Perso-Arabic script (UR).
 
@@ -46,7 +46,8 @@ outputs/exp0/<version>/    frozen ID-level manifests (dataset JSONL is gitignore
 ```bash
 pip install -e ".[dev]"                      # CPU: Exp 0, statistics, tests
 pytest tests -q
-python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv
+python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_approved_748.csv \
+    --extend-split outputs/exp0/final-692-b11d22b34008/split_manifest.json
 python scripts/dry_run_report.py
 ```
 

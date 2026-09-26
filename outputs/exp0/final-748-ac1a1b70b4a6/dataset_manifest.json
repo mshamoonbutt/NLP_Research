@@ -1,0 +1,26 @@
+{
+  "dataset_version": "final-748-ac1a1b70b4a6",
+  "schema_version": "csjail-longform-v2",
+  "source_sha256": "d6ca1734d24850002c3fafdd92b2ea84984c10ce0f342309d3c714d3ca9fc12e",
+  "source_path": "data/CS-Jail-UR_approved_748.csv",
+  "normalized_content_sha256": "ac1a1b70b4a68b19cf3cbb8c6b94470788e11330b64dfc9ac0d07c3d601af584",
+  "dataset_file": "dataset_final.jsonl",
+  "dataset_file_sha256": "6ae882b7c9610e9d7ec9fb8072b6f45c1199e294503188dff15a799145d2061f",
+  "split_file": "split_manifest.json",
+  "split_id": "7df6f9b8276fa856",
+  "split_scheme": "main",
+  "qa_ledger_sha256": null,
+  "duplicate_decisions_sha256": null,
+  "domain_dictionary_version": "domains-v1",
+  "n_families": 748,
+  "n_rows": 2992,
+  "gates": {
+    "ingest": "PASS",
+    "structure": "PASS",
+    "split": "PASS"
+  },
+  "notes": [
+    "no dataset-level kappa gate (docs/PROTOCOL.md §3.3)",
+    "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+  ]
+}

@@ -12,7 +12,9 @@ results, and are never tuned toward a desired direction or significance.
 
 ## 1. Dataset (Exp 0)
 
-**Input.** `data/CS-Jail-UR_final_692.csv` (local only; gitignored). It has seven
+**Input.** `data/CS-Jail-UR_approved_748.csv` (local only; gitignored). It
+supersedes `CS-Jail-UR_final_692.csv`: the 692 families are unchanged and
+56 `CSJUR-X1-*` families were added (D2 5, D3 15, D5 12, D6 24). It has seven
 columns: `prompt_id, domain_id, domain_name, EN, CS, RU, UR`. Per family there
 is one harmful request and four aligned variants:
 
@@ -25,18 +27,23 @@ is one harmful request and four aligned variants:
 **Current snapshot.** These are acceptance fixtures; the code derives all
 counts from the file, never from constants.
 
-- 692 families, 2,768 rows, 0 blank cells.
+- 748 families, 2,992 rows, 0 blank cells.
 - 0 equal variants within a family and 0 cross-family duplicate texts.
-- 60 UR items contain Latin letters (flagged for review, not errors).
+- 69 UR items contain Latin letters (flagged for review, not errors).
+- The X1 batch is lexically distinct from the older families: its median
+  best-match token-Jaccard is 0.26. One pair, `CSJUR-X1-0062` ~
+  `CSJUR-V4-0068` at 0.61, is worth a reviewer glance; both are in the
+  training pool. Word overlap cannot detect paraphrases written in different
+  words, so a reviewer skim of X1 is still advised.
 
 | Domain | Name | Families |
 |---|---|---:|
 | D1 | Hate, harassment and coercion | 122 |
-| D2 | Self-harm and suicide | 108 |
-| D3 | Dangerous acts, violence and criminal facilitation | 112 |
+| D2 | Self-harm and suicide | 113 |
+| D3 | Dangerous acts, violence and criminal facilitation | 127 |
 | D4 | Deception, fraud and intellectual-property abuse | 118 |
-| D5 | Privacy and personal-information abuse | 112 |
-| D6 | Cyber abuse and unauthorized access | 120 |
+| D5 | Privacy and personal-information abuse | 124 |
+| D6 | Cyber abuse and unauthorized access | 144 |
 
 **Identity and preservation** (`csjail/convert_final.py`)
 
@@ -52,11 +59,11 @@ counts from the file, never from constants.
   styles, authenticity scores, raters or provenance.
 
 **ID namespaces** (490 numeric, 18 `CSJUR-R-*`, 100 `CSJUR-V3-*`,
-84 `CSJUR-V4-*`) show that batches differ. They do not establish who wrote
+84 `CSJUR-V4-*`, 56 `CSJUR-X1-*`) show that batches differ. They do not establish who wrote
 them or that text is unchanged from older versions.
 
 **Provenance.** Document authorship and model assistance per batch from real
-records. Where records are missing, mark it unknown. Do not claim "all 692
+records. Where records are missing, mark it unknown. Do not claim "all 748
 written from scratch by native speakers" unless records show that. A
 defensible alternative, only if verified, is a human-authored core with
 model-assisted additions/edits and bilingual review. The old 1,000-row CSV is
@@ -122,11 +129,15 @@ analyses such as tokenizer fertility per pinned tokenizer.
 
 - 200 held-out families (`eval_main`), group-level and stratified across all
   six domains (largest-remainder quotas; seeded permutation over sorted groups).
-- 492 families in the **candidate** `train_pool`. This is a pool, not 492
+- 548 families in the **candidate** `train_pool`. This is a pool, not 548
   guaranteed pairs.
 - The main B/C comparison trains on all six domains.
-- Frozen manifest: `outputs/exp0/final-692-b11d22b34008/split_manifest.json`,
-  split `9451ca61d16575fb`. eval D1–D6 = 35/31/33/34/32/35.
+- Frozen manifest: `outputs/exp0/final-748-ac1a1b70b4a6/split_manifest.json`,
+  split `7df6f9b8276fa856`. It is an append-only extension of the 692 split
+  `9451ca61d16575fb`: every original assignment is unchanged, and the 56 X1
+  families all joined `train_pool`, so eval D1–D6 remains 35/31/33/34/32/35.
+  The 20 Exp 1 development families are all in `train_pool`, never in
+  `eval_main`. Train D1–D6 = 87/82/94/84/92/109.
 
 **Why this replaced the old split.** The old code auto-withheld the two
 smallest domains. On this data that reserves D2 and D3, leaving only 336
@@ -235,7 +246,7 @@ Freeze the one that passes.
 
 ## 4. Evaluation (Exp 2)
 
-**Primary sweep.** 3 SLMs × 4 conditions × 692 families = **8,304
+**Primary sweep.** 3 SLMs × 4 conditions × 748 families = **8,976
 responses**. Models: Qwen2.5-1.5B, Phi-3-mini ~3.8B, Llama-3.2 ~3.2B, so the
 set is not "1.5–3B".
 
@@ -335,7 +346,7 @@ shuffles. The single ordering yields nested N-curve prefixes. Counts are
 recorded per stage and domain: mined, validated, deduped, final.
 
 - `target_pairs` = 250 is a cap, never a quota.
-- Illustration (not a forecast): 492 × 30–45% ≈ 148–221 raw CS candidates.
+- Illustration (not a forecast): 548 × 30–45% ≈ 164–247 raw CS candidates.
 - Budgets {50, 100, 200, all} run only up to the available N. Below 50 is
   exploratory. Pairs are never padded, duplicated, or borrowed from eval.
 
@@ -396,7 +407,7 @@ fails to beat B. Human-audit a sample of post-training outputs.
 - Distinguish harmful seed requests, optional adversarial framing and measured
   successes. A prompt need not defeat a model to belong in a safety benchmark.
 - Keep benign prompts as a separate resource.
-- 692 families and six domains do not invalidate the design, but N alone does
+- 748 families and six domains do not invalidate the design, but N alone does
   not guarantee power or a positive mitigation result.
 - Do not claim native authorship, independent review, anonymity or consent
   without evidence.
@@ -405,7 +416,7 @@ fails to beat B. Human-audit a sample of post-training outputs.
 
 ## 8. Order of work
 
-1. Exp 0: done, `final-692-b11d22b34008`.
+1. Exp 0: done, `final-748-ac1a1b70b4a6`, extending the frozen 692 split.
 2. Tiny GPU smoke (§9).
 3. Exp 1 development sample → rubric iteration → separate validation sample
    → PASS manifest, for both the harm and benign rubrics.
