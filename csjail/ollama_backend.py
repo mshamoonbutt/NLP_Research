@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -55,7 +56,13 @@ class OllamaRunner:
         self.host = host.rstrip("/")
         self.workers, self.num_ctx, self.timeout_s = workers, num_ctx, timeout_s
         self.adapter_path, self.adapter_sha256 = None, None
-        show = self._post("/api/show", {"model": self.tag})
+        try:
+            show = self._post("/api/show", {"model": self.tag})
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                raise RuntimeError(f"ollama model {self.tag!r} is not pulled "
+                                   f"(run: ollama pull {self.tag})") from None
+            raise
         self._template = show.get("template") or ""
         self._details = show.get("details") or {}
         self._params = show.get("parameters") or ""

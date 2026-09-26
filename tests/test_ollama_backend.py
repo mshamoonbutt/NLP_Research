@@ -72,6 +72,15 @@ def test_missing_model_and_adapters_rejected(http, monkeypatch):
         ob.OllamaRunner(resolve("qwen25"))
 
 
+def test_show_404_is_reported_as_not_pulled(monkeypatch):
+    def raise_404(req, timeout=None):
+        raise ob.urllib.error.HTTPError(req.full_url, 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(ob.urllib.request, "urlopen", raise_404)
+    with pytest.raises(RuntimeError, match="ollama pull"):
+        ob.OllamaRunner(resolve("phi3"))
+
+
 def test_validation_sample_refuses_ollama():
     import importlib.util
     import sys
