@@ -1,0 +1,85 @@
+{
+  "created_utc": "20260927T073807Z",
+  "schema_version": "csjail-longform-v2",
+  "near_dup_threshold": 0.92,
+  "conversion": {
+    "converter_version": "convert_final-v2",
+    "input_path": "C:\\Users\\Unnus Ahmad Usmani\\Desktop\\NLP_Research\\data\\CS-Jail-UR_final_approved_791.csv",
+    "input_sha256": "4a34e81a38932fef769e563bbfe735606eadb4c473d24898ae249bd8480a1ecf",
+    "normalized_content_sha256": "ddc14ecbc568aec9efd41f042e5b26078698d1c2fdca4793852e9fa6a090b3d4",
+    "dataset_version": "final-791-ddc14ecbc568",
+    "domain_dictionary_version": "domains-v1",
+    "n_families": 791,
+    "n_long_rows": 3164,
+    "families_by_domain": {
+      "D1": 122,
+      "D2": 123,
+      "D3": 137,
+      "D4": 128,
+      "D5": 137,
+      "D6": 144
+    },
+    "families_by_id_namespace": {
+      "CSJUR-R": 18,
+      "CSJUR-V3": 100,
+      "CSJUR-V4": 84,
+      "CSJUR-X1": 59,
+      "CSJUR-X2": 40,
+      "numeric": 490
+    },
+    "n_cells_normalized": 42,
+    "normalizations": {
+      "strip_outer_whitespace": 42
+    },
+    "n_cells_with_internal_newlines": 28,
+    "extra_columns_preserved": [
+      "row_number",
+      "evaluation_stratum",
+      "approval_status"
+    ],
+    "metadata_value_counts": {
+      "evaluation_stratum": {
+        "harmful": 791
+      },
+      "approval_status": {
+        "approved": 791
+      }
+    }
+  },
+  "structure": {
+    "n_families": 791,
+    "n_rows": 3164,
+    "n_complete": 791,
+    "errors": []
+  },
+  "qa_flag_counts": {
+    "equal_variants_within_family": 0,
+    "exact_duplicates_across_families": 0,
+    "script": {
+      "ur_contains_latin": 69
+    },
+    "ru_possible_english_clause": 2,
+    "ru_items_with_technical_loans": 347
+  },
+  "groups": {
+    "n_groups": 791,
+    "n_multi_family_groups": 0,
+    "n_families_in_multi_groups": 0,
+    "near_duplicate_candidates": 0,
+    "candidates_unresolved_grouped_conservatively": 0,
+    "candidates_confirmed_grouped": 0,
+    "candidates_marked_distinct": 0,
+    "exact_duplicate_sets": 0
+  },
+  "new_family_screen": {
+    "threshold": 0.5,
+    "flagged": [],
+    "cleared_by_reviewer": 0
+  },
+  "gates": {
+    "ingest": "PASS",
+    "structure": "PASS",
+    "split": "PASS",
+    "exposure": "PASS"
+  }
+}

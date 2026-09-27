@@ -151,6 +151,30 @@ def exact_duplicate_groups(rows: Iterable[Prompt]) -> list[dict]:
     return out
 
 
+def cross_similarity(rows: Iterable[Prompt], set_a: set[str], set_b: set[str], *,
+                     threshold: float, conditions=("EN", "CS", "RU")) -> list[dict]:
+    """Pairs (a in set_a, b in set_b) whose token-Jaccard similarity reaches
+    `threshold` in any listed condition -- a deliberately loose screen for
+    relatives of evaluation families (lexical only; paraphrases in different
+    words are not caught)."""
+    toks: dict[tuple[str, str], frozenset[str]] = {}
+    for r in rows:
+        if r.condition in conditions and (r.base_id in set_a or r.base_id in set_b):
+            toks[(r.base_id, r.condition)] = frozenset(normalize_for_dup(r.prompt).split())
+    out = []
+    for a in sorted(set_a):
+        for b in sorted(set_b):
+            if a == b:
+                continue
+            best = max((len(toks[(a, c)] & toks[(b, c)]) / len(toks[(a, c)] | toks[(b, c)])
+                        for c in conditions if (a, c) in toks and (b, c) in toks
+                        and toks[(a, c)] | toks[(b, c)]), default=0.0)
+            if best >= threshold:
+                out.append({"family_a": a, "family_b": b, "method": "token_jaccard_max_EN_CS_RU",
+                            "score": round(best, 4), "threshold": threshold})
+    return out
+
+
 def token_jaccard_candidates(
     rows: Iterable[Prompt], *, threshold: float = 0.92,
 ) -> list[dict]:

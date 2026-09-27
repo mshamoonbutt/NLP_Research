@@ -1,29 +1,43 @@
 #!/usr/bin/env python3
-"""Exp 0 — ingest, validate, group and split the FINAL dataset (CPU only).
+"""Exp 0 — ingest, validate, group and split a dataset release (CPU only).
 
-    python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_final_692.csv
+    python scripts/exp0_finalize_data.py                       # the ACTIVE release (configs/dataset.yaml)
+    python scripts/exp0_finalize_data.py --release final-791   # a named release
+    python scripts/exp0_finalize_data.py --source-csv X.csv [--extend-split M.json]   # ad hoc
+    python scripts/exp0_finalize_data.py --training-extension-csv ext.csv --extension-name ext1
 
 Steps
- 1. Convert the seven-column CSV (csjail.convert_final) -- or read an already
-    converted JSONL via --dataset.
+ 1. Ingest. Release mode verifies the source CSV's SHA-256 against the
+    registry before converting (csjail.convert_final; the seven content
+    columns are required, extra metadata columns are preserved).
  2. Structural gate: every family has exactly one EN/CS/RU/UR row, one domain,
     no duplicates, no legacy SM. Counts come from the file, not from code.
  3. QA reports (IDs only, no prompt text): script flags, RU English-clause
     flags, equal variants, exact duplicates, token-Jaccard near-duplicate
     candidates. Nothing is deleted or rewritten.
  4. Duplicate grouping (exact + unresolved/confirmed candidates) -> group_id.
- 5. Optional QA ledger import (--qa-ledger) and descriptive agreement
-    (--independent-annotations). There is NO kappa gate: agreement is reported
-    when independent annotations exist, never stubbed.
- 6. Frozen, group-level, domain-stratified split manifest (fresh, or an
-    append-only extension of --extend-split).
- 7. Everything is written to a temp dir and only moved to
-    outputs/exp0/<dataset_version>/ (+ LATEST.json) if every gate passes.
-    Failures leave outputs/exp0/FAILED-*/ marked DIAGNOSTIC_ONLY.
+ 5. Optional QA ledger import and descriptive agreement. No kappa gate.
+ 6. Split: a fresh group-level, domain-stratified split, or an APPEND-ONLY
+    extension of a frozen manifest (release mode uses the registry's
+    `extends_split`). Newly added families that loosely resemble an
+    eval/holdout family (token-Jaccard >= --new-family-screen-threshold in
+    EN/CS/RU) are quarantined unless a reviewer marked the pair `distinct`
+    in data/qa/duplicate_decisions.csv.
+ 7. Exposure gate: families already used by judge development / pilots
+    (registry `exposure_samples`) must be in train_pool and unrelated to
+    eval families.
+ 8. Everything is written to a temp dir and moved to
+    outputs/exp0/<dataset_version>/ (+ LATEST.json) only if every gate
+    passes; failures leave outputs/exp0/FAILED-*/ marked DIAGNOSTIC_ONLY.
 
-On another machine with a committed finalized dir (the dataset JSONL itself
-is gitignored), recreate it with the same command plus --restore; it is
-copied in only if its sha256 and split_id match the committed manifest.
+Training-only extension mode (--training-extension-csv): the finalized CORE
+release (default LATEST) is loaded unchanged, the extension's families are
+appended as train-only (never evaluation), the new-family screen and exposure
+gate run, and a separately versioned `<core>+ext-<name>-<hash>` release is
+written WITHOUT updating LATEST (Phase 1 keeps using the core release).
+
+--restore recreates the gitignored dataset file inside a committed
+finalized dir; it is copied in only if its sha256 and split_id match.
 Files are written with LF line endings so hashes match across OSes.
 """
 from __future__ import annotations
@@ -40,24 +54,25 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from csjail.artifacts import EXP0_ROOT, FINALIZED_MARKER, ROOT, file_sha256_or_none  # noqa: E402
+import yaml  # noqa: E402
+
+from csjail.artifacts import EXP0_ROOT, FINALIZED_MARKER, ROOT, file_sha256_or_none, resolve_exp0  # noqa: E402
 from csjail.convert_final import convert, flag_counts  # noqa: E402
 from csjail.data import (  # noqa: E402
     SCHEMA_VERSION, DatasetError, Prompt, check_structure, load_dataset, summarize,
 )
 from csjail.qa import (  # noqa: E402
-    content_hash, equal_variant_flags, exact_duplicate_groups, ru_english_flags,
-    ru_loanword_inventory, script_flags, token_jaccard_candidates,
+    content_hash, cross_similarity, equal_variant_flags, exact_duplicate_groups,
+    ru_english_flags, ru_loanword_inventory, script_flags, token_jaccard_candidates,
 )
 from csjail.splits import (  # noqa: E402
-    attach_heuristic_features, build_groups, dataset_stats, extend_split,
-    load_duplicate_decisions, load_manifest, make_splits, pairwise_agreement, verify_split,
+    TRAINABLE_SPLITS, attach_heuristic_features, build_groups, dataset_stats, exposure_report,
+    extend_split, load_duplicate_decisions, load_manifest, make_splits, pairwise_agreement,
+    verify_split,
 )
 from csjail.utils.io import sha256_file, write_jsonl, write_text_lf  # noqa: E402
 
-QA_LEDGER_FIELDS = ["family_id", "dataset_version", "reviewer", "review_date",
-                    "harmful_eligible", "semantic_equivalence", "condition_validity",
-                    "cs_naturalness", "duplicate_decision", "resolution", "status", "notes"]
+REGISTRY = ROOT / "configs" / "dataset.yaml"
 
 
 def _read_ledger(path: Path) -> list[dict]:
@@ -69,11 +84,81 @@ def _read_ledger(path: Path) -> list[dict]:
     return rows
 
 
+def _load_samples(dirs: list[str]) -> list[tuple[str, dict]]:
+    out = []
+    for d in dirs:
+        p = Path(d) if Path(d).is_absolute() else ROOT / d
+        out.append((str(d), json.loads((p / "sample_manifest.json").read_text(encoding="utf-8"))))
+    return out
+
+
+def _findings(manifest: dict, split: dict, report: dict, exposure: dict) -> str:
+    m, c = split["meta"], split["meta"]["counts"]
+    dom = lambda s: " / ".join(f"{k} {v}" for k, v in c.get(s, {}).items() if k != "total")  # noqa: E731
+    conv = report.get("conversion") or {}
+    ext = manifest.get("training_extension")
+    lines = [
+        f"# Exp 0 findings — {manifest['dataset_version']}", "",
+        f"Generated by `scripts/exp0_finalize_data.py` at {report['created_utc']} (UTC).", "",
+        "## Input",
+        f"- Release: `{manifest.get('release') or 'unregistered'}`; source "
+        f"`{manifest.get('source_filename')}`, SHA-256 `{manifest['source_sha256']}`.",
+        f"- {manifest['n_families']} families, {manifest['n_rows']} rows "
+        f"(4 conditions per family). Families by domain: "
+        f"{json.dumps(conv.get('families_by_domain') or report.get('families_by_domain'))}.",
+        f"- Extra columns preserved: {conv.get('extra_columns_preserved', [])}; "
+        f"metadata values: {json.dumps(conv.get('metadata_value_counts', {}))}.",
+        "", "## Gates", *(f"- {k}: **{v}**" for k, v in manifest["gates"].items()),
+        "", "## Split",
+        f"- Split `{m['split_id']}` (scheme `{m['scheme']}`"
+        + (f"; append-only extension of `{m.get('extended_from_split_id')}`, "
+           f"{m.get('n_families_added')} families added" if m.get("extended_from_split_id") else "")
+        + ").",
+        *(f"- {s}: {c[s]['total']} ({dom(s)})" for s in sorted(c)),
+        f"- Groups: {report['groups']['n_groups']} "
+        f"({report['groups']['n_multi_family_groups']} multi-family); near-duplicate candidates "
+        f"at token-Jaccard >= {report['near_dup_threshold']}: "
+        f"{report['groups']['near_duplicate_candidates']}.",
+        f"- New-family screen vs non-training families (token-Jaccard >= "
+        f"{report['new_family_screen']['threshold']}): "
+        f"{len(report['new_family_screen']['flagged'])} flagged and quarantined, "
+        f"{report['new_family_screen']['cleared_by_reviewer']} cleared by reviewer decisions.",
+        "", "## Exposure (judge development / pilots)",
+        f"- Status: **{exposure['status']}**; exposed families: {exposure['n_exposed_families']}; "
+        f"pairwise overlap: {json.dumps(exposure['pairwise_family_overlap'])}.",
+        *(f"- `{s['sample']}` ({s['role']}, {s['generation_backend']}): {s['n_families']} families "
+          f"-> {json.dumps(s['split_counts'])}" for s in exposure["samples"]),
+        f"- Training pool {exposure['training']['train_pool']}; reserved from training "
+        f"{exposure['training']['reserved_from_training']}; eligible for preference training "
+        f"**{exposure['training']['eligible_for_preference_training']}**.",
+        "", "## Review flags (for humans; nothing was changed)",
+        f"- {json.dumps(report['qa_flag_counts'])}",
+        "", "## Not established by Exp 0",
+        "- Semantic equivalence across the four variants, harmfulness of each item, and "
+        "paraphrase-level duplicates (the screens are lexical).",
+        "- `approval_status=approved` is supplied review metadata, not independent agreement; "
+        "`evaluation_stratum=harmful` describes the prompt population, not model behaviour.",
+        "- `cmi_heuristic` / `urdu_word_ratio_heuristic` are unvalidated heuristics.",
+    ]
+    if ext:
+        lines += ["", "## Training-only extension",
+                  f"- `{ext['name']}` on core `{ext['core_dataset_version']}` (split "
+                  f"`{ext['core_split_id']}`): {ext['n_added']} families added as train-only, "
+                  f"{ext['n_quarantined']} quarantined. Evaluation membership and wording unchanged."]
+    return "\n".join(lines) + "\n"
+
+
 def main(argv=None) -> int:
+    reg = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
     ap = argparse.ArgumentParser()
-    src = ap.add_mutually_exclusive_group(required=True)
-    src.add_argument("--source-csv", help="final seven-column CSV")
+    src = ap.add_mutually_exclusive_group()
+    src.add_argument("--release", default=None, help="registered release (default: active)")
+    src.add_argument("--source-csv", help="ad hoc release CSV (not checked against the registry)")
     src.add_argument("--dataset", help="already-converted long JSONL")
+    src.add_argument("--training-extension-csv",
+                     help="append train-only families to a finalized core release")
+    ap.add_argument("--extension-name", default=None)
+    ap.add_argument("--core-exp0-dir", default=None, help="core release for extension mode (default LATEST)")
     ap.add_argument("--eval-size", type=int, default=200)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--scheme", choices=["main", "domain_holdout"], default="main")
@@ -83,7 +168,11 @@ def main(argv=None) -> int:
                     help="frozen split_manifest.json to extend append-only")
     ap.add_argument("--near-dup-threshold", type=float, default=0.92,
                     help="token-Jaccard threshold (NOT cosine)")
+    ap.add_argument("--new-family-screen-threshold", type=float, default=0.5,
+                    help="loose token-Jaccard screen of NEW families vs non-training families")
     ap.add_argument("--duplicate-decisions", default="data/qa/duplicate_decisions.csv")
+    ap.add_argument("--exposure-samples", nargs="*", default=None,
+                    help="sample dirs with sample_manifest.json (default: registry list)")
     ap.add_argument("--qa-ledger", default=None, help="optional QA ledger CSV")
     ap.add_argument("--independent-annotations", default=None,
                     help="optional CSV with rater1_*/rater2_* columns (pre-adjudication)")
@@ -97,13 +186,28 @@ def main(argv=None) -> int:
                     help="do not update LATEST.json (e.g. fixtures/smoke runs)")
     args = ap.parse_args(argv)
 
+    release_name = None
+    if not (args.source_csv or args.dataset or args.training_extension_csv):
+        release_name = args.release or reg["active"]
+        if release_name not in reg["releases"]:
+            print(f"FAIL: unknown release {release_name!r}", file=sys.stderr)
+            return 1
+    release = reg["releases"].get(release_name) if release_name else None
+    if args.exposure_samples is None:
+        args.exposure_samples = reg.get("exposure_samples", []) if (release or args.training_extension_csv) else []
+    if release and not args.extend_split and release.get("extends_split"):
+        args.extend_split = str(ROOT / release["extends_split"])
+    if args.training_extension_csv and not args.extension_name:
+        ap.error("--training-extension-csv needs --extension-name")
+
     out_root = Path(args.out_root)
     out_root.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     tmp = out_root / f".tmp-{stamp}-{os.getpid()}"
     tmp.mkdir()
     gates: dict[str, str] = {}
-    report: dict = {"created_utc": stamp, "schema_version": SCHEMA_VERSION}
+    report: dict = {"created_utc": stamp, "schema_version": SCHEMA_VERSION,
+                    "near_dup_threshold": args.near_dup_threshold}
 
     def fail(msg: str, code: int) -> int:
         report["gates"] = gates
@@ -116,8 +220,30 @@ def main(argv=None) -> int:
         return code
 
     # 1. ingest
+    core = None
     try:
-        if args.source_csv:
+        if release:
+            src_path = ROOT / release["source_csv"]
+            if not src_path.exists():
+                raise ValueError(f"release source {release['source_csv']} not found (local-only file)")
+            got = sha256_file(src_path)
+            if got != release["sha256"]:
+                raise ValueError(f"{release['source_csv']} sha256 {got[:12]} != registry "
+                                 f"{release['sha256'][:12]} -- wrong or modified file")
+            args.source_csv = str(src_path)
+        if args.training_extension_csv:
+            core = resolve_exp0(args.core_exp0_dir)
+            core_rows = core.load_rows()
+            ext_long, conv = convert(args.training_extension_csv)
+            clash = sorted({r["base_id"] for r in ext_long} & {r.base_id for r in core_rows})
+            if clash:
+                raise ValueError(f"extension reuses core family IDs {clash[:5]}")
+            ext_rows = [Prompt.model_validate(r) for r in ext_long]
+            rows = core_rows + ext_rows
+            report["conversion"] = {k: v for k, v in conv.items() if k != "review_flags"}
+            source_sha = conv["input_sha256"]
+            args.extend_split = str(core.split_path)
+        elif args.source_csv:
             long_rows, conv = convert(args.source_csv)
             report["conversion"] = {k: v for k, v in conv.items() if k != "review_flags"}
             source_sha = conv["input_sha256"]
@@ -138,10 +264,14 @@ def main(argv=None) -> int:
         gates["structure"] = "FAIL"
         return fail(f"structure: {len(st.errors)} errors, e.g. {st.errors[:3]}", 2)
     gates["structure"] = "PASS"
-    versions = {r.dataset_version for r in rows}
     chash = content_hash(rows)
-    dataset_version = versions.pop() if len(versions) == 1 and None not in versions \
-        else f"final-{st.n_families}-{chash[:12]}"
+    if core:
+        ext_hash = content_hash(ext_rows)[:8]
+        dataset_version = f"{core.dataset_version}+ext-{args.extension_name}-{ext_hash}"
+    else:
+        versions = {r.dataset_version for r in rows}
+        dataset_version = versions.pop() if len(versions) == 1 and None not in versions \
+            else f"final-{st.n_families}-{chash[:12]}"
 
     # 3. QA reports (ids only)
     exact = exact_duplicate_groups(rows)
@@ -157,8 +287,7 @@ def main(argv=None) -> int:
     decisions = load_duplicate_decisions(args.duplicate_decisions)
     with (tmp / "duplicate_candidates.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["family_a", "family_b", "condition", "method",
-                                          "score", "threshold", "decision"],
-                           lineterminator="\n")
+                                          "score", "threshold", "decision"], lineterminator="\n")
         w.writeheader()
         for c in cands:
             w.writerow({**c, "decision": decisions.get(tuple(sorted((c["family_a"],
@@ -188,11 +317,22 @@ def main(argv=None) -> int:
         qa_summary["agreement"] = pairwise_agreement(args.independent_annotations)
     write_text_lf(tmp / "qa_summary.json", json.dumps(qa_summary, ensure_ascii=False, indent=2))
 
-    # 6. split
+    # 6. split (+ loose screen of newly added families against non-training families)
+    screen = {"threshold": args.new_family_screen_threshold, "flagged": [], "cleared_by_reviewer": 0}
     try:
         if args.extend_split:
-            split = extend_split(load_manifest(args.extend_split), rows,
-                                 fam_to_group=fam_to_group, dataset_version=dataset_version)
+            frozen = load_manifest(args.extend_split)
+            new = {r.base_id for r in rows} - set(frozen["assignments"])
+            nontrain = {f for f, a in frozen["assignments"].items()
+                        if a["split"] not in TRAINABLE_SPLITS}
+            pairs = cross_similarity(rows, new, nontrain, threshold=args.new_family_screen_threshold)
+            kept = [p for p in pairs if decisions.get(tuple(sorted((p["family_a"], p["family_b"]))))
+                    != "distinct"]
+            screen.update(flagged=kept, cleared_by_reviewer=len(pairs) - len(kept))
+            split = extend_split(
+                frozen, rows, fam_to_group=fam_to_group, dataset_version=dataset_version,
+                quarantine={p["family_a"] for p in kept},
+                added_fields={"extension": args.extension_name} if core else None)
         else:
             split = make_splits(rows, fam_to_group=fam_to_group, eval_size=args.eval_size,
                                 seed=args.seed, scheme=args.scheme,
@@ -201,44 +341,77 @@ def main(argv=None) -> int:
     except ValueError as e:
         gates["split"] = "FAIL"
         return fail(f"split: {e}", 3)
+    report["new_family_screen"] = screen
     rows = [r.model_copy(update={"group_id": fam_to_group[r.base_id],
                                  "dataset_version": dataset_version}) for r in rows]
     rows = attach_heuristic_features(rows)
     errs = verify_split(split, rows)
+    if core:
+        moved = [f for f, a in core.split["assignments"].items()
+                 if split["assignments"][f]["split"] != a["split"]]
+        errs += [f"core family {f} changed split" for f in moved[:5]]
     if errs:
         gates["split"] = "FAIL"
         return fail(f"split verification: {errs[:3]}", 3)
     gates["split"] = "PASS"
     write_text_lf(tmp / "split_manifest.json", json.dumps(split, ensure_ascii=False, indent=2))
 
-    # 7. dataset + manifest
+    # 7. exposure gate
+    try:
+        exposure = exposure_report(split, _load_samples(args.exposure_samples),
+                                   reg.get("reserved_from_training") or [])
+    except FileNotFoundError as e:
+        gates["exposure"] = "FAIL"
+        return fail(f"exposure: sample manifest missing ({e})", 6)
+    write_text_lf(tmp / "exposure_report.json", json.dumps(exposure, ensure_ascii=False, indent=2))
+    if exposure["conflicts"]:
+        gates["exposure"] = "FAIL"
+        return fail(f"exposure: {len(exposure['conflicts'])} used families conflict with the "
+                    f"evaluation set, e.g. {exposure['conflicts'][:3]}", 6)
+    gates["exposure"] = "PASS"
+
+    # 8. dataset + manifest
     ds_name = "dataset_final.jsonl"
     write_jsonl(tmp / ds_name, [r.model_dump() for r in rows])
     write_text_lf(tmp / "dataset_stats.json",
-        json.dumps({"summary": summarize(rows), "stats": dataset_stats(rows)},
-                   ensure_ascii=False, indent=2))
+                  json.dumps({"summary": summarize(rows), "stats": dataset_stats(rows)},
+                             ensure_ascii=False, indent=2))
     manifest = {
         "dataset_version": dataset_version,
+        "release": release_name,
         "schema_version": SCHEMA_VERSION,
         "source_sha256": source_sha,
-        "source_path": args.source_csv or args.dataset,
+        "source_filename": Path(args.training_extension_csv or args.source_csv
+                                or args.dataset).name,
         "normalized_content_sha256": chash,
         "dataset_file": ds_name,
         "dataset_file_sha256": sha256_file(tmp / ds_name),
         "split_file": "split_manifest.json",
         "split_id": split["meta"]["split_id"],
         "split_scheme": split["meta"]["scheme"],
+        "extends_split_id": split["meta"].get("extended_from_split_id"),
         "qa_ledger_sha256": file_sha256_or_none(args.qa_ledger),
         "duplicate_decisions_sha256": file_sha256_or_none(args.duplicate_decisions),
         "domain_dictionary_version": (report.get("conversion") or {}).get("domain_dictionary_version"),
         "n_families": st.n_families, "n_rows": st.n_rows,
+        "exposure_samples": args.exposure_samples,
+        "eligible_training_families": exposure["training"]["eligible_for_preference_training"],
         "gates": gates,
-        "notes": ["no dataset-level kappa gate (docs/PROTOCOL.md §3.3)",
+        "notes": ["no dataset-level kappa gate (docs/PROTOCOL.md §1)",
                   "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"],
     }
+    if core:
+        n_q = sum(1 for a in split["assignments"].values()
+                  if a.get("extension") == args.extension_name and a["split"] not in TRAINABLE_SPLITS)
+        manifest["training_extension"] = {
+            "name": args.extension_name, "core_dataset_version": core.dataset_version,
+            "core_split_id": core.split_id, "source_sha256": source_sha,
+            "n_added": len(ext_rows) // 4, "n_quarantined": n_q,
+            "policy": "train-only; evaluation membership and wording frozen"}
     write_text_lf(tmp / "dataset_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
     report["gates"] = gates
     write_text_lf(tmp / "exp0_report.json", json.dumps(report, ensure_ascii=False, indent=2))
+    write_text_lf(tmp / "FINDINGS.md", _findings(manifest, split, report, exposure))
     write_text_lf(tmp / FINALIZED_MARKER, stamp + "\n")
 
     dest = out_root / dataset_version
@@ -264,18 +437,21 @@ def main(argv=None) -> int:
             return 4
         shutil.rmtree(dest)
     tmp.rename(dest)
-    if not args.no_latest:
+    if not args.no_latest and not core:
         rel = os.path.relpath(dest, ROOT).replace("\\", "/")
         write_text_lf(out_root / "LATEST.json", json.dumps({"dir": rel}, indent=2) + "\n")
 
     m = split["meta"]
-    print(f"[exp0] dataset_version: {dataset_version}")
+    print(f"[exp0] dataset_version: {dataset_version}" + (f"  (release {release_name})" if release_name else ""))
     print(f"[exp0] families: {st.n_families}  rows: {st.n_rows}  (structure PASS)")
     print(f"[exp0] split {m['split_id']} scheme={m['scheme']}: "
           + ", ".join(f"{s}={c['total']}" for s, c in m["counts"].items()))
-    print(f"[exp0] groups: {group_report}")
+    print(f"[exp0] new-family screen: {len(screen['flagged'])} quarantined, "
+          f"{screen['cleared_by_reviewer']} cleared by reviewer")
+    print(f"[exp0] exposure: {exposure['status']}; eligible training families "
+          f"{exposure['training']['eligible_for_preference_training']}")
     print(f"[exp0] QA flags (review, not deletions): {report['qa_flag_counts']}")
-    print(f"[exp0] FINALIZED -> {dest}")
+    print(f"[exp0] FINALIZED -> {dest}" + ("  (LATEST unchanged: training-only extension)" if core else ""))
     return 0
 
 

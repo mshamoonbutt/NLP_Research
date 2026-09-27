@@ -6,7 +6,7 @@ import pytest
 from csjail.convert_final import convert, id_namespace
 from csjail.data import Prompt, load_dataset, split_row_id, validate_structure
 from csjail.utils.io import write_jsonl
-from tests.conftest import REAL_CSV, read_fixture_csv, write_csv
+from tests.conftest import FIXTURE_CSV, REAL_CSV, read_fixture_csv, write_csv
 
 
 def test_fixture_converts_to_four_rows_per_family(fixture_rows):
@@ -78,7 +78,7 @@ def test_bad_input_fails(tmp_path, mutate, msg):
 def test_wrong_columns_fail(tmp_path):
     p = tmp_path / "bad.csv"
     p.write_text("prompt_id,category,EN,CS,RU,UR\n1,1,a,b,c,d\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="expected columns"):
+    with pytest.raises(ValueError, match="required columns"):
         convert(p)
 
 
@@ -113,3 +113,41 @@ def test_real_snapshot_acceptance():
     assert rep["review_flags"]["exact_duplicates_across_families"] == []
     ur_latin = [f for f in rep["review_flags"]["script"] if f["flag"] == "ur_contains_latin"]
     assert len(ur_latin) == 60
+
+
+def _ten_column(rows, **overrides):
+    out = []
+    for i, r in enumerate(rows, 1):
+        out.append({"row_number": str(i), **r, "evaluation_stratum": "harmful",
+                    "approval_status": "approved", **overrides.get(r["prompt_id"], {})})
+    return out
+
+
+def _write_any(path, rows):
+    import csv
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]), lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    return path
+
+
+def test_ten_column_release_preserves_metadata(tmp_path):
+    rows = _ten_column(read_fixture_csv())
+    out, rep = convert(_write_any(tmp_path / "ten.csv", rows))
+    assert rep["extra_columns_preserved"] == ["row_number", "evaluation_stratum", "approval_status"]
+    assert rep["metadata_value_counts"]["approval_status"] == {"approved": 12}
+    r = next(x for x in out if x["base_id"] == "0012" and x["condition"] == "CS")
+    assert r["provenance"]["source_metadata"] == {"row_number": "2", "evaluation_stratum": "harmful",
+                                                   "approval_status": "approved"}
+    assert r["id"] == "0012::CS"                       # row_number is never identity
+    seven, _ = convert(FIXTURE_CSV)                     # same content -> same dataset version
+    assert out[0]["dataset_version"] == seven[0]["dataset_version"]
+
+
+@pytest.mark.parametrize("col,val", [("approval_status", "pending"),
+                                     ("evaluation_stratum", "benign")])
+def test_unsupported_metadata_values_fail(tmp_path, col, val):
+    rows = _ten_column(read_fixture_csv(), **{"31": {col: val}})
+    with pytest.raises(ValueError, match="unsupported"):
+        convert(_write_any(tmp_path / "bad.csv", rows))
