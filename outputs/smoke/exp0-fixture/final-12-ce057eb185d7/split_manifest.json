@@ -1,0 +1,103 @@
+{
+  "assignments": {
+    "0012": {
+      "split": "eval_main",
+      "group_id": "0012",
+      "domain_id": "D2"
+    },
+    "31": {
+      "split": "train_pool",
+      "group_id": "31",
+      "domain_id": "D6"
+    },
+    "44": {
+      "split": "train_pool",
+      "group_id": "44",
+      "domain_id": "D2"
+    },
+    "58": {
+      "split": "eval_main",
+      "group_id": "58",
+      "domain_id": "D3"
+    },
+    "61": {
+      "split": "train_pool",
+      "group_id": "61",
+      "domain_id": "D5"
+    },
+    "7": {
+      "split": "train_pool",
+      "group_id": "7",
+      "domain_id": "D1"
+    },
+    "99": {
+      "split": "train_pool",
+      "group_id": "99",
+      "domain_id": "D6"
+    },
+    "CSJUR-R-0246-01": {
+      "split": "train_pool",
+      "group_id": "CSJUR-R-0246-01",
+      "domain_id": "D5"
+    },
+    "CSJUR-V3-0001": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V3-0001",
+      "domain_id": "D3"
+    },
+    "CSJUR-V3-0007": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V3-0007",
+      "domain_id": "D1"
+    },
+    "CSJUR-V4-0002": {
+      "split": "eval_main",
+      "group_id": "CSJUR-V4-0002",
+      "domain_id": "D4"
+    },
+    "CSJUR-V4-0010": {
+      "split": "train_pool",
+      "group_id": "CSJUR-V4-0010",
+      "domain_id": "D4"
+    }
+  },
+  "meta": {
+    "scheme": "main",
+    "seed": 42,
+    "method": "group-level, domain-stratified (largest-remainder quotas), numpy default_rng(seed).permutation over sorted groups per sorted domain",
+    "eval_size_requested": 4,
+    "holdout_domains": [],
+    "eval_quota_by_domain": {
+      "D2": 1,
+      "D6": 0,
+      "D3": 1,
+      "D5": 0,
+      "D1": 1,
+      "D4": 1
+    },
+    "size_adjustments": {},
+    "multi_domain_groups": [],
+    "dataset_version": "final-12-ce057eb185d7",
+    "counts": {
+      "eval_main": {
+        "total": 4,
+        "D1": 1,
+        "D2": 1,
+        "D3": 1,
+        "D4": 1
+      },
+      "train_pool": {
+        "total": 8,
+        "D1": 1,
+        "D2": 1,
+        "D3": 1,
+        "D4": 1,
+        "D5": 2,
+        "D6": 2
+      }
+    },
+    "n_families": 12,
+    "split_id": "46da1c56efd3f134",
+    "created_utc": "2026-09-27T07:56:01.043712+00:00"
+  }
+}

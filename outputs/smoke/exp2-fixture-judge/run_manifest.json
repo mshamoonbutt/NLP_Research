@@ -1,0 +1,120 @@
+{
+  "kind": "eval_run_manifest",
+  "experiment": "exp2_primary",
+  "created_utc": "2026-09-27T08:01:04.521806+00:00",
+  "git_sha": "aa5a5200843e985111d9297e34a10829fa5dce01",
+  "debug": true,
+  "args": {
+    "models": [
+      "qwen25"
+    ],
+    "conditions": [
+      "CS",
+      "EN",
+      "RU",
+      "UR"
+    ],
+    "families": "all",
+    "exp0_dir": "outputs/smoke/exp0-fixture/final-12-ce057eb185d7",
+    "split_manifest": null,
+    "out_dir": "outputs/smoke/exp2-fixture-judge",
+    "judge_manifest": "C:\\Users\\Unnus Ahmad Usmani\\Desktop\\NLP_Research\\outputs\\exp1\\judge_validation_manifest.json",
+    "temperature": null,
+    "max_tokens": null,
+    "seed": null,
+    "max_families": 2,
+    "backend": "ollama",
+    "skip_judge": false,
+    "allow_unvalidated_judge": true,
+    "allow_unpinned_models": false,
+    "allow_fallback_template": false
+  },
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 512,
+    "seed": 0,
+    "n": 1
+  },
+  "sampling_overrides": {},
+  "eval_config_sha256": "1d71eb92492965bb38b3ae56cd7e2f76a96af6fcdaba4c1c5063f9dbfc8fca8c",
+  "dataset_version": "final-12-ce057eb185d7",
+  "dataset_manifest": {
+    "dataset_version": "final-12-ce057eb185d7",
+    "release": null,
+    "schema_version": "csjail-longform-v2",
+    "source_sha256": "19034edf25b3aa4b018aef2f546932dc48c629e4286d23bc901e7ca7f7d68059",
+    "source_filename": "final_fixture.csv",
+    "normalized_content_sha256": "ce057eb185d741eefa44d09ea350aa94c37928251dc95f3364e661c5ccdc0874",
+    "dataset_file": "dataset_final.jsonl",
+    "dataset_file_sha256": "d0e888f1f18b2c4065d361ee6db05afcdf55e57b981a189516c71eb2b88c6a4b",
+    "split_file": "split_manifest.json",
+    "split_id": "46da1c56efd3f134",
+    "split_scheme": "main",
+    "extends_split_id": null,
+    "qa_ledger_sha256": null,
+    "duplicate_decisions_sha256": null,
+    "domain_dictionary_version": "domains-v1",
+    "n_families": 12,
+    "n_rows": 48,
+    "exposure_samples": [],
+    "eligible_training_families": 8,
+    "gates": {
+      "ingest": "PASS",
+      "structure": "PASS",
+      "split": "PASS",
+      "exposure": "PASS"
+    },
+    "notes": [
+      "no dataset-level kappa gate (docs/PROTOCOL.md §1)",
+      "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+    ]
+  },
+  "split_id": "46da1c56efd3f134",
+  "split_scheme": "main",
+  "families_selector": "all",
+  "max_families": 2,
+  "n_rows_per_model": 8,
+  "backend": "ollama",
+  "judging": "UNVALIDATED judge (debug)",
+  "judge_fingerprint": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "fd5a40e535fba75a"
+  },
+  "judge_fingerprint_id": "fd5a40e535fba75a",
+  "judge_validation_manifest_sha256": null,
+  "models": {
+    "qwen25": {
+      "backend": "ollama",
+      "model_key": "qwen25",
+      "hf_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "revision": null,
+      "reference_hf_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "ollama_tag": "qwen2.5:1.5b-instruct-q8_0",
+      "ollama_digest": "b19683a34698365318287452c1711a7dd94253eba73c1f834e09a09c2b8d9415",
+      "quantization": "Q8_0",
+      "parameter_size": "1.5B",
+      "ollama_parameters": "",
+      "chat_template_sha256": "cddb6ab770cd808149aa84417fd5489dd48171caca471ffb08937fb9a54df456",
+      "template_is_fallback": false,
+      "template_probe": "{{- if .Messages }}\n{{- if or .System .Tools }}<|im_start|>system\n{{- if .System }}\n{{ .System }}\n{{- end }}\n{{- if .Tools }}\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{{- range .Tools }}\n{\"type\": \"function\", \"function\": {{ .Function }}}\n{{- end }}\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call>\n{{- end }}<|im_end|>\n{{ end }}\n{{- range $i, $_ := .Messages }}\n{{- $last := eq (len (slice $.Messages $i)) 1 -}}\n{{- if eq .Role \"user\" }}<|im_start|>user\n{{ .Content }}<|im_end|>\n{{ else if eq .Role \"assistant\" }}<|im_start|>assistant\n{{ if .Content }}{{ .Content }}\n{{- else if .ToolCalls }}<tool_call>\n{{ range .ToolCalls }}{\"name\": \"{{ .Function.Name }}\", \"arguments\": {{ .Function.Arguments }}}\n{{ end }}</tool_call>\n{{- end }}{{ if not $last }}<|im_end|>\n{{ end }}\n{{- else if eq .Role \"tool\" }}<|im_start|>user\n<tool_response>\n{{ .Content }}\n</tool_response><|im_end|>\n{{ end }}\n{{- if and (ne .Role \"assistant\") $last }}<|im_start|>assistant\n{{ end }}\n{{- end }}\n{{- else }}\n{{- if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant\n{{ end }}{{ .Response }}{{ if .Response }}<|im_end|>{{ end }}",
+      "default_system": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+      "system_prompt_sha256": null,
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "num_ctx": 4096,
+      "runtime": {
+        "ollama": "0.34.4"
+      },
+      "scope_note": "development/debug only: quantized GGUF via Ollama, not the pinned bf16 HF weights used by the production vLLM backend"
+    }
+  },
+  "planned_primary_responses_this_invocation": 8
+}
