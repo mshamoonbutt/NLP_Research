@@ -1,0 +1,37 @@
+{
+  "equal_variants_within_family": [],
+  "exact_duplicates_across_families": [],
+  "script": [
+    {
+      "id": "CSJUR-V3-0001::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0002::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-R-0246-01::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V3-0007::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    },
+    {
+      "id": "CSJUR-V4-0010::UR",
+      "flag": "ur_contains_latin",
+      "severity": "info"
+    }
+  ],
+  "ru_possible_english_clause": [],
+  "ru_loanword_inventory": {
+    "n_ru_items_with_technical_loans": 0,
+    "term_item_counts": {},
+    "policy": "technical loans/names/acronyms permitted; substantive English clauses flagged for bilingual adjudication"
+  }
+}

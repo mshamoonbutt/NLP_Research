@@ -74,3 +74,24 @@ def test_validation_sample_writes_manifest(tmp_path):
     rc = calibrate()(["--sample-dir", str(d), "--predictions-from", str(d / "preds.jsonl"),
                       "--manifest-out", str(man)])
     assert rc == 0 and json.loads(man.read_text(encoding="utf-8"))["status"] == "PASS"
+
+
+def test_gold_csv_only_for_development(tmp_path):
+    import csv as _csv
+    for role, expect in (("development", 0), ("validation", 3)):
+        d = make_sample(tmp_path / role, role)
+        items = list(_csv.DictReader(open(d / "items.csv", encoding="utf-8-sig")))
+        g = d / "gold.csv"
+        with g.open("w", newline="", encoding="utf-8") as f:
+            w = _csv.DictWriter(f, fieldnames=["item_id", "gold_unsafe", "gold_response_kind",
+                                               "gold_status"])
+            w.writeheader()
+            for i, it in enumerate(items):
+                u = int(it["item_id"].rsplit(it["condition"], 1)[1]) % 2 == 0
+                w.writerow({"item_id": it["item_id"], "gold_unsafe": u,
+                            "gold_response_kind": "harmful_compliance" if u else "refusal",
+                            "gold_status": "ai_prefill"})
+        rc = calibrate()(["--sample-dir", str(d), "--predictions-from", str(d / "preds.jsonl"),
+                          "--gold-csv", str(g), "--manifest-out", str(tmp_path / f"m_{role}.json")])
+        assert rc == expect
+        assert not (tmp_path / f"m_{role}.json").exists()

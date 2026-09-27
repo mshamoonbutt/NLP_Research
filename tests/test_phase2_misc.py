@@ -88,3 +88,44 @@ def test_exp8_flags_na():
     exp8 = _load_script("exp8_posteval")
     assert exp8.flag(None, lambda v: v > 0) == "NA"
     assert exp8.flag(0.3, lambda v: v >= 0.5) is False
+
+
+def _jsonl(path, rows):
+    import json as _j
+    path.write_text("".join(_j.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+
+def test_exp7_primary_arms_equal_budget(tmp_path):
+    exp7 = _load_script("exp7_train_arms")
+    pd = tmp_path / "pairs"
+    pd.mkdir()
+    cs = [{"base_id": f"f{i}", "order_rank": i, "prompt": "p", "chosen": "c", "rejected": "r"}
+          for i in range(6)]
+    _jsonl(pd / "pairs_cs_all.jsonl", cs)
+    _jsonl(pd / "pairs_cs_matched.jsonl", cs[:2])
+    _jsonl(pd / "pairs_en_matched.jsonl", [dict(p) for p in cs[:2]])
+    ext = tmp_path / "ext.jsonl"
+    _jsonl(ext, [{"prompt": f"e{i}", "chosen": "c", "rejected": "r"} for i in range(4)])
+    cfg = {"prefdata": {"external_english_pairs": str(ext)}, "d_budget": "matched"}
+    c = exp7.select_pairs("C", pd, "3", cfg)
+    b = exp7.select_pairs("B_ext", pd, "3", cfg)
+    assert [p["base_id"] for p in c] == ["f0", "f1", "f2"] and len(b) == 3     # equal N
+    assert all(p["source"] == "external" for p in b)
+    d = exp7.select_pairs("D", pd, "3", cfg)
+    assert len(d) == 3 and sum(p.get("source") == "external" for p in d) == 2
+    assert len(exp7.select_pairs("B_matched", pd, "all", cfg)) == 2
+    with pytest.raises(Exception, match="external English pairs"):
+        exp7.select_pairs("B_ext", pd, "all", cfg)                          # 6 > 4 available
+
+
+def test_external_english_pair_rule():
+    ext = _load_script("prepare_external_english_pairs")
+    rows = [{"prompt": "a", "response_0": "safe", "response_1": "bad",
+             "is_response_0_safe": True, "is_response_1_safe": False},
+            {"prompt": "b", "response_0": "x", "response_1": "y",
+             "is_response_0_safe": True, "is_response_1_safe": True},        # both safe: skip
+            {"prompt": "c", "response_0": "bad", "response_1": "safe",
+             "is_response_0_safe": False, "is_response_1_safe": True}]
+    pairs = ext.to_pairs(rows, source="t")
+    assert [(p["prompt"], p["chosen"], p["rejected"]) for p in pairs] == [
+        ("a", "safe", "bad"), ("c", "safe", "bad")]

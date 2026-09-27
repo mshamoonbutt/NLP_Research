@@ -1,0 +1,86 @@
+{
+  "created_utc": "2026-09-27T08:02:08.714014+00:00",
+  "note": "Smoke/debug evidence only (CPU, Ollama Q8_0). NOT production-backend certification; raw outputs are gitignored under outputs/smoke/.",
+  "offline_cpu_checks": {
+    "pytest": "all passed",
+    "smoke_pipeline_cpu": "SMOKE OK",
+    "smoke_exp1_cpu": "SMOKE OK"
+  },
+  "live_generation_smoke": {
+    "dataset_version": "final-791-ddc14ecbc568",
+    "split_id": "51c2dd1bb7d72166",
+    "backend": "ollama",
+    "families_selector": "train_pool",
+    "max_families": 2,
+    "models": {
+      "qwen25": {
+        "ollama_tag": "qwen2.5:1.5b-instruct-q8_0",
+        "quantization": "Q8_0",
+        "ollama_digest": "b19683a34698365318287452c1711a7dd94253eba73c1f834e09a09c2b8d9415",
+        "chat_template_sha256": "cddb6ab770cd808149aa84417fd5489dd48171caca471ffb08937fb9a54df456",
+        "default_system": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
+      },
+      "phi3": {
+        "ollama_tag": "phi3:3.8b-mini-4k-instruct-q8_0",
+        "quantization": "Q8_0",
+        "ollama_digest": "6b7f8cbb8b25416d441932f024de06c899044e9390b3bc8c8be47edc2e49f23c",
+        "chat_template_sha256": "9ce8dd028728c1b660ffd2959cb43d3a864efa0d04b95eb60fe30f15f4038f16",
+        "default_system": null
+      },
+      "llama32": {
+        "ollama_tag": "llama3.2:3b-instruct-q8_0",
+        "quantization": "Q8_0",
+        "ollama_digest": "e410b836fe6132b8c5e09bd83156dab0ce2c19f371e0bce2d77e993f8a65241a",
+        "chat_template_sha256": "040bccf5dc2664e908322ac706328ef28908aab007ae316618dd5edc5b588391",
+        "default_system": null
+      }
+    },
+    "expected_records": 24,
+    "observed_records": 24,
+    "unique_keys": 24,
+    "by_model_condition": {
+      "llama32/CS": 2,
+      "llama32/EN": 2,
+      "llama32/RU": 2,
+      "llama32/UR": 2,
+      "phi3/CS": 2,
+      "phi3/EN": 2,
+      "phi3/RU": 2,
+      "phi3/UR": 2,
+      "qwen25/CS": 2,
+      "qwen25/EN": 2,
+      "qwen25/RU": 2,
+      "qwen25/UR": 2
+    },
+    "generation_failures": 0,
+    "finish_reasons": {
+      "stop": 15,
+      "length": 9
+    },
+    "judge_status": {
+      "not_run": 24
+    },
+    "resume_rerun_new_generations": 0,
+    "status": "PASSED (generation-only, debug)"
+  },
+  "live_judge_smoke": {
+    "dataset": "harmless fixture (tests/fixtures/final_fixture.csv) -- no harmful text sent",
+    "judge_fingerprint_id": "fd5a40e535fba75a",
+    "judge_model": "gpt-4o-mini",
+    "calls": 8,
+    "judge_status": {
+      "api_error": 8
+    },
+    "error": "HTTP 429 insufficient_quota / credit_balance_exhausted (OpenAI account has no credits)",
+    "handled_as": "missing (ASR NA), retried on next run -- never counted as safe",
+    "status": "BLOCKED: API reached and authenticated, but no credits; judge-contract parsing on live output NOT verified"
+  },
+  "production_backend": {
+    "vllm_gpu": "NOT RUN (no CUDA GPU on this machine)",
+    "official_templates": "see outputs/checks/official_chat_templates.json (Llama gated: needs HF_TOKEN)"
+  },
+  "benign_urdu_controls": {
+    "qwen25_phi3": "outputs/checks/urdu_sanity_ollama.json (degenerate/incorrect Urdu-script answers)",
+    "llama32": "outputs/checks/urdu_sanity_ollama_llama32.json (mostly coherent; some script contamination)"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "human_verification": {
+    "labels_prefilled_by_ai": true,
+    "human_verifier_ids": null,
+    "verification_date": null,
+    "what_was_verified": null,
+    "note": "Fill from real records only; leave null if unknown."
+  },
+  "derived": {
+    "source_files": {
+      "rater1_ai_prefilled_for_verification.csv": "d76cdc8b0e1131fe1a441d11aef542de565cab11e17c483494e74e733bc7f72d",
+      "rater2_ai_prefilled_for_verification.csv": "ef947d3f8942be699d9dbdcf421b1d4a7197c6f693dc330d1c12b61ce8078948"
+    },
+    "rater_id_values": [
+      "AI_PRELABEL",
+      "AI_PRELABEL_R2"
+    ],
+    "n_items": 160,
+    "n_items_labels_identical": 160,
+    "independent_annotations": false,
+    "gold_status_counts": {
+      "pending_adjudication": 15,
+      "ai_prefill": 145
+    },
+    "unsafe_by_condition": {
+      "CS": 7,
+      "UR": 5,
+      "EN": 5,
+      "RU": 3
+    }
+  }
+}

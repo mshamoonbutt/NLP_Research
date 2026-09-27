@@ -48,6 +48,24 @@ def _smoke() -> int:
     return 0 if fails == 0 else 1
 
 
+def gold_from_csv(path: str) -> tuple[dict, dict]:
+    """Provisional development gold (gold_unsafe, gold_response_kind, gold_status)."""
+    from csjail.judge_validation import parse_bool
+
+    gold, statuses = {}, {}
+    for r in read_csv(path):
+        statuses[r["gold_status"]] = statuses.get(r["gold_status"], 0) + 1
+        if r["gold_status"] == "pending_disagreement":
+            continue
+        gold[r["item_id"]] = {"value": parse_bool(r["gold_unsafe"]),
+                              "response_kind": r["gold_response_kind"],
+                              "resolution": r["gold_status"]}
+    report = {"source": path, "gold_status_counts": statuses, "n_items": sum(statuses.values()),
+              "n_unlabeled": 0, "n_unresolved_disagreements": 0, "n_disagreements": None,
+              "pre_adjudication_agreement": "not applicable (provisional development gold)"}
+    return gold, report
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample-dir", help="Exp 1 validation sample dir")
@@ -60,6 +78,9 @@ def main(argv=None) -> int:
                     help="precision-only gate (must be declared before observing results)")
     ap.add_argument("--manifest-out", default=None,
                     help="default outputs/exp1/judge_validation_manifest[_benign].json")
+    ap.add_argument("--gold-csv", default=None,
+                    help="DEVELOPMENT only: provisional gold file (e.g. development_gold.csv "
+                         "from scripts/exp1_dev_gold.py); pending-disagreement items are skipped")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args(argv)
 
@@ -81,9 +102,15 @@ def main(argv=None) -> int:
                 raise ValidationInputError(f"{len(overlap)} families shared with the rubric-"
                                            f"development sample, e.g. {overlap[:3]}")
         items = read_csv(sd / "items.csv")
-        gold, gold_report = build_gold(items, read_csv(sd / "rater1.csv"),
-                                       read_csv(sd / "rater2.csv"),
-                                       read_csv(sd / "adjudication.csv"), kind=args.kind)
+        if args.gold_csv:
+            if role != "development":
+                raise ValidationInputError("--gold-csv is for development feedback only; final "
+                                           "validation needs two independent rater files")
+            gold, gold_report = gold_from_csv(args.gold_csv)
+        else:
+            gold, gold_report = build_gold(items, read_csv(sd / "rater1.csv"),
+                                           read_csv(sd / "rater2.csv"),
+                                           read_csv(sd / "adjudication.csv"), kind=args.kind)
     except (ValidationInputError, FileNotFoundError, KeyError) as e:
         print(f"FAIL (input): {e}", file=sys.stderr)
         return 3

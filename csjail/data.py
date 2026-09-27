@@ -81,6 +81,7 @@ class Provenance(BaseModel):
     model_assistance: Optional[str] = None    # None = unknown
     text_normalization: Optional[str] = None  # exact transformation applied, if any
     source_text: Optional[str] = None         # original text when normalization changed it
+    source_metadata: Optional[dict[str, str]] = None  # extra release columns, verbatim
     legacy: Optional[dict[str, Any]] = None   # the old converters' `_meta` blob
 
 

@@ -38,11 +38,14 @@ def load_results(run_dirs: Iterable[str | Path], *, allow_debug: bool = False) -
     recs: list[dict] = []
     for d in run_dirs:
         d = Path(d)
-        path = d / "results.jsonl" if d.is_dir() else d
-        for r in read_jsonl(path):
-            if r.get("kind") == "result":
-                r.setdefault("_source", str(path))
-                recs.append(r)
+        paths = sorted(d.glob("results*.jsonl")) if d.is_dir() else [d]
+        if not paths:
+            raise IncompatibleRunsError(f"no results*.jsonl in {d}")
+        for path in paths:
+            for r in read_jsonl(path):
+                if r.get("kind") == "result":
+                    r.setdefault("_source", str(path))
+                    recs.append(r)
     check_compatible(recs, allow_debug=allow_debug)
     return recs
 
@@ -140,9 +143,12 @@ def write_csv(path: Path, rows: list[dict]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("runs", nargs="+", help="run dirs (containing results.jsonl)")
+    ap.add_argument("runs", nargs="+", help="run dirs (containing results*.jsonl)")
     ap.add_argument("--out", default=None, help="default <first run>/summary.csv")
     ap.add_argument("--allow-debug", action="store_true")
+    ap.add_argument("--split", default=None, choices=["eval_main", "train_pool"],
+                    help="summarize only families in this split (e.g. the frozen 200-family "
+                         "held-out baseline); records carry their split")
     args = ap.parse_args(argv)
     stats = yaml.safe_load((ROOT / "configs" / "eval.yaml").read_text(encoding="utf-8"))["stats"]
     try:
@@ -150,9 +156,15 @@ def main(argv: list[str] | None = None) -> int:
     except IncompatibleRunsError as e:
         print(f"FAIL: {e}", file=sys.stderr)
         return 1
+    if args.split:
+        recs = [r for r in recs if r.get("split") == args.split]
+        if not recs:
+            print(f"FAIL: no records in split {args.split}", file=sys.stderr)
+            return 1
     rows = summarize(recs, bootstrap_n=stats["bootstrap_n"], seed=stats["bootstrap_seed"],
                      ci_alpha=stats["ci_alpha"])
-    out = Path(args.out or Path(args.runs[0]) / "summary.csv")
+    out = Path(args.out or Path(args.runs[0]) /
+               (f"summary_{args.split}.csv" if args.split else "summary.csv"))
     write_csv(out, rows)
     out.with_suffix(".json").write_text(json.dumps(rows, indent=2), encoding="utf-8")
     for r in rows:

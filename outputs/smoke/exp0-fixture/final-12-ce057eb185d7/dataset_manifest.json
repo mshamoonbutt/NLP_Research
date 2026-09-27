@@ -1,0 +1,31 @@
+{
+  "dataset_version": "final-12-ce057eb185d7",
+  "release": null,
+  "schema_version": "csjail-longform-v2",
+  "source_sha256": "19034edf25b3aa4b018aef2f546932dc48c629e4286d23bc901e7ca7f7d68059",
+  "source_filename": "final_fixture.csv",
+  "normalized_content_sha256": "ce057eb185d741eefa44d09ea350aa94c37928251dc95f3364e661c5ccdc0874",
+  "dataset_file": "dataset_final.jsonl",
+  "dataset_file_sha256": "d0e888f1f18b2c4065d361ee6db05afcdf55e57b981a189516c71eb2b88c6a4b",
+  "split_file": "split_manifest.json",
+  "split_id": "46da1c56efd3f134",
+  "split_scheme": "main",
+  "extends_split_id": null,
+  "qa_ledger_sha256": null,
+  "duplicate_decisions_sha256": null,
+  "domain_dictionary_version": "domains-v1",
+  "n_families": 12,
+  "n_rows": 48,
+  "exposure_samples": [],
+  "eligible_training_families": 8,
+  "gates": {
+    "ingest": "PASS",
+    "structure": "PASS",
+    "split": "PASS",
+    "exposure": "PASS"
+  },
+  "notes": [
+    "no dataset-level kappa gate (docs/PROTOCOL.md §1)",
+    "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+  ]
+}

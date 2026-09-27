@@ -78,3 +78,6 @@ data/*.csv
 data/*.xlsx
 !data/csjail_fixture.jsonl
 !data/judge_calibration/*.jsonl
+
+# Smoke / debug runs (never paper results)
+outputs/smoke/

@@ -1,6 +1,13 @@
-"""Convert the FINAL seven-column CS-Jail-UR CSV to the long JSONL schema.
+"""Convert a CS-Jail-UR release CSV to the long JSONL schema.
 
-Input columns (exactly): prompt_id, domain_id, domain_name, EN, CS, RU, UR
+Required columns (any order): prompt_id, domain_id, domain_name, EN, CS, RU, UR.
+Any additional columns (the 791 release adds row_number, evaluation_stratum,
+approval_status) are PRESERVED per family in `provenance.source_metadata`,
+never dropped. `row_number` is display/order metadata only -- never an ID.
+`evaluation_stratum` must be `harmful` (it describes the prompt population,
+not an observed harmful response) and `approval_status` must be `approved`
+(supplied review metadata, not evidence of agreement or judge accuracy);
+any other value FAILS conversion rather than being silently included.
 Output: one row per (family, condition) -- exactly four per family.
 
 Rules
@@ -21,7 +28,7 @@ Rules
   content is REPORTED (see csjail.qa) for human review.
 
 Usage:
-    python -m csjail.convert_final --input data/CS-Jail-UR_final_692.csv \\
+    python -m csjail.convert_final --input data/CS-Jail-UR_final_approved_791.csv \\
         --out data/csjail_final.jsonl --report outputs/exp0/convert_report.json
 """
 from __future__ import annotations
@@ -49,8 +56,9 @@ from csjail.utils.io import sha256_file, write_jsonl
 
 ROOT = Path(__file__).resolve().parent.parent
 DOMAINS_CFG = ROOT / "configs" / "domains.yaml"
-EXPECTED_COLUMNS = ["prompt_id", "domain_id", "domain_name", "EN", "CS", "RU", "UR"]
-CONVERTER_VERSION = "convert_final-v1"
+REQUIRED_COLUMNS = ["prompt_id", "domain_id", "domain_name", "EN", "CS", "RU", "UR"]
+ALLOWED_METADATA_VALUES = {"evaluation_stratum": {"harmful"}, "approval_status": {"approved"}}
+CONVERTER_VERSION = "convert_final-v2"
 
 
 def load_domain_dictionary(path: str | Path = DOMAINS_CFG) -> tuple[str, dict[str, str]]:
@@ -67,7 +75,7 @@ def id_namespace(pid: str) -> tuple[str, str | None]:
     m = re.fullmatch(r"CSJUR-R-(\d+)-(\d+)", pid)
     if m:
         return "CSJUR-R", f"id-references-replaced-prompt:{m.group(1)}"
-    m = re.fullmatch(r"(CSJUR-V\d+)-\d+", pid)
+    m = re.fullmatch(r"(CSJUR-[A-Z]+\d*)-\d+", pid)
     if m:
         return m.group(1), None
     return "other", None
@@ -95,9 +103,12 @@ def convert(input_path: str | Path, *, domains_path: str | Path = DOMAINS_CFG,
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         columns = list(reader.fieldnames or [])
-        if columns != EXPECTED_COLUMNS:
-            raise ValueError(f"expected columns {EXPECTED_COLUMNS}, got {columns}")
+        missing = [c for c in REQUIRED_COLUMNS if c not in columns]
+        if missing or len(set(columns)) != len(columns):
+            raise ValueError(f"required columns {REQUIRED_COLUMNS} (missing {missing}); "
+                             f"got {columns}")
         src_rows = list(reader)
+    extra_columns = [c for c in columns if c not in REQUIRED_COLUMNS]
 
     errors: list[str] = []
     seen: Counter[str] = Counter(r["prompt_id"] for r in src_rows)
@@ -125,6 +136,12 @@ def convert(input_path: str | Path, *, domains_path: str | Path = DOMAINS_CFG,
             errors.append(f"row {i} ({pid}): domain_name {dname!r} != dictionary "
                           f"{domains[did]!r} for {did}")
             continue
+        meta = {c: (src[c] or "").strip() for c in extra_columns}
+        bad = [f"{c}={v!r}" for c, v in meta.items()
+               if c in ALLOWED_METADATA_VALUES and v not in ALLOWED_METADATA_VALUES[c]]
+        if bad:
+            errors.append(f"row {i} ({pid}): unsupported {', '.join(bad)}")
+            continue
         ns, hint = id_namespace(pid)
         for cond in CONDITIONS:
             raw = src[cond]
@@ -151,6 +168,7 @@ def convert(input_path: str | Path, *, domains_path: str | Path = DOMAINS_CFG,
                     "model_assistance": None,
                     "text_normalization": norm,
                     "source_text": raw if norm else None,
+                    "source_metadata": meta or None,
                 },
             })
     if errors:
@@ -181,6 +199,9 @@ def convert(input_path: str | Path, *, domains_path: str | Path = DOMAINS_CFG,
         "normalizations": dict(Counter(r["provenance"]["text_normalization"]
                                        for r in out if r["provenance"]["text_normalization"])),
         "n_cells_with_internal_newlines": sum(1 for r in out if "\n" in r["prompt"]),
+        "extra_columns_preserved": extra_columns,
+        "metadata_value_counts": {c: dict(Counter((r[c] or "").strip() for r in src_rows))
+                                  for c in extra_columns if c in ALLOWED_METADATA_VALUES},
         "review_flags": {
             "equal_variants_within_family": equal_variant_flags(prompts),
             "exact_duplicates_across_families": exact_duplicate_groups(prompts),

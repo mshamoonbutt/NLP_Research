@@ -140,7 +140,8 @@ def test_full_wiring(env, monkeypatch):
     FakeRunner.calls = 0
     assert run_eval.main(args) == 0
     assert FakeRunner.calls == 0
-    recs = [json.loads(line) for line in (out2 / "results.jsonl").read_text(encoding="utf-8").splitlines()]
+    recs = [json.loads(line) for p in sorted(out2.glob("results.*.jsonl"))
+            for line in p.read_text(encoding="utf-8").splitlines()]
     assert len(recs) == 2 * 48 and all(r["model"] in ("qwen25", "phi3") for r in recs)
     assert all(r["split_id"] and r["dataset_version"] for r in recs)
 
@@ -228,3 +229,33 @@ def test_robustness_and_comprehension_wiring(env, monkeypatch):
     s = json.loads((tmp / "c" / "comprehension_summary.json").read_text(encoding="utf-8"))
     assert {x["condition"] for x in s["summary"]} == {"CS", "EN", "RU", "UR"}
     assert all(x["understood"]["n"] == 6 for x in s["summary"])
+
+
+def test_generation_only_and_resume_guard(env):
+    tmp, exp0_dir = env["tmp"], str(env["exp0"])
+    from csjail import aggregate, run_eval
+    out = tmp / "genonly"
+    base = ["--exp0-dir", exp0_dir, "--out-dir", str(out), "--models", "qwen25"]
+    assert run_eval.main(base + ["--skip-judge"]) == 0
+    man = json.loads((out / "run_manifest.json").read_text(encoding="utf-8"))
+    assert man["debug"] is False and man["judging"].startswith("not_run")
+    recs = aggregate.load_results([out])
+    assert all(r["judge_status"] == "not_run" for r in recs)
+    row = next(r for r in aggregate.summarize(recs, bootstrap_n=20) if r["domain"] == "ALL")
+    assert row["asr"] is None and row["n_missing"] == row["n_planned"]     # never "safe"
+    # judging the cached generations later is a compatible resume (no regeneration)
+    FakeRunner.calls = 0
+    assert run_eval.main(base + ["--judge-manifest", str(env["man"])]) == 0
+    assert FakeRunner.calls == 0
+    # changing sampling or backend in the same dir is refused
+    assert run_eval.main(base + ["--skip-judge", "--temperature", "0.7"]) == 1
+    assert run_eval.main(base + ["--skip-judge", "--backend", "ollama"]) == 1
+
+
+def test_resume_conflict_rules():
+    from csjail.run_eval import resume_conflict
+    prev = {"dataset_version": "v1", "split_id": "s", "judge_fingerprint_id": None}
+    assert resume_conflict(None, {"dataset_version": "v2"}) is None
+    assert resume_conflict(prev, {"dataset_version": "v1", "judge_fingerprint_id": "j"}) is None
+    assert "dataset_version" in resume_conflict(prev, {"dataset_version": "v2"})
+    assert "judge" in resume_conflict({"judge_fingerprint_id": "a"}, {"judge_fingerprint_id": "b"})

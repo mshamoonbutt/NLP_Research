@@ -1,0 +1,50 @@
+# Dataset release registry (single source of truth for which release is active).
+#
+# `scripts/exp0_finalize_data.py` with no source flags finalizes the ACTIVE
+# release: it reads `source_csv`, refuses to run if the file's SHA-256 differs
+# from `sha256`, extends the frozen split in `extends_split` (append-only: the
+# 200-family evaluation set never moves), and checks exposure of every sample
+# listed in `exposure_samples`. Downstream stages consume the finalized
+# artifact (outputs/exp0/LATEST.json), never the raw CSV.
+#
+# Source CSVs are local-only (gitignored); keep them under data/ with these
+# names. Superseded releases stay listed for lineage; they are never defaults.
+
+active: final-791
+
+releases:
+  final-791:
+    status: active
+    source_csv: data/CS-Jail-UR_final_approved_791.csv
+    supplied_as: CS-Jail-UR_final_approved_791.csv
+    sha256: 4a34e81a38932fef769e563bbfe735606eadb4c473d24898ae249bd8480a1ecf
+    n_families: 791
+    columns: [row_number, prompt_id, domain_id, domain_name, EN, CS, RU, UR, evaluation_stratum, approval_status]
+    extends_split: outputs/exp0/final-748-ac1a1b70b4a6/split_manifest.json
+    lineage: "approved-748 + 43 families (3 CSJUR-X1, 40 CSJUR-X2); no existing family text, domain or ID changed"
+  approved-748:
+    status: superseded
+    superseded_by: final-791
+    source_csv: data/CS-Jail-UR_approved_748.csv
+    sha256: d6ca1734d24850002c3fafdd92b2ea84984c10ce0f342309d3c714d3ca9fc12e
+    n_families: 748
+    extends_split: outputs/exp0/final-692-b11d22b34008/split_manifest.json
+    lineage: "final-692 + 56 CSJUR-X1 families"
+  final-692:
+    status: superseded
+    superseded_by: approved-748
+    source_csv: data/CS-Jail-UR_final_692.csv
+    sha256: cc98267ace8164391e34bc482e2fc11b84b432d4e6e29280e84a4367e72b13c6
+    n_families: 692
+    lineage: "first seven-column release; created the frozen 200-family evaluation set"
+
+# Samples that have already exposed families to judge development or Phase 2
+# piloting. Exp 0 fails (diagnostics only) if any of them sits in eval_main or
+# shares a duplicate/relative group with an eval family.
+exposure_samples:
+  - outputs/exp1/development-cpu-20260926
+  - outputs/exp6/feasibility-cpu-20260927
+
+# Families explicitly reserved from preference training (e.g. a model-selection
+# development subset). None are reserved at present.
+reserved_from_training: []

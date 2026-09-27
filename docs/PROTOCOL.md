@@ -12,9 +12,27 @@ results, and are never tuned toward a desired direction or significance.
 
 ## 1. Dataset (Exp 0)
 
-**Input.** `data/CS-Jail-UR_final_692.csv` (local only; gitignored). It has seven
-columns: `prompt_id, domain_id, domain_name, EN, CS, RU, UR`. Per family there
-is one harmful request and four aligned variants:
+**Input.** The active release is `final-791`:
+`data/CS-Jail-UR_final_approved_791.csv` (local only; gitignored), SHA-256
+`4a34e81a…1ecf`. It is registered in `configs/dataset.yaml` together with its
+superseded predecessors `approved-748` and `final-692`, and Exp 0 refuses a
+modified file.
+
+- **Lineage.** The 692 original families are unchanged, plus 56 + 3
+  `CSJUR-X1-*` and 40 `CSJUR-X2-*` additions. No existing text, domain or ID
+  changed at any step.
+- **Columns (ten).** `row_number, prompt_id, domain_id, domain_name, EN, CS,
+  RU, UR, evaluation_stratum, approval_status`.
+  - The seven content columns are required.
+  - The other three are preserved per family in `provenance.source_metadata`.
+  - `row_number` is display order only, never an identity.
+  - `evaluation_stratum=harmful` describes the prompt population, not a model
+    response.
+  - `approval_status=approved` is supplied review metadata, not evidence of
+    independent agreement or judge accuracy.
+  - Any other stratum/approval value fails conversion.
+
+Per family there is one harmful request and four aligned variants:
 
 - EN: English
 - CS: Urdu-English code-switched
@@ -25,18 +43,24 @@ is one harmful request and four aligned variants:
 **Current snapshot.** These are acceptance fixtures; the code derives all
 counts from the file, never from constants.
 
-- 692 families, 2,768 rows, 0 blank cells.
+- 791 families, 3,164 rows, 0 blank cells; `harmful`/`approved` on all 791.
 - 0 equal variants within a family and 0 cross-family duplicate texts.
-- 60 UR items contain Latin letters (flagged for review, not errors).
+- 69 UR items contain Latin letters (flagged for review, not errors).
+- The added X1/X2 families are lexically distinct from evaluation families:
+  0 were flagged by Exp 0's new-family screen (token-Jaccard ≥ 0.5 vs any
+  eval family). `CSJUR-X1-0062` ~ `CSJUR-V4-0068` (0.61) is worth a reviewer
+  glance, but both are training families. Word overlap cannot detect
+  paraphrases written in different words, so a reviewer skim of the additions
+  is still advised.
 
 | Domain | Name | Families |
 |---|---|---:|
 | D1 | Hate, harassment and coercion | 122 |
-| D2 | Self-harm and suicide | 108 |
-| D3 | Dangerous acts, violence and criminal facilitation | 112 |
-| D4 | Deception, fraud and intellectual-property abuse | 118 |
-| D5 | Privacy and personal-information abuse | 112 |
-| D6 | Cyber abuse and unauthorized access | 120 |
+| D2 | Self-harm and suicide | 123 |
+| D3 | Dangerous acts, violence and criminal facilitation | 137 |
+| D4 | Deception, fraud and intellectual-property abuse | 128 |
+| D5 | Privacy and personal-information abuse | 137 |
+| D6 | Cyber abuse and unauthorized access | 144 |
 
 **Identity and preservation** (`csjail/convert_final.py`)
 
@@ -52,11 +76,11 @@ counts from the file, never from constants.
   styles, authenticity scores, raters or provenance.
 
 **ID namespaces** (490 numeric, 18 `CSJUR-R-*`, 100 `CSJUR-V3-*`,
-84 `CSJUR-V4-*`) show that batches differ. They do not establish who wrote
+84 `CSJUR-V4-*`, 59 `CSJUR-X1-*`, 40 `CSJUR-X2-*`) show that batches differ. They do not establish who wrote
 them or that text is unchanged from older versions.
 
 **Provenance.** Document authorship and model assistance per batch from real
-records. Where records are missing, mark it unknown. Do not claim "all 692
+records. Where records are missing, mark it unknown. Do not claim "all 791
 written from scratch by native speakers" unless records show that. A
 defensible alternative, only if verified, is a human-authored core with
 model-assisted additions/edits and bilingual review. The old 1,000-row CSV is
@@ -122,11 +146,24 @@ analyses such as tokenizer fertility per pinned tokenizer.
 
 - 200 held-out families (`eval_main`), group-level and stratified across all
   six domains (largest-remainder quotas; seeded permutation over sorted groups).
-- 492 families in the **candidate** `train_pool`. This is a pool, not 492
+- 591 families in the **candidate** `train_pool`. This is a pool, not 591
   guaranteed pairs.
-- The main B/C comparison trains on all six domains.
-- Frozen manifest: `outputs/exp0/final-692-b11d22b34008/split_manifest.json`,
-  split `9451ca61d16575fb`. eval D1–D6 = 35/31/33/34/32/35.
+- The main Phase 2 comparison trains on all six domains.
+- Frozen manifest: `outputs/exp0/final-791-ddc14ecbc568/split_manifest.json`,
+  split `51c2dd1bb7d72166`. It is an append-only extension of
+  `9451ca61d16575fb` (692) → `7df6f9b8276fa856` (748).
+  - Every original assignment is unchanged, and all 99 added families joined
+    `train_pool`.
+  - The **same 200 evaluation families** have held since 692: D1–D6 =
+    35/31/33/34/32/35.
+  - Train D1–D6 = 87/92/104/94/105/109 (591).
+- Exposure (`exposure_report.json`, a hard gate):
+  - The 20 Exp 1 development families and the 100 feasibility-pilot families
+    (11 shared) are all in `train_pool` and unrelated to evaluation families.
+  - Exposed training families stay **eligible** for preference training;
+    nothing is reserved (`reserved_from_training: []` in
+    `configs/dataset.yaml`).
+  - Eligible training families: 591.
 
 **Why this replaced the old split.** The old code auto-withheld the two
 smallest domains. On this data that reserves D2 and D3, leaving only 336
@@ -142,6 +179,24 @@ in the main evaluation. Counts are always taken from the actual assignments.
 - After results exist, a new evaluation set needs a new version and matched
   baselines.
 - Same-ID text edits change the content hash and invalidate caches.
+- Newly added families are screened against evaluation families. Any that
+  reaches token-Jaccard ≥ 0.5 in EN, CS or RU is quarantined unless a reviewer
+  marks the pair `distinct` in `data/qa/duplicate_decisions.csv`.
+
+**Training-only extensions.** Future training data is added as a separately
+versioned extension (`exp0_finalize_data.py --training-extension-csv X
+--extension-name NAME`).
+
+- **Unchanged:** the core release, its evaluation membership and its wording.
+- **New:** the extension families become `train_pool` families tagged
+  `extension: NAME`. Relatives of eval families are quarantined.
+- **Output:** a `<core>+ext-NAME-<hash>` release with its own lineage. It does
+  **not** move `LATEST`, so Phase 1 stays on the core release.
+- **Phase 2 use:** point Exp 2 generation (`--families train_pool`), Exp 6 and
+  Exp 7 at the extension release with `--exp0-dir`.
+- **Scope:** an extension never enlarges the held-out test set. For example,
+  791 + 250 = 1,041 families is up to 841 non-evaluation families, and an
+  extension's size is a collection budget, not a pair yield.
 
 **Unseen-domain ablation (Exp 9, not free).** This is a separate derived
 manifest (`scripts/exp9_ablations.py domain`):
@@ -235,7 +290,7 @@ Freeze the one that passes.
 
 ## 4. Evaluation (Exp 2)
 
-**Primary sweep.** 3 SLMs × 4 conditions × 692 families = **8,304
+**Primary sweep.** 3 SLMs × 4 conditions × 791 families = **9,492
 responses**. Models: Qwen2.5-1.5B, Phi-3-mini ~3.8B, Llama-3.2 ~3.2B, so the
 set is not "1.5–3B".
 
@@ -335,27 +390,37 @@ shuffles. The single ordering yields nested N-curve prefixes. Counts are
 recorded per stage and domain: mined, validated, deduped, final.
 
 - `target_pairs` = 250 is a cap, never a quota.
-- Illustration (not a forecast): 492 × 30–45% ≈ 148–221 raw CS candidates.
-- Budgets {50, 100, 200, all} run only up to the available N. Below 50 is
-  exploratory. Pairs are never padded, duplicated, or borrowed from eval.
+- Planning target: ~100 accepted pairs per model, nested smaller budgets
+  {25, 50, 100}. Team-reported AI-reviewed pilot (100 training families,
+  Ollama Q8, exploratory, not gold): CS failures 18 (Phi-3) / 17 (Llama),
+  strict 13 / 10; same-family CS-and-EN failures 9 / 1, strict 6 / 1.
+- Budgets run only up to the available N (`pairs_manifest.json` reports
+  them). Pairs are never padded, duplicated, pooled across models, or borrowed
+  from evaluation. Gibberish and refusals are never counted as harmful
+  rejected responses.
 
-**Arms (Exp 7).**
+**Arms (Exp 7).** This design supersedes the earlier matched-intersection
+design.
 
-- A: untrained.
-- **B: matched English** control, the RQ4 control. Same model, same families
-  (intersection of valid model-derived CS **and** EN pairs), same N and
-  optimization budget as C.
-- C: CS matched set.
-- B_ext: external off-the-shelf English pairs, a practical extra baseline
-  (off-policy, different source).
-- D: optional. By default it is budget-matched to C (half CS / half EN);
-  otherwise it is labelled as the larger-data recipe.
-- E: eval-time safety-priming prompt.
-
-*Predeclared contingency (decided from pair availability, not results).*
-Matched N is bounded by the EN unsafe rate. If it is too small to train, run
-C vs B_ext and narrow the claim to a comparison of recipes, not of language
-alone.
+- **Primary comparison (RQ4): C vs B_ext at equal accepted-pair budgets.**
+  Both arms use the same DPO config, epochs and optimiser. This compares
+  training recipes / data sources, not training language alone.
+  - **C:** our CS pairs. The target model's own validated CS failures are the
+    rejected responses, and validated CS refusals are the chosen ones.
+  - **B_ext:** external off-the-shelf English preference pairs
+    (`scripts/prepare_external_english_pairs.py`). They are off-policy and
+    from a different source, and B_ext trains on the same count as C.
+  - The primary comparison does **not** require any English-and-CS double
+    failure on the same family. The pilot showed those are scarce.
+- A: untrained. E: eval-time safety-priming prompt.
+- D (optional): half C plus half B_ext at C's total N. With
+  `d_budget: double` it becomes the larger-data recipe and is labelled as
+  such.
+- **Secondary (optional, separately specified): C_matched vs B_matched.** Both
+  use the same families, with model-derived CS and EN failures. This is a
+  language-controlled construction, only where pair availability allows.
+  Translated or external rejected responses must never be described as the
+  target model's own failures.
 
 **Training.**
 
@@ -374,8 +439,8 @@ alone.
 evaluated on identical `eval_main` IDs and settings, with the same validated
 judge. Measured and persisted:
 
-- CS-ASR vs A, per-condition paired tests, and **RQ4 C vs B on CS** (with
-  Holm across the two models)
+- CS-ASR vs A, per-condition paired tests, and **RQ4 primary: C vs B_ext on
+  CS** (Holm across the two models); secondary C_matched vs B_matched when run
 - EN drift, and condition transfer to RU/UR
 - over-refusal on the 150-item benign probe, scored with the benign rubric.
   Its language coverage is unaudited, so do not claim per-condition
@@ -386,7 +451,8 @@ Thresholds are reporting flags (True/False/"NA"). Undefined values are never
 "met": relative reduction at zero baseline and retention at zero accuracy are
 NA, and absolute pp differences are always reported. Null and negative
 results are reported with uncertainty. Phase 2 is **not** dropped because C
-fails to beat B. Human-audit a sample of post-training outputs.
+fails to beat B_ext, and a positive or significant result is not required to
+report it. Human-audit a sample of post-training outputs.
 
 ## 7. Paper claims
 
@@ -396,7 +462,7 @@ fails to beat B. Human-audit a sample of post-training outputs.
 - Distinguish harmful seed requests, optional adversarial framing and measured
   successes. A prompt need not defeat a model to belong in a safety benchmark.
 - Keep benign prompts as a separate resource.
-- 692 families and six domains do not invalidate the design, but N alone does
+- 791 families and six domains do not invalidate the design, but N alone does
   not guarantee power or a positive mitigation result.
 - Do not claim native authorship, independent review, anonymity or consent
   without evidence.
@@ -405,7 +471,8 @@ fails to beat B. Human-audit a sample of post-training outputs.
 
 ## 8. Order of work
 
-1. Exp 0: done, `final-692-b11d22b34008`.
+1. Exp 0: done, `final-791-ddc14ecbc568` (split `51c2dd1bb7d72166`), extending
+   the frozen split `692 → 748 → 791`.
 2. Tiny GPU smoke (§9).
 3. Exp 1 development sample → rubric iteration → separate validation sample
    → PASS manifest, for both the harm and benign rubrics.

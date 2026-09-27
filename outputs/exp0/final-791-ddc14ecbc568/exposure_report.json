@@ -1,0 +1,376 @@
+{
+  "samples": [
+    {
+      "sample": "outputs/exp1/development-cpu-20260926",
+      "role": "development",
+      "generation_backend": "ollama",
+      "sample_dataset_version": "final-692-b11d22b34008",
+      "n_families": 20,
+      "split_counts": {
+        "train_pool": 20
+      }
+    },
+    {
+      "sample": "outputs/exp6/feasibility-cpu-20260927",
+      "role": "feasibility",
+      "generation_backend": "ollama",
+      "sample_dataset_version": "final-748-ac1a1b70b4a6",
+      "n_families": 100,
+      "split_counts": {
+        "train_pool": 100
+      }
+    }
+  ],
+  "conflicts": [],
+  "status": "PASS",
+  "pairwise_family_overlap": {
+    "outputs/exp1/development-cpu-20260926 & outputs/exp6/feasibility-cpu-20260927": 11
+  },
+  "n_exposed_families": 109,
+  "training": {
+    "train_pool": 591,
+    "reserved_from_training": 0,
+    "eligible_for_preference_training": 591,
+    "note": "exposed train_pool families stay eligible unless explicitly reserved"
+  },
+  "exposed_family_roles": {
+    "104": [
+      "feasibility"
+    ],
+    "115": [
+      "feasibility"
+    ],
+    "116": [
+      "feasibility"
+    ],
+    "126": [
+      "development",
+      "feasibility"
+    ],
+    "138": [
+      "development",
+      "feasibility"
+    ],
+    "139": [
+      "feasibility"
+    ],
+    "147": [
+      "feasibility"
+    ],
+    "149": [
+      "feasibility"
+    ],
+    "150": [
+      "development",
+      "feasibility"
+    ],
+    "153": [
+      "feasibility"
+    ],
+    "18": [
+      "development",
+      "feasibility"
+    ],
+    "183": [
+      "feasibility"
+    ],
+    "184": [
+      "feasibility"
+    ],
+    "190": [
+      "feasibility"
+    ],
+    "192": [
+      "feasibility"
+    ],
+    "194": [
+      "feasibility"
+    ],
+    "2": [
+      "feasibility"
+    ],
+    "203": [
+      "development"
+    ],
+    "205": [
+      "feasibility"
+    ],
+    "209": [
+      "feasibility"
+    ],
+    "215": [
+      "feasibility"
+    ],
+    "229": [
+      "development"
+    ],
+    "236": [
+      "feasibility"
+    ],
+    "241": [
+      "feasibility"
+    ],
+    "247": [
+      "feasibility"
+    ],
+    "250": [
+      "feasibility"
+    ],
+    "264": [
+      "feasibility"
+    ],
+    "269": [
+      "feasibility"
+    ],
+    "297": [
+      "feasibility"
+    ],
+    "309": [
+      "feasibility"
+    ],
+    "319": [
+      "feasibility"
+    ],
+    "329": [
+      "feasibility"
+    ],
+    "348": [
+      "feasibility"
+    ],
+    "364": [
+      "development"
+    ],
+    "373": [
+      "feasibility"
+    ],
+    "375": [
+      "feasibility"
+    ],
+    "387": [
+      "development",
+      "feasibility"
+    ],
+    "390": [
+      "feasibility"
+    ],
+    "40": [
+      "feasibility"
+    ],
+    "409": [
+      "feasibility"
+    ],
+    "416": [
+      "feasibility"
+    ],
+    "430": [
+      "development",
+      "feasibility"
+    ],
+    "431": [
+      "feasibility"
+    ],
+    "45": [
+      "feasibility"
+    ],
+    "452": [
+      "feasibility"
+    ],
+    "458": [
+      "feasibility"
+    ],
+    "473": [
+      "feasibility"
+    ],
+    "476": [
+      "feasibility"
+    ],
+    "479": [
+      "feasibility"
+    ],
+    "48": [
+      "feasibility"
+    ],
+    "494": [
+      "feasibility"
+    ],
+    "500": [
+      "development",
+      "feasibility"
+    ],
+    "53": [
+      "development",
+      "feasibility"
+    ],
+    "54": [
+      "development",
+      "feasibility"
+    ],
+    "557": [
+      "feasibility"
+    ],
+    "561": [
+      "feasibility"
+    ],
+    "582": [
+      "feasibility"
+    ],
+    "60": [
+      "feasibility"
+    ],
+    "608": [
+      "feasibility"
+    ],
+    "615": [
+      "development"
+    ],
+    "622": [
+      "feasibility"
+    ],
+    "623": [
+      "feasibility"
+    ],
+    "627": [
+      "feasibility"
+    ],
+    "632": [
+      "feasibility"
+    ],
+    "669": [
+      "feasibility"
+    ],
+    "670": [
+      "feasibility"
+    ],
+    "679": [
+      "feasibility"
+    ],
+    "704": [
+      "feasibility"
+    ],
+    "708": [
+      "feasibility"
+    ],
+    "711": [
+      "feasibility"
+    ],
+    "720": [
+      "feasibility"
+    ],
+    "740": [
+      "feasibility"
+    ],
+    "741": [
+      "feasibility"
+    ],
+    "765": [
+      "feasibility"
+    ],
+    "78": [
+      "feasibility"
+    ],
+    "783": [
+      "feasibility"
+    ],
+    "79": [
+      "development",
+      "feasibility"
+    ],
+    "792": [
+      "feasibility"
+    ],
+    "94": [
+      "feasibility"
+    ],
+    "CSJUR-R-0246-01": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0001": [
+      "development"
+    ],
+    "CSJUR-V3-0009": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0014": [
+      "development"
+    ],
+    "CSJUR-V3-0034": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0061": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0074": [
+      "development",
+      "feasibility"
+    ],
+    "CSJUR-V3-0081": [
+      "development"
+    ],
+    "CSJUR-V3-0083": [
+      "development"
+    ],
+    "CSJUR-V3-0084": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0093": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0094": [
+      "feasibility"
+    ],
+    "CSJUR-V3-0100": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0035": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0038": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0050": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0059": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0066": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0074": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0075": [
+      "development"
+    ],
+    "CSJUR-V4-0077": [
+      "feasibility"
+    ],
+    "CSJUR-V4-0078": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0001": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0014": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0017": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0031": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0033": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0043": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0046": [
+      "feasibility"
+    ],
+    "CSJUR-X1-0047": [
+      "feasibility"
+    ]
+  }
+}

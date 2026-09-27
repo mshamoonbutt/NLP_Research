@@ -29,42 +29,53 @@ dpo:
     target_projections: [q, k, v, o, gate, up, down]
 
 # Comparison arms (Exp 7/8). A and E are not trained.
-#   B      matched English control: same model, same families (intersection of
-#          valid CS & EN model-derived pairs), same count and optimisation budget
-#          as C -> the RQ4 comparison.
-#   C      code-switched pairs (matched set)
-#   B_ext  practical extra baseline: external off-the-shelf English pairs
-#          (off-policy, different source). Predeclared contingency: if the matched
-#          set is too small to train B/C (see pairs_manifest budgets), only B_ext
-#          vs C is run and the claim is narrowed to a comparison of RECIPES, not of
-#          language alone. Decided from pair availability, never from results.
-#   D      optional CS + English; by default budget-matched to C (half/half).
-#          Set d_budget: double to run the larger-data recipe, labelled as such.
-#   E      eval-time safety-priming prompt baseline (no training).
+#
+# PRIMARY (RQ4): C vs B_ext at EQUAL accepted-pair budgets, same DPO config,
+# epochs and optimiser settings (the `dpo:` block above is shared). This
+# compares TRAINING RECIPES / DATA SOURCES -- our model-specific CS pairs vs an
+# off-the-shelf English preference set -- not training language alone.
+# It does NOT require any English-and-CS double failure on the same family.
+#   C      our CS pairs: target model's own validated CS failures (rejected) +
+#          validated CS refusals (chosen), nested prefixes of one seeded order
+#   B_ext  external English pairs (off-policy, different source), same count as C
+#   D      optional: half C + half B_ext at C's total N (d_budget: matched), or
+#          C + B_ext (d_budget: double, labelled as the larger-data recipe)
+#   E      eval-time safety-priming prompt baseline (no training)
+# SECONDARY (optional, separately specified language-controlled experiment):
+#   C_matched / B_matched  same families, model-derived CS and EN pairs. Needs
+#          English-and-CS double failures, which the pilot found scarce; it is
+#          never a gate for Phase 2.
 arms:
   A: {method: none, data: none}
-  B: {method: dpo, data: en_matched}
-  C: {method: dpo, data: cs_matched}
-  B_ext: {method: dpo, data: en_external}
-  D: {method: dpo, data: cs_matched+en_matched, optional: true}
+  C: {method: dpo, data: cs_all}
+  B_ext: {method: dpo, data: en_external, budget: same_as_C}
+  D: {method: dpo, data: cs_all+en_external, optional: true}
   E: {method: prompt, data: none}
+  C_matched: {method: dpo, data: cs_matched, optional: true, secondary: true}
+  B_matched: {method: dpo, data: en_matched, optional: true, secondary: true}
 d_budget: matched                # matched | double
 
 prefdata:
-  # 692 families - 200 eval_main = 492 CANDIDATE training families. Illustration
-  # only (not a forecast): a 30-45% CS unsafe rate would give ~148-221 raw
-  # candidates per model before chosen validation. 250 is a cap/aspiration.
-  target_pairs: 250
+  # 791 families - 200 eval_main = 591 eligible training families (no reserved
+  # exclusions; see outputs/exp0/<release>/exposure_report.json). Planning
+  # target ~100 ACCEPTED pairs per model with nested smaller budgets; a
+  # training-only extension is an initial collection budget, not guaranteed
+  # yield. AI-reviewed pilot (100 families, Ollama Q8, team-reported, exploratory):
+  # CS failures 18 phi3 / 17 llama32 (strict 13 / 10); CS-and-EN matched 9 / 1
+  # (strict 6 / 1). Validate yield in the production configuration.
+  primary_budget: 100
+  target_pairs: 250                # cap on pairs kept in the ordering, never a quota
   length_balance_tolerance: 0.15
   selection_seed: 42
   naturalness_sample_size: 50
-  n_curve: [50, 100, 200, "all"]   # only budgets <= available pairs are run
+  n_curve: [25, 50, 100]           # nested prefixes; only budgets <= available pairs run
   chosen_generator:                # MUST differ from the judge (configs/judge.yaml)
     provider: anthropic
     model: claude-sonnet-4-5
     temperature: 0.7
     max_tokens: 300
-  external_english_pairs: data/pref_pairs_en_external.jsonl   # B_ext source (user-supplied)
+  # B_ext source, built by scripts/prepare_external_english_pairs.py (local, gitignored)
+  external_english_pairs: data/pref_pairs_en_external.jsonl
 
 # Exp 8 improvement targets are REPORTING FLAGS, not pass/fail gates, and
 # never grounds for hiding or discarding results (null/negative results are

@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "n_rows": 3164,
+    "n_families": 791,
+    "n_families_exactly_4_conditions": 791,
+    "rows_by_condition": {
+      "CS": 791,
+      "EN": 791,
+      "RU": 791,
+      "UR": 791
+    },
+    "rows_by_domain": {
+      "D1": 488,
+      "D2": 492,
+      "D3": 548,
+      "D4": 512,
+      "D5": 548,
+      "D6": 576
+    },
+    "families_by_domain": {
+      "D1": 122,
+      "D2": 123,
+      "D3": 137,
+      "D4": 128,
+      "D5": 137,
+      "D6": 144
+    },
+    "n_domains": 6
+  },
+  "stats": {
+    "per_condition": {
+      "CS": {
+        "n": 791,
+        "word_len": {
+          "n": 791,
+          "mean": 38.396,
+          "median": 37.0,
+          "min": 11.0,
+          "max": 103.0
+        },
+        "char_len": {
+          "n": 791,
+          "mean": 224.392,
+          "median": 215.0,
+          "min": 54.0,
+          "max": 631.0
+        },
+        "cmi_heuristic": {
+          "n": 791,
+          "mean": 29.374,
+          "median": 29.63,
+          "min": 0.0,
+          "max": 48.84
+        },
+        "urdu_word_ratio_heuristic": {
+          "n": 791,
+          "mean": 0.294,
+          "median": 0.296,
+          "min": 0.0,
+          "max": 0.538
+        }
+      },
+      "EN": {
+        "n": 791,
+        "word_len": {
+          "n": 791,
+          "mean": 37.705,
+          "median": 35.0,
+          "min": 6.0,
+          "max": 100.0
+        },
+        "char_len": {
+          "n": 791,
+          "mean": 220.09,
+          "median": 205.0,
+          "min": 35.0,
+          "max": 632.0
+        },
+        "cmi_heuristic": {
+          "n": 791,
+          "mean": 6.02,
+          "median": 5.88,
+          "min": 0.0,
+          "max": 18.92
+        },
+        "urdu_word_ratio_heuristic": {
+          "n": 791,
+          "mean": 0.06,
+          "median": 0.059,
+          "min": 0.0,
+          "max": 0.189
+        }
+      },
+      "RU": {
+        "n": 791,
+        "word_len": {
+          "n": 791,
+          "mean": 46.633,
+          "median": 44.0,
+          "min": 8.0,
+          "max": 148.0
+        },
+        "char_len": {
+          "n": 791,
+          "mean": 258.191,
+          "median": 241.0,
+          "min": 41.0,
+          "max": 789.0
+        },
+        "cmi_heuristic": {
+          "n": 791,
+          "mean": 39.266,
+          "median": 38.98,
+          "min": 20.69,
+          "max": 50.0
+        },
+        "urdu_word_ratio_heuristic": {
+          "n": 791,
+          "mean": 0.397,
+          "median": 0.39,
+          "min": 0.207,
+          "max": 0.652
+        }
+      },
+      "UR": {
+        "n": 791,
+        "word_len": {
+          "n": 791,
+          "mean": 48.381,
+          "median": 45.0,
+          "min": 8.0,
+          "max": 146.0
+        },
+        "char_len": {
+          "n": 791,
+          "mean": 223.492,
+          "median": 209.0,
+          "min": 34.0,
+          "max": 671.0
+        },
+        "cmi_heuristic": {
+          "n": 791,
+          "mean": 0.283,
+          "median": 0.0,
+          "min": 0.0,
+          "max": 22.64
+        },
+        "urdu_word_ratio_heuristic": {
+          "n": 791,
+          "mean": 0.997,
+          "median": 1.0,
+          "min": 0.774,
+          "max": 1.0
+        }
+      }
+    },
+    "families_by_domain": {
+      "D1": 122,
+      "D2": 123,
+      "D3": 137,
+      "D4": 128,
+      "D5": 137,
+      "D6": 144
+    },
+    "heuristic_feature_note": "cmi/urdu_word_ratio here are *_heuristic and unvalidated; do not use for mechanistic inference"
+  }
+}

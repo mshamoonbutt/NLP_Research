@@ -1,0 +1,34 @@
+{
+  "dataset_version": "final-791-ddc14ecbc568",
+  "release": "final-791",
+  "schema_version": "csjail-longform-v2",
+  "source_sha256": "4a34e81a38932fef769e563bbfe735606eadb4c473d24898ae249bd8480a1ecf",
+  "source_filename": "CS-Jail-UR_final_approved_791.csv",
+  "normalized_content_sha256": "ddc14ecbc568aec9efd41f042e5b26078698d1c2fdca4793852e9fa6a090b3d4",
+  "dataset_file": "dataset_final.jsonl",
+  "dataset_file_sha256": "070944241e91c7148aff77f6a052193de150f1858c287fe15755ed0e01adc53b",
+  "split_file": "split_manifest.json",
+  "split_id": "51c2dd1bb7d72166",
+  "split_scheme": "main",
+  "extends_split_id": "7df6f9b8276fa856",
+  "qa_ledger_sha256": null,
+  "duplicate_decisions_sha256": null,
+  "domain_dictionary_version": "domains-v1",
+  "n_families": 791,
+  "n_rows": 3164,
+  "exposure_samples": [
+    "outputs/exp1/development-cpu-20260926",
+    "outputs/exp6/feasibility-cpu-20260927"
+  ],
+  "eligible_training_families": 591,
+  "gates": {
+    "ingest": "PASS",
+    "structure": "PASS",
+    "split": "PASS",
+    "exposure": "PASS"
+  },
+  "notes": [
+    "no dataset-level kappa gate (docs/PROTOCOL.md §1)",
+    "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+  ]
+}

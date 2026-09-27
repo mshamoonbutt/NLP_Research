@@ -283,11 +283,15 @@ def _finalize_manifest(assignments: dict[str, dict], meta: dict) -> dict:
 
 
 def extend_split(frozen: dict, rows: list[Prompt], *, fam_to_group: dict[str, str],
-                 dataset_version: Optional[str] = None) -> dict:
+                 dataset_version: Optional[str] = None, quarantine: Iterable[str] = (),
+                 added_fields: Optional[dict] = None) -> dict:
     """Append-only extension of a frozen manifest. Existing families keep their
     assignment verbatim. New families go to `train_pool`, unless their group
-    already contains an eval/holdout family, in which case they are
-    quarantined (neither trained nor evaluated) so they cannot leak."""
+    already contains an eval/holdout family or they are listed in
+    `quarantine` (e.g. flagged as possible relatives of eval families), in
+    which case they are quarantined: neither trained nor evaluated.
+    `added_fields` are stored on every newly added assignment."""
+    quarantine = set(quarantine)
     old = frozen["assignments"]
     fam_dom = family_domains(rows)
     gone = sorted(set(old) - set(fam_dom))
@@ -301,9 +305,9 @@ def extend_split(frozen: dict, rows: list[Prompt], *, fam_to_group: dict[str, st
     for f in sorted(set(fam_dom) - set(old)):
         g = fam_to_group[f]
         splits = group_split.get(g, set())
-        split = QUARANTINE if splits - {TRAIN} else TRAIN
+        split = QUARANTINE if (splits - {TRAIN} or f in quarantine) else TRAIN
         assignments[f] = {"split": split, "group_id": g, "domain_id": fam_dom[f],
-                          "added_after_freeze": True}
+                          "added_after_freeze": True, **(added_fields or {})}
         added.append(f)
     meta = dict(frozen["meta"])
     meta.pop("created_utc", None)
@@ -387,6 +391,46 @@ def assert_trainable(manifest: dict, families: Iterable[str]) -> None:
     if rel:
         raise ValueError(f"{len(rel)} families share a group with eval/holdout families "
                          f"(e.g. {rel[:5]})")
+
+
+def exposure_report(manifest: dict, samples: list[tuple[str, dict]],
+                    reserved_from_training: Iterable[str] = ()) -> dict:
+    """Where previously used families (judge development, pilots, ...) sit in
+    the split. `samples` = [(label, sample_manifest)]. A conflict is a used
+    family that is missing, outside train_pool, or in the same group as any
+    non-training family: the evaluation set must stay untouched by them."""
+    a = manifest["assignments"]
+    nontrain_groups = {x["group_id"] for x in a.values() if x["split"] not in TRAINABLE_SPLITS}
+    per, conflicts, roles = [], [], defaultdict(set)
+    for label, man in samples:
+        fams = list(man.get("families") or [])
+        for f in fams:
+            roles[f].add(man.get("role") or "unknown")
+            if f not in a:
+                conflicts.append({"sample": label, "family": f, "issue": "not in dataset"})
+            elif a[f]["split"] not in TRAINABLE_SPLITS or a[f]["group_id"] in nontrain_groups:
+                conflicts.append({"sample": label, "family": f,
+                                  "issue": f"exposed family in/related to {a[f]['split']}"})
+        per.append({"sample": label, "role": man.get("role"),
+                    "generation_backend": man.get("generation_backend"),
+                    "sample_dataset_version": man.get("dataset_version"),
+                    "n_families": len(fams),
+                    "split_counts": dict(Counter(a[f]["split"] if f in a else "missing"
+                                                 for f in fams))})
+    sets = {label: set(man.get("families") or []) for label, man in samples}
+    labels = sorted(sets)
+    train = trainable_families(manifest)
+    reserved = set(reserved_from_training)
+    return {
+        "samples": per, "conflicts": conflicts, "status": "FAIL" if conflicts else "PASS",
+        "pairwise_family_overlap": {f"{x} & {y}": len(sets[x] & sets[y])
+                                    for i, x in enumerate(labels) for y in labels[i + 1:]},
+        "n_exposed_families": len(roles),
+        "training": {"train_pool": len(train), "reserved_from_training": len(train & reserved),
+                     "eligible_for_preference_training": len(train - reserved),
+                     "note": "exposed train_pool families stay eligible unless explicitly reserved"},
+        "exposed_family_roles": {f: sorted(r) for f, r in sorted(roles.items())},
+    }
 
 
 def load_manifest(path: str | Path) -> dict:

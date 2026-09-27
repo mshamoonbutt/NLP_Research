@@ -1,0 +1,14 @@
+{
+  "samples": [],
+  "conflicts": [],
+  "status": "PASS",
+  "pairwise_family_overlap": {},
+  "n_exposed_families": 0,
+  "training": {
+    "train_pool": 8,
+    "reserved_from_training": 0,
+    "eligible_for_preference_training": 8,
+    "note": "exposed train_pool families stay eligible unless explicitly reserved"
+  },
+  "exposed_family_roles": {}
+}
