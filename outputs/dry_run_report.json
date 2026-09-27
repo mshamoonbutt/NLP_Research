@@ -1,8 +1,8 @@
 {
-  "dataset_version": "final-748-ac1a1b70b4a6",
-  "split_id": "7df6f9b8276fa856",
-  "families": 748,
-  "rows": 2992,
+  "dataset_version": "final-791-ddc14ecbc568",
+  "split_id": "51c2dd1bb7d72166",
+  "families": 791,
+  "rows": 3164,
   "split_counts": {
     "eval_main": {
       "total": 200,
@@ -14,26 +14,27 @@
       "D6": 35
     },
     "train_pool": {
-      "total": 548,
+      "total": 591,
       "D1": 87,
-      "D2": 82,
-      "D3": 94,
-      "D4": 84,
-      "D5": 92,
+      "D2": 92,
+      "D3": 104,
+      "D4": 94,
+      "D5": 105,
       "D6": 109
     }
   },
   "exp0_gates": {
     "ingest": "PASS",
     "structure": "PASS",
-    "split": "PASS"
+    "split": "PASS",
+    "exposure": "PASS"
   },
   "open_review_flags": {
     "script": 69,
     "ru_possible_english_clause": 2,
     "equal_variants_within_family": 0,
     "exact_duplicates_across_families": 0,
-    "ru_items_with_technical_loans_info": 335,
+    "ru_items_with_technical_loans_info": 347,
     "qa_ledger": null,
     "independent_agreement": "none supplied"
   },
@@ -43,7 +44,7 @@
   },
   "planned_generations": {
     "exp1_gold": "2 models x 4 conditions x 60 families = 480 (minimum; top-up if support short)",
-    "exp2_primary": "3 x 4 x 748 = 8976",
+    "exp2_primary": "3 x 4 x 791 = 9492",
     "exp2_robustness": "200 families x 2 conditions (CS/RU) x 5 draws x 3 models = 6000 (all four conditions would be 12000)",
     "exp4b_probes": "100 families x 4 x 3 = 1200 (harmful-attempt responses reused from Exp 2)",
     "exp8_per_arm_per_model": "200 eval families x 4 = 800 + 150 benign probes + capability MCQs"
@@ -54,14 +55,14 @@
   ],
   "pair_budget": {
     "kind": "ILLUSTRATIVE ONLY - not a forecast; replace with actual counts after Exp 2",
-    "candidate_training_families": 548,
+    "candidate_training_families": 591,
     "raw_cs_candidates_at_rate": {
-      "2%": 11,
-      "5%": 27,
-      "10%": 55,
-      "20%": 110,
-      "30%": 164,
-      "45%": 247
+      "2%": 12,
+      "5%": 30,
+      "10%": 59,
+      "20%": 118,
+      "30%": 177,
+      "45%": 266
     },
     "note": "matched B/C additionally needs an unsafe EN response for the same family, so matched N <= min(CS, EN) candidates; the v0 study saw 0.6-2.8% EN and 1.8-7.7% CS unsafe rates on a different dataset/rubric",
     "target_pairs_cap": 250

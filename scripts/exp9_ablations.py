@@ -61,15 +61,15 @@ def cmd_domain(args) -> int:
 def cmd_ncurve(args) -> int:
     pdir = ROOT / "outputs" / "exp6" / (args.model + (f"_{args.tag}" if args.tag else ""))
     man = json.loads((pdir / "pairs_manifest.json").read_text(encoding="utf-8"))
-    m = man.get("matched") or {}
-    budgets = (m.get("budgets") or {}).get("runnable", [])
-    print(f"[exp9] {args.model}: matched pairs available = {m.get('n_matched')}; "
-          f"status = {(m.get('budgets') or {}).get('status')}")
-    for b in budgets:
+    cs = (man.get("budgets") or {}).get("CS") or {}
+    print(f"[exp9] {args.model}: validated CS pairs = {cs.get('n_available')}; "
+          f"status = {cs.get('status')} (primary design: C vs B_ext at equal N)")
+    for b in cs.get("runnable", []):
         if b == "all":
             continue
-        print(f"python scripts/exp7_train_arms.py --model {args.model} --arm C --budget {b}")
-        print(f"python scripts/exp7_train_arms.py --model {args.model} --arm B --budget {b}")
+        print(f"python scripts/exp7_train_arms.py --model {args.model} --arm C --budget {b} "
+              "--naturalness-csv <rated csv>")
+        print(f"python scripts/exp7_train_arms.py --model {args.model} --arm B_ext --budget {b}")
     print("then evaluate each budget with scripts/exp8_posteval.py --tag n<budget> "
           "(adapters are named <arm>_<model>_n<budget>)")
     return 0

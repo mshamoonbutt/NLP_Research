@@ -1,61 +1,65 @@
 # CS-Jail-UR
 
-A safety benchmark and preference-alignment study for small language models
-using code-switched Urdu-English. There are 748 harmful-request families in
-six domains (D1–D6), each written in four aligned variants: English (EN),
-code-switched (CS), Roman Urdu (RU), and Urdu in Perso-Arabic script (UR).
+A safety benchmark and preference-alignment study for **small language models**
+on **code-switched Urdu-English** requests.
 
-- **Phase 1** measures unsafe-response rates and paired contrasts across the
-  four conditions. It also checks comprehension.
-- **Phase 2** runs preference-alignment mitigation. Code-switched pairs are
-  compared against a matched English control, with generalization, utility
-  and error analysis.
+- **Phase 1 (measure).** How often do SLMs produce harmful assistance when the
+  same harmful request is written in English (EN), code-switched Urdu-English
+  (CS), Roman Urdu (RU) or Urdu in Perso-Arabic script (UR)? Planned paired
+  contrasts: CS–RU, RU–UR, RU–EN, plus the CS–EN gap, with a comprehension
+  control.
+- **Phase 2 (mitigate).** Preference (DPO) training. The primary comparison is
+  our CS preference pairs (C) against external English preference pairs
+  (B_ext) at equal accepted-pair budgets: a comparison of **training
+  recipes**, not of training language alone. It also covers generalization,
+  over-refusal, utility and error analysis.
 
-**Protocol:** [`docs/PROTOCOL.md`](docs/PROTOCOL.md) is the single current
-protocol. **Commands:** [`RUNBOOK.md`](RUNBOOK.md). **History:**
-[`docs/archive/`](docs/archive/) holds the v0 report, earlier plans and the
-Sept-7 guide (superseded in part).
+The experiment numbering (Exp 0–10) and the two-phase paper structure follow
+`docs/PROTOCOL.md`.
 
-## Layout
+## Current dataset
+**`final-791`**: 791 harmful-request families × 4 conditions = 3,164
+prompts, in six domains (D1–D6).
+
+- **Source:** `data/CS-Jail-UR_final_approved_791.csv`, local only, SHA-256
+  `4a34e81a…1ecf`.
+- **Finalized:** `outputs/exp0/final-791-ddc14ecbc568/`.
+- **Split:** frozen split `51c2dd1bb7d72166`, with **200 held-out evaluation
+  families** (unchanged since the 692 release) and **591 training
+  families**, all eligible for preference training.
+- **More:** dataset card in [`data/README.md`](data/README.md); release
+  registry in `configs/dataset.yaml`.
+
+## Status
+Details, hashes and next actions are in
+[`docs/EXPERIMENT_STATUS.md`](docs/EXPERIMENT_STATUS.md).
+
+| Exp | Status |
+|---|---|
+| 0 Dataset finalization | **Done** on `final-791`: all gates PASS (structure, split, exposure) |
+| 1 Judge validation | **Development only.** 160-item development sample exists (AI-prefilled labels, 15 flagged items awaiting human adjudication). **Final validation pending**; no validated judge exists yet |
+| 2 Main evaluation | **Not run.** Offline checks and a CPU live-generation smoke passed; the live-judge smoke reached the API but the OpenAI account has **no credits**; the production GPU backend is untested |
+| 3–4b | Not run (need Exp 2) |
+| 5 | Cut |
+| 6–9 Phase 2 | Not run. Design fixed (C vs B_ext). The feasibility pilot generated 400 CPU responses; its AI-reviewed counts are team-reported, not in this repo (exploratory, not gold) |
+| 10 | Not run |
+
+## Using the code
+- [`RUNBOOK.md`](RUNBOOK.md) has installation, credentials (`.env.example`),
+  exact commands, resume behaviour and expected outputs. Commands are marked
+  tested or untested.
+- [`docs/PROTOCOL.md`](docs/PROTOCOL.md) is the single current protocol.
+  Superseded plans are in `docs/archive/`.
 
 ```
-csjail/                    library
-  convert_final.py         final seven-column CSV -> long JSONL (active)
-  data.py                  schema + exact family/condition contract
-  qa.py                    script / loanword / duplicate audits (IDs only)
-  splits.py                groups, frozen split manifests, ablation manifest
-  artifacts.py             resolves + hash-checks finalized Exp 0 artifacts
-  judge.py, outcomes.py    versioned judge contract + the ONE unsafe predicate
-  judge_validation.py      Exp 1 gold/adjudication/metrics/manifest guard
-  models.py, pipeline.py   vLLM runner + persist-first resumable gen/judge caches
-  run_eval.py              Exp 2 engine (also used by Exp 8)
-  asr.py, metrics.py       null-safe ASR, bootstrap, McNemar, GEE, Holm
-  aggregate.py, robustness.py
-  comprehension.py         Exp 4b
-  prefdata.py, chosen_gen.py, train_dpo.py   Exp 6-7
-  convert_v1.py, convert_csv.py   LEGACY converters (historical reproduction only)
-configs/                   domains, eval, judge (+validation protocol), models (pinned), dpo, capability
-scripts/                   exp0 ... exp9 entry points, smoke tests, dry_run_report.py
-tests/                     CPU tests (harmless fixtures)
-data/                      fixtures, exemplars, benign probe, QA templates (dataset itself is local-only)
-outputs/exp0/<version>/    frozen ID-level manifests (dataset JSONL is gitignored)
+csjail/     library: conversion, schema, QA, splits, judge contract, pipeline, stats, Phase 2
+configs/    dataset registry, domains, eval, judge (+ validation protocol), models (pinned), dpo
+scripts/    exp0 … exp9 entry points, smoke tests, dry-run report
+tests/      CPU tests on harmless fixtures
+outputs/    small ID-level manifests and summaries only (raw text is gitignored)
 ```
-
-## Quick start
-
-```bash
-pip install -e ".[dev]"                      # CPU: Exp 0, statistics, tests
-pytest tests -q
-python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_approved_748.csv \
-    --extend-split outputs/exp0/final-692-b11d22b34008/split_manifest.json
-python scripts/dry_run_report.py
-```
-
-The GPU host additionally needs `pip install -e ".[train,judge]"`, plus
-`OPENAI_API_KEY`, `ANTHROPIC_API_KEY` and `HF_TOKEN`. See `RUNBOOK.md`.
 
 ## Data handling
-
-The harmful dataset, and any file holding prompt or response text, stays
-local. Those files are gitignored and must not be run on shared notebooks.
-Only ID-level manifests (splits, QA flags, hashes) are committed.
+The dataset and every file containing prompt or response text are sensitive.
+Keep them local or in private team storage, and never run them on shared
+notebooks. Only ID-level manifests are committed.

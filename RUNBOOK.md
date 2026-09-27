@@ -1,120 +1,186 @@
-# CS-Jail-UR — Runbook
+# CS-Jail-UR — runner guide
 
-These are the commands, in order. The rationale for each step is in
-`docs/PROTOCOL.md`.
+These are exact commands from a fresh checkout. Every command is labelled:
 
-There are two environments:
+- **[tested]**: executed on the CPU box (Windows 11, Python 3.12) for the current release.
+- **[CPU/untested]**: expected to work there, not yet executed.
+- **[GPU]** / **[API]**: needs the GPU host or API keys; **not** executed yet.
 
-- **CPU box:** Exp 0, statistics, pair assembly, tests.
-- **GPU host (RTX 4080 / WSL2):** generation, judging, training.
-
-Every stage consumes the finalized Exp 0 artifact (`outputs/exp0/LATEST.json`)
-and verifies its hashes.
+The protocol and its rationale are in `docs/PROTOCOL.md`; current statuses
+are in `docs/EXPERIMENT_STATUS.md`.
 
 ## 0. Environment
+
+| Where | What runs | Needs |
+|---|---|---|
+| CPU box | Exp 0, statistics, aggregation, tests, CPU smoke (Ollama) | Python 3.10–3.12; `pip install -e ".[dev]"`; optional Ollama for smoke |
+| API | judge (Exp 1 scoring, Exp 2+), chosen generator (Exp 6) | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` |
+| GPU host | Exp 1 validation sample, Exp 2, Exp 4b, Exp 6–9 | Linux + CUDA 12.x GPU (16 GB is enough for these ≤3.8B models; QLoRA 4-bit for training); `pip install -e ".[train,judge,dev]"`; `HF_TOKEN` with access to meta-llama/Llama-3.2-3B-Instruct |
+
 ```bash
-pip install -e ".[dev]"                          # CPU
-pip install -e ".[train,judge,dev]"              # GPU host (pins are candidates; see §9 smoke)
-export OPENAI_API_KEY=... ANTHROPIC_API_KEY=... HF_TOKEN=...
-pytest tests -q
-python scripts/smoke_pipeline_cpu.py && python scripts/smoke_exp1_cpu.py
+git clone https://github.com/mshamoonbutt/NLP_Research.git && cd NLP_Research
+git checkout revision/final-692-dataset
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"                                 # CPU  [CPU/untested as a single command]
+pip install -e ".[train,judge,dev]"                     # GPU host  [GPU]
+cp .env.example .env    # fill in keys; then: set -a; source .env; set +a
 ```
 
-## Exp 0: finalize (CPU)
-```bash
-python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_approved_748.csv \
-    --extend-split outputs/exp0/final-692-b11d22b34008/split_manifest.json \
-    [--qa-ledger data/qa/qa_ledger.csv] [--independent-annotations data/qa/annotations.csv]
-#   -> outputs/exp0/final-748-ac1a1b70b4a6/  (FINALIZED; split 7df6f9b8276fa856: 200 eval / 548 train,
-#      an append-only extension of the 692 split: eval set unchanged)
-#   Frozen: re-running refuses to overwrite; add data later with
-#   --extend-split outputs/exp0/<version>/split_manifest.json (append-only)
-# On another machine (GPU host), the committed dir lacks the gitignored dataset
-# file; recreate it from the same CSV and verify it against the manifest:
-python scripts/exp0_finalize_data.py --source-csv data/CS-Jail-UR_approved_748.csv \
-    --extend-split outputs/exp0/final-692-b11d22b34008/split_manifest.json --restore
-python scripts/dry_run_report.py
-```
-Review `qa_review_flags.json`. It lists 60 UR items with Latin letters and
-2 possible English clauses in RU, and inventories technical loans in RU. Also
-review `duplicate_candidates.csv` (0 here). Record decisions in `data/qa/`.
-Do not edit rows silently.
+- The CPU dependency set was tested as individual installs: numpy 2.5, scipy 1.18,
+  **pandas 2.2.3**, statsmodels 0.15, pydantic 2.13, PyYAML 6, pytest 9.
+- On Windows with Smart App Control, pandas 3.x's compiled module was blocked;
+  pin `pandas<3` there.
+- Very long install paths can break statsmodels' wheel (MAX_PATH).
+- The GPU pins in `pyproject.toml` (vLLM 0.6.3.post1, torch 2.4.0,
+  transformers 4.46.3, trl 0.12.2, peft 0.13.2) are compatibility **candidates**
+  and have not been executed.
 
-## GPU smoke (required before production)
-```bash
-python scripts/smoke_test.py --model qwen25     # pinned load, template probe, finish reasons
-```
-Then run a tiny end-to-end pass (`--max-families 4 --allow-unvalidated-judge`,
-marked debug) through Exp 8 on a few pairs. See PROTOCOL §9.
+Place the release CSV locally (never commit it):
+`data/CS-Jail-UR_final_approved_791.csv` (SHA-256 `4a34e81a…1ecf`).
 
-## Exp 1: judge validation
+## 1. Checks (CPU, no keys)
 ```bash
-# rubric development (train_pool families)
-python scripts/exp1_sample_for_annotation.py --role development --models qwen25 phi3 \
-    --n-per-model-condition 20
-# ... iterate on configs/judge.yaml using ONLY the development sample ...
-# final validation on DISJOINT families (60 per model per condition -> 480 responses)
-python scripts/exp1_sample_for_annotation.py --role validation --models qwen25 phi3 \
-    --exclude-sample-dirs outputs/exp1/development-<ts>
+pytest tests -q                              # [tested] all pass
+python scripts/smoke_pipeline_cpu.py         # [tested] stubbed end-to-end chain
+python scripts/smoke_exp1_cpu.py             # [tested] validation-gate logic
 ```
-Two raters then fill `rater1.csv` / `rater2.csv` independently. Each row needs
-`rater_id`, `unsafe`, `response_kind` and `compliance_degree`. Adjudicate the
-disagreements in `adjudication.csv`, then score:
+
+## 2. Exp 0 — finalize the active release (CPU)
+```bash
+python scripts/exp0_finalize_data.py         # [tested] reads configs/dataset.yaml (active: final-791)
+```
+
+This does the following:
+- Verifies the CSV checksum.
+- Converts all ten columns (the three metadata columns are preserved).
+- Runs the structure and QA checks.
+- Extends the frozen split append-only, so the 200 eval families never move.
+- Screens new families against eval families.
+- Checks exposure of the development and pilot samples.
+- Writes `outputs/exp0/final-791-ddc14ecbc568/`: `FINDINGS.md`,
+  `split_manifest.json`, `exposure_report.json`, `dataset_manifest.json`,
+  `dataset_stats.json`, `qa_review_flags.json`, and `dataset_final.jsonl`
+  (gitignored).
+- Updates `LATEST.json`.
+- Re-running refuses to overwrite the frozen output.
+
+On a fresh clone (for example the GPU host), the committed output folder lacks
+the gitignored dataset file. Recreate it and verify it against the committed
+manifest:
+```bash
+python scripts/exp0_finalize_data.py --restore   # [tested: byte-identical dataset_final.jsonl on final-791]
+```
+
+A later **training-only extension** leaves the core release, eval membership,
+wording and `LATEST` untouched:
+```bash
+python scripts/exp0_finalize_data.py --training-extension-csv data/<ext>.csv --extension-name ext1   # [CPU/untested on real data; covered by tests]
+```
+
+## 3. Exp 1 — judge validation (status: development only; see EXPERIMENT_STATUS)
+
+Development (rubric iteration) [API]:
+```bash
+# adjudicate the 15 flagged items in outputs/exp1/development-cpu-20260926/annotations/adjudication_questions.csv, then
+python scripts/exp1_dev_gold.py --sample-dir outputs/exp1/development-cpu-20260926      # [tested]
+python scripts/calibrate_judge.py --sample-dir outputs/exp1/development-cpu-20260926 \
+    --gold-csv outputs/exp1/development-cpu-20260926/development_gold.csv              # [API] report only
+```
+
+Freeze `configs/judge.yaml`: any later edit changes the fingerprint and
+invalidates validation.
+
+Final validation, on families never used for development or the pilot, from
+the production backend [GPU]:
+```bash
+python scripts/exp1_sample_for_annotation.py --role validation --models qwen25 phi3 llama32 \
+    --exclude-sample-dirs outputs/exp1/development-cpu-20260926 outputs/exp6/feasibility-cpu-20260927
+```
+
+- That is 60 families × 4 conditions × 3 models = 720 blank items. Two models
+  (480 items) is the minimum.
+- Two independent humans fill `rater1.csv` and `rater2.csv` (blank label
+  fields; guide: `docs/exp1_rater_guide.md`).
+- Adjudicate disagreements in `adjudication.csv`, then run:
 ```bash
 python scripts/calibrate_judge.py --sample-dir outputs/exp1/validation-<ts> \
-    --development-sample-dir outputs/exp1/development-<ts>
-# exit 0 PASS / 1 FAIL / 2 INSUFFICIENT_EVIDENCE -> outputs/exp1/judge_validation_manifest.json
-# benign rubric: same flow on benign probe responses with `refused` labels, --kind benign
+    --development-sample-dir outputs/exp1/development-cpu-20260926             # [API] exit 0 = PASS
 ```
 
-## Exp 2: sweep + robustness
+It writes `outputs/exp1/judge_validation_manifest.json`. PASS requires every
+condition to reach precision and recall ≥ 0.90 with the declared support.
+
+The benign (over-refusal) rubric needs its own validation before Exp 8
+(`--kind benign`). A sampler for benign-probe responses is **not implemented**
+yet.
+
+## 4. Exp 2 — evaluation
+
+Smoke tests, all marked debug and written under `outputs/smoke/` (never paper results):
 ```bash
-bash scripts/run_all_baseline.sh                  # 3 x 4 x 748 = 8,976 responses; resumable
-python -m csjail.aggregate outputs/exp2/main      # denominators, micro/macro ASR, behaviour rates
-python scripts/exp2_robustness.py --greedy-results outputs/exp2/main   # 6,000 responses (CS/RU)
+# live generation, CPU/quantized Ollama (ollama pull the tags in configs/models.yaml first)
+python -m csjail.run_eval --backend ollama --skip-judge --families train_pool --max-families 2 \
+    --models qwen25 phi3 llama32 --out-dir outputs/smoke/exp2-ollama-791          # [tested]
+# live judge on the HARMLESS fixture only (unvalidated judge => debug)
+python scripts/exp0_finalize_data.py --source-csv tests/fixtures/final_fixture.csv --eval-size 4 \
+    --out-root outputs/smoke/exp0-fixture --no-latest --exposure-samples            # [tested]
+python -m csjail.run_eval --exp0-dir outputs/smoke/exp0-fixture/<final-12-...> --backend ollama \
+    --models qwen25 --max-families 2 --allow-unvalidated-judge --out-dir outputs/smoke/exp2-fixture-judge   # [ran: API reached, all calls 429 no credits]
+python -m csjail.aggregate outputs/smoke/exp2-ollama-791 --allow-debug              # [tested]
 ```
 
-## Exp 3 / 4b
+Full runs [GPU], not executed:
 ```bash
-python scripts/exp3_isolation.py --results outputs/exp2/main
-python scripts/exp4b_comprehension.py --baseline-results outputs/exp2/main
-python scripts/exp4b_comprehension.py --baseline-results outputs/exp2/main \
-    --score-review outputs/exp4b/review_sample.csv      # after human review
+# generation-only while Exp 1 is pending: responses are produced now, every metric stays NA
+python -m csjail.run_eval --out-dir outputs/exp2/main --skip-judge
+# after a PASS judge manifest exists: the same command without --skip-judge judges the cached generations
+python -m csjail.run_eval --out-dir outputs/exp2/main
+bash scripts/run_all_baseline.sh                              # = run_eval + aggregate + Exp 3
+python -m csjail.aggregate outputs/exp2/main                  # full-core table (791 families)
+python -m csjail.aggregate outputs/exp2/main --split eval_main   # the frozen 200-family held-out baseline
+python scripts/exp2_robustness.py --greedy-results outputs/exp2/main   # 200 fams x CS/RU x 5 draws x 3 models
 ```
 
-## Exp 6–8 (Phase 2; phi3 + llama32)
+**Scope and expected counts.**
+
+| Run | Per model | For 3 models |
+|---|---:|---:|
+| Full core: 791 families × 4 conditions | 3,164 | 9,492 |
+| Held-out subset: 200 families × 4 conditions | 800 | 2,400 |
+| Robustness: 200 × 2 × 5 | 2,000 | 6,000 |
+
+- Never compare the full-core baseline against held-out-only post-training
+  results; Exp 8 regenerates arm A on exactly the 200 held-out families.
+- Training-exposed families are never held-out evidence.
+
+**Resume and outputs.**
+- Re-run the identical command after an interruption. Cached generations and
+  judgments are reused, with no duplicate rows.
+- A run folder made with a different dataset, split, sampling, backend or
+  judge is refused.
+- Results go to `outputs/exp2/<run>/results.<model>.jsonl`, plus
+  `run_manifest.json`, `generations.jsonl` and `judgments.jsonl`. These hold
+  prompt/response text and are **gitignored**: store raw outputs in the
+  team's private storage and commit only `run_manifest.json` and
+  `summary*.csv/json`.
+
+**Rough estimates, unverified.** Exp 2 generation on one 16 GB GPU takes about
+1–2 h. Judging 9,492 responses with gpt-4o-mini costs a few USD and is
+rate-limit bound.
+
+## 5. Later stages (commands unchanged; see PROTOCOL)
 ```bash
-python scripts/dry_run_report.py --results outputs/exp2/main   # actual pair budgets
-python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main
-#   rate outputs/exp6/phi3/naturalness_sample.csv (mean >= 4, clean refusals) before C/D
-python scripts/exp7_train_arms.py --model phi3 --arm C --naturalness-csv <rated csv>
-python scripts/exp7_train_arms.py --model phi3 --arm B          # matched English control
-python scripts/exp7_train_arms.py --model phi3 --arm B_ext      # optional practical baseline
-python scripts/exp8_posteval.py --arms A B C E                  # add B_ext / D if trained
+python scripts/exp3_isolation.py --results outputs/exp2/main                     # CPU
+python scripts/exp4b_comprehension.py --baseline-results outputs/exp2/main       # [GPU][API]
+python scripts/prepare_external_english_pairs.py --n 1000                        # [untested] B_ext source
+python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main   # [API]
+python scripts/exp7_train_arms.py --model phi3 --arm C --budget 100 --naturalness-csv <rated>   # [GPU]
+python scripts/exp7_train_arms.py --model phi3 --arm B_ext --budget 100                          # [GPU]
+python scripts/exp8_posteval.py --arms A B_ext C E                               # [GPU][API]
+python scripts/exp9_ablations.py ncurve --model phi3                             # CPU
 ```
 
-## Exp 9: ablations
-```bash
-python scripts/exp9_ablations.py ncurve --model phi3
-python scripts/exp9_ablations.py domain --domain <Dk> --attest-chosen-before-outcomes
-#   then exp6 / exp7 / exp8 with --split-manifest outputs/exp9/ablation_<Dk>/split_manifest.json
-#   --tag ablation_<Dk>   (fresh adapters from the base model)
-```
-
-## Gates vs. flags
-- **Hard:**
-  - Exp 0 structural gate.
-  - Exp 1 per-condition precision and recall ≥ 0.90, with declared support
-    (PASS only).
-  - Production refuses any unvalidated judge.
-  - Missing adapters or inputs stop Exp 8.
-- **Not gates:**
-  - Dataset κ: descriptive only.
-  - Robustness ranking agreement: reported.
-  - Exp 8 improvement thresholds: reporting flags. "NA" means undefined.
-
-## Rough budget (RTX 4080)
-- Exp 2: 8,976 generations in about 1 hour.
-- Robustness: 6,000 generations.
-- Judging is the bottleneck, so run it with concurrency.
-- Each DPO arm: tens of minutes.
+- The primary Phase 2 comparison is C vs B_ext at equal accepted-pair budgets.
+- C_matched and B_matched are optional.
+- Exp 8 needs a PASS judge manifest for the harm rubric **and** one for the
+  benign rubric.

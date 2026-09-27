@@ -1,0 +1,29 @@
+{
+  "qwen25": {
+    "hf_id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "status": "fetched",
+    "chat_template_sha256": "cd8e9439f0570856fd70470bf8889ebd8b5d1107207f67a5efb46e342330527f",
+    "inserts_default_system_prompt": true,
+    "default_system_text": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+    "has_system_role_handling": true,
+    "model_max_length": 131072,
+    "eos_token": "<|im_end|>"
+  },
+  "phi3": {
+    "hf_id": "microsoft/Phi-3-mini-4k-instruct",
+    "revision": "f39ac1d28e925b323eae81227eaba4464caced4e",
+    "status": "fetched",
+    "chat_template_sha256": "dcaee66df77bfbb789ec541fe713218da30225a526f1db97138fc39ee6dc56aa",
+    "inserts_default_system_prompt": false,
+    "default_system_text": null,
+    "has_system_role_handling": true,
+    "model_max_length": 4096,
+    "eos_token": "<|endoftext|>"
+  },
+  "llama32": {
+    "hf_id": "meta-llama/Llama-3.2-3B-Instruct",
+    "revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
+    "status": "not fetched: HTTP 401 (gated; needs HF_TOKEN)"
+  }
+}

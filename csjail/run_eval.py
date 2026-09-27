@@ -13,7 +13,7 @@
 - Judging requires a PASS judge-validation manifest for the exact current
   judge fingerprint. `--allow-unvalidated-judge` is a debug bypass that marks
   the run `debug: true`; aggregation rejects debug runs by default.
-- results.jsonl: one record per (model, arm, row, sample) with model identity,
+- results.<model>.jsonl: one record per (model, arm, row, sample) with model identity,
   family, domain, condition, split + split id, dataset version, prompt and
   response hashes, response, finish reason, token counts, generation status,
   judge status and validated judge fields.
@@ -30,10 +30,10 @@ from typing import Any, Optional
 
 import yaml
 
-from csjail.artifacts import resolve_exp0, sha256_json
+from csjail.artifacts import resolve_exp0
 from csjail.data import CONDITIONS, filter_prompts
 from csjail.pipeline import JsonlCache, merge_results, run_generation, run_judging
-from csjail.utils.io import sha256_file, write_jsonl
+from csjail.utils.io import sha256_file, write_jsonl, write_text_lf
 
 ROOT = Path(__file__).resolve().parent.parent
 EVAL_CFG = ROOT / "configs" / "eval.yaml"
@@ -114,7 +114,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-tokens", type=int, default=None)
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--max-families", type=int, default=None, help="debug cap")
-    ap.add_argument("--skip-judge", action="store_true")
+    ap.add_argument("--backend", choices=["vllm", "ollama"], default="vllm",
+                    help="ollama = CPU/quantized smoke backend; such runs are always DEBUG")
+    ap.add_argument("--skip-judge", action="store_true",
+                    help="generation only: every metric stays unavailable until a validated "
+                         "judge scores the cached generations (re-run without this flag)")
     ap.add_argument("--allow-unvalidated-judge", action="store_true", help="DEBUG ONLY")
     ap.add_argument("--allow-unpinned-models", action="store_true", help="DEBUG ONLY")
     ap.add_argument("--allow-fallback-template", action="store_true", help="DEBUG ONLY")
@@ -142,28 +146,42 @@ def main(argv: list[str] | None = None) -> int:
         judge, judge_man, debug = prepare_judge("harm", args.judge_manifest,
                                                 args.allow_unvalidated_judge)
     debug = debug or args.allow_unpinned_models or args.allow_fallback_template \
-        or bool(args.max_families) or args.skip_judge
+        or bool(args.max_families) or args.backend != "vllm"
 
-    from csjail.models import SLMRunner, resolve
+    prev_path = out_dir / "run_manifest.json"
+    prev = json.loads(prev_path.read_text(encoding="utf-8")) if prev_path.exists() else None
+    problem = resume_conflict(prev, {
+        "dataset_version": art.dataset_version, "split_id": art.split_id, "sampling": sampling,
+        "backend": args.backend, "families_selector": args.families,
+        "max_families": args.max_families, "debug": debug,
+        "judge_fingerprint_id": judge.fingerprint["fingerprint_id"] if judge else None})
+    if problem:
+        print(f"[eval] FAIL: {out_dir} holds an incompatible run ({problem}); use a new "
+              "--out-dir", file=sys.stderr)
+        return 1
 
-    all_results, model_prov = [], {}
+    from csjail.models import resolve
+
+    model_prov = dict((prev or {}).get("models") or {})
+    n_results = 0
     for model in args.models:
-        runner = SLMRunner(resolve(model), require_pinned=not args.allow_unpinned_models,
-                           allow_fallback_template=args.allow_fallback_template)
+        runner = make_runner(args.backend, resolve(model), allow_unpinned=args.allow_unpinned_models,
+                             allow_fallback_template=args.allow_fallback_template)
         try:
             model_prov[model] = runner.provenance()
+            results = []
             for cond in args.conditions:  # one load, all conditions
                 sub = filter_prompts(rows, condition=cond)
-                all_results += evaluate_system(
+                results += evaluate_system(
                     runner=runner, rows=sub, arm="A", sampling=sampling, system=None,
                     out_dir=out_dir, judge=judge, split=art.split,
                     chunk_size=int(cfg["inference"]["chunk_size"]), skip_judge=args.skip_judge)
         finally:
             runner.shutdown()
-
-    for r in all_results:
-        r["run_debug"] = debug
-    write_jsonl(out_dir / "results.jsonl", all_results)
+        for r in results:
+            r["run_debug"] = debug
+        write_jsonl(out_dir / f"results.{model}.jsonl", results)   # one file per model
+        n_results += len(results)
     manifest: dict[str, Any] = {
         "kind": "eval_run_manifest", "experiment": "exp2_primary",
         "created_utc": datetime.now(timezone.utc).isoformat(), "git_sha": git_sha(),
@@ -171,20 +189,50 @@ def main(argv: list[str] | None = None) -> int:
         "eval_config_sha256": sha256_file(EVAL_CFG),
         "dataset_version": art.dataset_version, "dataset_manifest": art.manifest,
         "split_id": art.split_id, "split_scheme": art.split["meta"]["scheme"],
-        "families_selector": args.families, "n_rows": len(rows),
+        "families_selector": args.families, "max_families": args.max_families,
+        "n_rows_per_model": len(rows), "backend": args.backend,
+        "judging": "not_run (generation-only; metrics unavailable)" if args.skip_judge
+                   else ("UNVALIDATED judge (debug)" if judge_man is None else "validated judge"),
         "judge_fingerprint": judge.fingerprint if judge else None,
+        "judge_fingerprint_id": judge.fingerprint["fingerprint_id"] if judge else None,
         "judge_validation_manifest_sha256": (sha256_file(args.judge_manifest)
                                              if judge_man else None),
         "models": model_prov,
-        "results_sha256": sha256_json([r.get("gen_key") for r in all_results]),
-        "planned_primary_responses": len(rows) * len(args.models),
+        "planned_primary_responses_this_invocation": len(rows) * len(args.models),
     }
-    (out_dir / "run_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2),
-                                               encoding="utf-8")
-    print(f"[eval] {len(all_results)} result records -> {out_dir / 'results.jsonl'}"
-          + ("  [DEBUG RUN]" if debug else ""))
+    write_text_lf(out_dir / "run_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
+    print(f"[eval] {n_results} result records -> {out_dir}/results.<model>.jsonl"
+          + ("  [DEBUG RUN]" if debug else "") + ("  [GENERATION ONLY]" if args.skip_judge else ""))
     print(f"[eval] summarize: python -m csjail.aggregate {out_dir}")
     return 0
+
+
+def make_runner(backend: str, spec, *, allow_unpinned: bool = False,
+                allow_fallback_template: bool = False):
+    """Explicit backend choice -- never a silent GPU/CPU fallback."""
+    if backend == "ollama":
+        from csjail.ollama_backend import OllamaRunner
+
+        return OllamaRunner(spec)
+    from csjail.models import SLMRunner
+
+    return SLMRunner(spec, require_pinned=not allow_unpinned,
+                     allow_fallback_template=allow_fallback_template)
+
+
+def resume_conflict(prev: Optional[dict], new: dict) -> Optional[str]:
+    """Why an existing run dir can't be resumed with these settings (None = OK).
+    Adding models/conditions is fine; changing what a result MEANS is not. A
+    generation-only run may later be judged (judge id None -> set)."""
+    if not prev:
+        return None
+    for k, v in new.items():
+        old = prev.get(k)
+        if k == "judge_fingerprint_id" and (old is None or v is None):
+            continue
+        if k in prev and old != v:
+            return f"{k}: {old!r} -> {v!r}"
+    return None
 
 
 if __name__ == "__main__":

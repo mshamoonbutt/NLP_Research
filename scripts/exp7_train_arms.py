@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Exp 7 — train one comparison arm for one model (GPU only).
 
-    python scripts/exp7_train_arms.py --model phi3 --arm C  --budget all
-    python scripts/exp7_train_arms.py --model phi3 --arm B  --budget all     # matched English
-    python scripts/exp7_train_arms.py --model phi3 --arm B_ext --budget all  # external English
-    python scripts/exp7_train_arms.py --model phi3 --arm C --budget 50        # N-curve point
+    python scripts/exp7_train_arms.py --model phi3 --arm C     --budget 100 --naturalness-csv <rated>
+    python scripts/exp7_train_arms.py --model phi3 --arm B_ext --budget 100   # external English, same N
+    python scripts/exp7_train_arms.py --model phi3 --arm C     --budget 50 --naturalness-csv <rated>
+    python scripts/exp7_train_arms.py --model phi3 --arm C_matched --budget all ...   # optional secondary
+    python scripts/exp7_train_arms.py --model phi3 --arm B_matched --budget all       # optional secondary
     python scripts/exp7_train_arms.py --model phi3 --arm C --pairs-dir outputs/exp6/phi3_ablation_D2 \
         --split-manifest outputs/exp9/ablation_D2/split_manifest.json --tag ablation_D2
 
@@ -12,10 +13,14 @@ Enforced at this boundary (again, independently of Exp 6):
   - every family is in the split's train_pool and shares no group with
     eval/holdout families; no pair from an ablation-excluded domain;
   - rejected answers come from THIS model;
-  - B and C use the matched sets with the SAME families and count;
+  - PRIMARY: C (all validated CS pairs) and B_ext (external English) train on
+    the SAME accepted-pair count with the same DPO config -- a comparison of
+    training recipes, not of language alone; the English-and-CS double-failure
+    intersection is NOT required for it;
+  - SECONDARY (optional): C_matched and B_matched use the same families;
   - the budget is a prefix of the seeded ordering (nested N-curve) and must be
     <= available pairs -- never padded or duplicated;
-  - the naturalness gate for C/D must be recorded as passed (--naturalness-csv).
+  - the naturalness gate for C/D/C_matched must be recorded as passed (--naturalness-csv).
 Adapters go to outputs/models/<arm>_<model>[_n<budget>][_<tag>]/ with
 training_manifest.json (lineage, split id, pair file hashes, modules).
 """
@@ -66,10 +71,49 @@ def take_budget(pairs: list[dict], budget: str) -> list[dict]:
     return pairs[:n]
 
 
+ARMS = ("C", "B_ext", "D", "C_matched", "B_matched")
+NEEDS_NATURALNESS = ("C", "D", "C_matched")
+
+
+def select_pairs(arm: str, pdir: Path, budget: str, cfg: dict) -> list[dict]:
+    """Training pairs for one arm. PRIMARY comparison: C (our validated CS
+    pairs) vs B_ext (external English pairs) at the SAME accepted-pair count --
+    a comparison of training recipes / data sources, not of language alone.
+    SECONDARY (optional, separately specified): C_matched vs B_matched on the
+    same families (English-and-CS double failures only; often scarce)."""
+    cs_all = lambda: take_budget(read_pairs(str(pdir / "pairs_cs_all.jsonl")), budget)  # noqa: E731
+
+    def external(n: int) -> list[dict]:
+        ext = load_external_english(str(ROOT / cfg["prefdata"]["external_english_pairs"]), limit=n)
+        if len(ext) < n:
+            raise PairBuildError(f"only {len(ext)} external English pairs for budget {n}")
+        return ext
+
+    if arm == "C":
+        return cs_all()
+    if arm == "B_ext":
+        return external(len(cs_all()))          # equal accepted-pair budget to C
+    if arm == "D":
+        cs = cs_all()
+        if cfg.get("d_budget", "matched") == "matched":
+            half = len(cs) // 2
+            return cs[:half] + external(len(cs) - half)   # same total N as C
+        return cs + external(len(cs))
+    if arm == "C_matched":
+        return take_budget(read_pairs(str(pdir / "pairs_cs_matched.jsonl")), budget)
+    if arm == "B_matched":
+        en = take_budget(read_pairs(str(pdir / "pairs_en_matched.jsonl")), budget)
+        cs = take_budget(read_pairs(str(pdir / "pairs_cs_matched.jsonl")), budget)
+        if [p["base_id"] for p in en] != [p["base_id"] for p in cs]:
+            raise PairBuildError("B_matched does not use the same families/order as C_matched")
+        return en
+    raise PairBuildError(f"unknown arm {arm!r}")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
-    ap.add_argument("--arm", required=True, choices=["B", "C", "B_ext", "D"])
+    ap.add_argument("--arm", required=True, choices=list(ARMS))
     ap.add_argument("--budget", default="all", help="all | integer (prefix of seeded ordering)")
     ap.add_argument("--pairs-dir", default=None, help="default outputs/exp6/<model>[_<tag>]")
     ap.add_argument("--exp0-dir", default=None)
@@ -94,7 +138,7 @@ def main(argv=None) -> int:
         return 1
 
     nat = {"status": "not_required"}
-    if args.arm in ("C", "D"):
+    if args.arm in NEEDS_NATURALNESS:
         nat = naturalness_gate(args.naturalness_csv)
         if nat["status"] != "PASS":
             print(f"FAIL: chosen naturalness gate is {nat}; rate naturalness_sample.csv first",
@@ -102,28 +146,7 @@ def main(argv=None) -> int:
             return 1
 
     try:
-        if args.arm == "C":
-            pairs = take_budget(read_pairs(str(pdir / "pairs_cs_matched.jsonl")), args.budget)
-        elif args.arm == "B":
-            pairs = take_budget(read_pairs(str(pdir / "pairs_en_matched.jsonl")), args.budget)
-            c_fams = [p["base_id"] for p in take_budget(
-                read_pairs(str(pdir / "pairs_cs_matched.jsonl")), args.budget)]
-            if [p["base_id"] for p in pairs] != c_fams:
-                raise PairBuildError("matched B does not use the same families/order as C")
-        elif args.arm == "B_ext":
-            src = cfg["prefdata"]["external_english_pairs"]
-            n_c = len(take_budget(read_pairs(str(pdir / "pairs_cs_matched.jsonl")), args.budget))
-            pairs = load_external_english(str(ROOT / src), limit=n_c)
-            if len(pairs) < n_c:
-                raise PairBuildError(f"only {len(pairs)} external English pairs for budget {n_c}")
-        else:  # D
-            cs = take_budget(read_pairs(str(pdir / "pairs_cs_matched.jsonl")), args.budget)
-            en = take_budget(read_pairs(str(pdir / "pairs_en_matched.jsonl")), args.budget)
-            if cfg.get("d_budget", "matched") == "matched":
-                half = len(cs) // 2
-                pairs = cs[:half] + en[half:len(cs)]   # same total N as C, disjoint families
-            else:
-                pairs = cs + en
+        pairs = select_pairs(args.arm, pdir, args.budget, cfg)
         assert_pairs_trainable(pairs, split, model=args.model, exclude_domains=excl)
     except (PairBuildError, ValueError, FileNotFoundError) as e:
         print(f"FAIL: {e}", file=sys.stderr)
