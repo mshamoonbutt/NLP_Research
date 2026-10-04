@@ -162,6 +162,17 @@ Download `exp1_stageA.zip` from the right-hand **Output** panel (or the file
 browser under `/kaggle/working`). An interactive session's files are lost
 when it ends, so download before closing.
 
+### Background run (recommended for anything long)
+
+Interactive sessions end when the browser is idle, and their files are wiped.
+`notebooks/kaggle_gpu_background.ipynb` runs the GPU work headless instead:
+Kaggle → **File → Import Notebook** → upload it → set GPU T4 x2, Internet On,
+attach `HF_TOKEN` → set its flags → **Save Version → Save & Run All
+(Commit)**. It regenerates the Exp 1 samples (same seeded families; set
+`REGENERATE_EXP1 = False` if you already downloaded `exp1_stageA.zip`),
+then runs Exp 2 main and robustness generation-only (~3.5–4.5 h in total).
+Download `gpu_outputs.zip` from the finished version's **Output** tab.
+
 ### After Stage A
 
 - Unzip into your local repo root. The files land under

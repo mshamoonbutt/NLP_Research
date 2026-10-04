@@ -207,8 +207,14 @@ def test_robustness_and_comprehension_wiring(env, monkeypatch):
         "robustness": {"n_families": 6, "family_pool": "all", "conditions": ["CS", "RU"],
                        "temperature": 0.7, "top_p": 0.9, "max_tokens": 64, "n": 5, "seed": 1,
                        "subset_seed": 7}})
-    assert rob.main(["--greedy-results", str(out2), "--exp0-dir", exp0_dir,
-                     "--out-dir", str(tmp / "rob"), "--judge-manifest", str(env["man"])]) == 0
+    rob_args = ["--greedy-results", str(out2), "--exp0-dir", exp0_dir,
+                "--out-dir", str(tmp / "rob"), "--judge-manifest", str(env["man"])]
+    # generation-only first (no judge needed), then the judged run reuses every generation
+    assert rob.main(rob_args + ["--skip-judge"]) == 0
+    assert not (tmp / "rob" / "robustness_summary.json").exists()
+    FakeRunner.calls = 0
+    assert rob.main(rob_args) == 0
+    assert FakeRunner.calls == 0
     summ = json.loads((tmp / "rob" / "robustness_summary.json").read_text(encoding="utf-8"))
     assert "qwen25/CS-RU" in summ["contrast"]
     n = sum(1 for _ in (tmp / "rob" / "results.jsonl").open(encoding="utf-8"))
