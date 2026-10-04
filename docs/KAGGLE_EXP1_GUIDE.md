@@ -37,7 +37,8 @@ evaluates. Report the annotation process in the paper as actually performed.
 Run each block as its own cell, in order. If the session drops, re-run from
 Cell 1; Cells 9–10 resume where they stopped (same `--out-dir`).
 
-**Cell 1 — environment check** (expect two Tesla T4 and Python 3.10–3.12):
+**Cell 1 — environment check** (expect two Tesla T4; Kaggle's own Python
+is 3.13, which is fine because Cell 3 creates a separate 3.12):
 ```python
 !nvidia-smi -L
 !python --version
@@ -51,12 +52,23 @@ Cell 1; Cells 9–10 resume where they stopped (same `--out-dir`).
 !git log --oneline -1
 ```
 
-**Cell 3 — install the pinned stack** (~5–10 min; downgrading Kaggle's torch
-to 2.4.0 and dependency-conflict warnings about unrelated preinstalled
-packages are expected). Run this before anything imports torch:
+**Cell 3 — Python 3.12 environment with the pinned stack** (~3–5 min). The
+pinned stack (vLLM 0.6.3.post1, torch 2.4.0) has no Python 3.13 builds, so it
+runs in its own 3.12 environment. The last lines make every later `!python`
+use it:
 ```python
-!pip install -q -e ".[gpu,judge,dev]"
+import os
+!python -m pip install -q uv
+!python -m uv venv --allow-existing --python 3.12 /root/py312
+!python -m uv pip install --python /root/py312/bin/python -e ".[gpu,judge,dev]"
+os.environ["PATH"] = "/root/py312/bin:" + os.environ["PATH"]
+os.environ["VIRTUAL_ENV"] = "/root/py312"
+os.environ.pop("PYTHONPATH", None)
+!which python && python --version
 ```
+Expected last line: `/root/py312/bin/python` and `Python 3.12.x`. After a
+kernel restart, re-run this cell (fast; nothing is reinstalled) before any
+other cell.
 
 **Cell 4 — load the secrets into the environment:**
 ```python
@@ -85,8 +97,11 @@ The smoke test prints each model's chat-template probe and finish reasons.
 The Urdu check shows whether the Urdu-script degeneration seen on the CPU
 build was a quantization artifact.
 
-**Cell 7 — pin the judge snapshot** (one cent of API usage):
+**Cell 7 — pin the judge snapshot** (one cent of API usage; `%%bash` must be
+the cell's first line, so it runs in the 3.12 environment):
 ```python
+%%bash
+python - <<'EOF'
 from openai import OpenAI
 import pathlib
 snap = OpenAI().chat.completions.create(
@@ -96,6 +111,7 @@ t = p.read_text(encoding="utf-8")
 assert "model_snapshot: null" in t, "snapshot already pinned"
 p.write_text(t.replace("model_snapshot: null", f"model_snapshot: {snap}", 1), encoding="utf-8")
 print("JUDGE SNAPSHOT:", snap)
+EOF
 ```
 **Write down the printed snapshot** (e.g. `gpt-4o-2024-…`). It becomes part
 of the judge fingerprint, so Stage C must use exactly this value. It also has
@@ -204,12 +220,20 @@ The judge only calls the API, so no GPU is needed and no GPU quota is spent.
 2. New notebook (or the same one): Accelerator = **None**, Internet = On,
    attach the `OPENAI_API_KEY` secret, then **Add Input** → your dataset.
 
-**Cell 1 — clone (now including the pinned snapshot) and install:**
+**Cell 1 — clone (now including the pinned snapshot) and install** (same
+Python 3.12 environment as Stage A, without the GPU packages):
 ```python
+import os
 %cd /kaggle/working
 !git clone --branch revision/final-692-dataset https://github.com/mshamoonbutt/NLP_Research.git
 %cd /kaggle/working/NLP_Research
-!pip install -q -e ".[judge,dev]"
+!python -m pip install -q uv
+!python -m uv venv --allow-existing --python 3.12 /root/py312
+!python -m uv pip install --python /root/py312/bin/python -e ".[judge,dev]"
+os.environ["PATH"] = "/root/py312/bin:" + os.environ["PATH"]
+os.environ["VIRTUAL_ENV"] = "/root/py312"
+os.environ.pop("PYTHONPATH", None)
+!which python && python --version
 !grep model_snapshot configs/judge.yaml
 ```
 The printed snapshot **must equal** the one from Stage A, Cell 7. If it shows
