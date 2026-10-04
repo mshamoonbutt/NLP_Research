@@ -100,11 +100,9 @@ python scripts/exp1_sample_for_annotation.py --role validation --models qwen25 p
 - That is 60 families × 4 conditions × 3 models = 720 blank items. Two models
   (480 items) is the minimum.
 - Two independent humans fill `rater1.csv` and `rater2.csv` (blank label
-  fields; guide: `docs/exp1_rater_guide.md`). Optionally AI-prefill them first
-  with `scripts/exp1_prefill_rater_files.py` (model distinct from the judge;
-  humans verify every row) — this is assisted verification, not blind
-  annotation, and is documented as such. Full walkthrough:
-  `docs/KAGGLE_EXP1_GUIDE.md`.
+  fields; guide: `docs/exp1_rater_guide.md`). Full walkthrough:
+  `docs/KAGGLE_EXP1_GUIDE.md`. Report the annotation process in the paper
+  exactly as it was actually performed (including any assistance used).
 - Adjudicate disagreements in `adjudication.csv`, then run:
 ```bash
 python scripts/calibrate_judge.py --sample-dir outputs/exp1/validation-<ts> \

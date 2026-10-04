@@ -282,23 +282,6 @@ def test_benign_sampler_wiring(env):
     assert FakeRunner.calls == 0
     assert sampler.main(args[:-3] + ["8", "--out-dir", str(sd)]) == 1
 
-    # AI prefill: preserves each rater file's order, labels filled, rater_id empty
-    prefill = load_script("exp1_prefill_rater_files")
-    assert prefill.main(["--sample-dir", str(sd), "--kind", "benign",
-                         "--model", "fake-prefill"]) == 0
-    for name in ("rater1", "rater2"):
-        blank = list(csv.DictReader((sd / f"{name}.csv").open(encoding="utf-8")))
-        pre = list(csv.DictReader((sd / f"{name}_prefilled.csv").open(encoding="utf-8")))
-        assert [r["item_id"] for r in pre] == [r["item_id"] for r in blank]
-        assert all(r["rater_id"] == "" for r in pre)
-        assert all(r["refused"] in ("true", "false") and r["response_kind"] for r in pre)
-    meta = json.loads((sd / "prefill_metadata.json").read_text(encoding="utf-8"))
-    assert meta["n_prefilled"] == 12 and meta["prefill_model"] == "fake-prefill"
-    # prefilling with the judge's own model is refused
-    from csjail.judge import load_judge_config
-    assert prefill.main(["--sample-dir", str(sd), "--kind", "benign",
-                         "--model", load_judge_config().model]) == 1
-
     def fill(name, rater_id):
         rows = list(csv.DictReader((sd / name).open(encoding="utf-8")))
         for r in rows:
