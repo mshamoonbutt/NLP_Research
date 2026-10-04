@@ -68,7 +68,7 @@ def main(argv=None) -> int:
         for label, contrasts in (("planned", planned), ("descriptive", descriptive)):
             out = mcnemar_pairs(by_cond, comparisons=contrasts,
                                 exact_threshold=st["mcnemar_exact_threshold"], strata=fam_dom,
-                                bootstrap_n=min(st["bootstrap_n"], 5000), seed=st["bootstrap_seed"])
+                                bootstrap_n=st["bootstrap_n"], seed=st["bootstrap_seed"])
             res[label] = [m.as_dict() for m in out]
             if label == "planned":
                 tests += [(model, m) for m in out]
@@ -86,7 +86,18 @@ def main(argv=None) -> int:
         print(f"[exp3] Holm ({h['family_size']} tests): {h['model']} {h['contrast']} "
               f"p_adj={h['p_adjusted']} reject={h['reject']}")
 
-    gee = None
+    def _gee(df, formula=None):
+        try:
+            g = gee_logit(df, outcome="unsafe", baseline_condition="EN", cluster="base_id",
+                          formula=formula)
+            return {"formula": g.formula, "odds_ratios": g.odds_ratios, "conf_int": g.conf_int,
+                    "pvalues": g.pvalues, "n_obs": g.n_obs, "n_clusters": g.n_clusters,
+                    "n_dropped_missing": g.n_dropped_missing}
+        except Exception as e:  # statsmodels may fail on degenerate data; report it
+            print(f"WARN: GEE failed: {e}", file=sys.stderr)
+            return {"error": f"{type(e).__name__}: {e}"}
+
+    gee = gee_by_model = gee_interaction = None
     try:
         import pandas as pd
 
@@ -94,13 +105,18 @@ def main(argv=None) -> int:
                             "domain": r["domain_id"], "model": r["model"],
                             "unsafe": primary_unsafe(r)} for r in recs])
         df["unsafe"] = df["unsafe"].astype("float")  # None -> NaN (dropped, not safe)
-        g = gee_logit(df, outcome="unsafe", baseline_condition="EN", cluster="base_id")
-        gee = {"formula": g.formula, "odds_ratios": g.odds_ratios, "conf_int": g.conf_int,
-               "pvalues": g.pvalues, "n_obs": g.n_obs, "n_clusters": g.n_clusters,
-               "n_dropped_missing": g.n_dropped_missing}
-        print(f"[exp3] GEE n_obs={g.n_obs} dropped_missing={g.n_dropped_missing}")
-    except Exception as e:  # statsmodels may fail on degenerate data; report it
-        gee = {"error": f"{type(e).__name__}: {e}"}
+        # Pooled additive model, per-model models, and a pooled sensitivity model
+        # with condition-by-model interactions (paper §4.3): one common language
+        # effect is not assumed.
+        gee = _gee(df)
+        gee_by_model = {m: _gee(df[df["model"] == m]) for m in sorted(df["model"].unique())}
+        if df["model"].nunique() > 1:
+            gee_interaction = _gee(
+                df, formula="unsafe ~ C(condition, Treatment('EN')) * C(model) + C(domain)")
+        if "n_obs" in gee:
+            print(f"[exp3] GEE n_obs={gee['n_obs']} dropped_missing={gee['n_dropped_missing']}")
+    except Exception as e:
+        gee = gee or {"error": f"{type(e).__name__}: {e}"}
         print(f"WARN: GEE failed: {e}", file=sys.stderr)
 
     out_dir = Path(args.out_dir or Path(args.results[0]) / "exp3")
@@ -108,6 +124,7 @@ def main(argv=None) -> int:
     (out_dir / "isolation_results.json").write_text(json.dumps({
         "arm": args.arm, "planned_contrasts": planned, "descriptive_contrasts": descriptive,
         "mcnemar_by_model": results, "holm": holm_out, "gee": gee,
+        "gee_by_model": gee_by_model, "gee_interaction_sensitivity": gee_interaction,
         "wording_note": "paired, semantically matched contrasts; not perfect single-variable "
                         "causal interventions",
     }, ensure_ascii=False, indent=2), encoding="utf-8")

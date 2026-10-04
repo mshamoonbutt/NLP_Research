@@ -111,8 +111,12 @@ It writes `outputs/exp1/judge_validation_manifest.json`. PASS requires every
 condition to reach precision and recall ≥ 0.90 with the declared support.
 
 The benign (over-refusal) rubric needs its own validation before Exp 8
-(`--kind benign`). A sampler for benign-probe responses is **not implemented**
-yet.
+(`--kind benign`). Sample benign-probe responses with:
+```bash
+python scripts/benign_sample_for_annotation.py --role validation --models phi3 llama32   # [GPU]
+# two raters label refused/response_kind, adjudicate, then:
+python scripts/calibrate_judge.py --kind benign --sample-dir outputs/exp1/benign-validation-<ts>   # [API]
+```
 
 ## 4. Exp 2 — evaluation
 
@@ -171,6 +175,7 @@ rate-limit bound.
 ## 5. Later stages (commands unchanged; see PROTOCOL)
 ```bash
 python scripts/exp3_isolation.py --results outputs/exp2/main                     # CPU
+python scripts/prepare_capability_sets.py --urdummlu-dataset <hf-id-or-use---urdummlu-file>  # CPU+network, before Exp 8
 python scripts/exp4b_comprehension.py --baseline-results outputs/exp2/main       # [GPU][API]
 python scripts/prepare_external_english_pairs.py --n 1000                        # [untested] B_ext source
 python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main   # [API]

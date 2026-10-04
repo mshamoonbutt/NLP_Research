@@ -97,8 +97,10 @@ def test_matched_sets_same_families_and_count(split):
 
 
 def test_budgets_never_pad():
-    assert supported_budgets(120)["runnable"] == [50, 100, "all"]
-    assert supported_budgets(30)["status"] == "EXPLORATORY_BELOW_50"
+    assert supported_budgets(120)["runnable"] == [25, 50, 100, "all"]
+    assert supported_budgets(30)["runnable"] == [25, "all"]
+    assert supported_budgets(30)["not_supported"] == [50, 100]
+    assert supported_budgets(10)["status"] == "EXPLORATORY_BELOW_25"
     assert supported_budgets(0)["runnable"] == []
 
 

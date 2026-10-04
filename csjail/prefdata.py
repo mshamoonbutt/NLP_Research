@@ -29,7 +29,7 @@ from csjail.outcomes import primary_unsafe
 from csjail.splits import assert_trainable, trainable_families
 from csjail.utils.io import read_jsonl, write_jsonl
 
-N_CURVE_DEFAULT = (50, 100, 200, "all")
+N_CURVE_DEFAULT = (25, 50, 100, "all")   # paper §5.3 menu; configs/dpo.yaml n_curve wins
 MIN_CHOSEN_CHARS = 20
 
 
@@ -145,7 +145,7 @@ def supported_budgets(n_available: int, requested=N_CURVE_DEFAULT) -> dict:
     ok = [b for b in fixed if b <= n_available]
     return {"n_available": n_available, "runnable": ok + (["all"] if n_available else []),
             "not_supported": [b for b in fixed if b > n_available],
-            "status": "EXPLORATORY_BELOW_50" if 0 < n_available < min(fixed) else
+            "status": f"EXPLORATORY_BELOW_{min(fixed)}" if 0 < n_available < min(fixed) else
                       ("NO_PAIRS" if n_available == 0 else "OK")}
 
 

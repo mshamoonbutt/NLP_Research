@@ -77,8 +77,10 @@ Remaining steps:
    `calibrate_judge.py --sample-dir <val> --development-sample-dir <dev>`.
    PASS needs per-condition precision and recall ≥ 0.90 with the declared
    support.
-6. Validate the benign (over-refusal) rubric separately before Exp 8. A
-   benign-response sampler is **not yet implemented**.
+6. Validate the benign (over-refusal) rubric separately before Exp 8:
+   `scripts/benign_sample_for_annotation.py` (added 2026-10-04) generates the
+   probe responses and blank rater files; gate with
+   `calibrate_judge.py --kind benign`.
 
 ## Exp 2 — main evaluation: **NOT RUN** (smoke checks only)
 

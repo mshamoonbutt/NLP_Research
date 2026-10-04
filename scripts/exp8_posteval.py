@@ -151,7 +151,7 @@ def main(argv=None) -> int:
     sampling = dict(ecfg["sampling"])
     from csjail.models import SLMRunner
 
-    results, table, prov = [], [], {}
+    results, table, prov, cap_items = [], [], {}, []
     for model in models:
         spec = resolve(model)
         for arm in args.arms:
@@ -193,7 +193,11 @@ def main(argv=None) -> int:
                     for k, pk, nk in (("mmlu", "mmlu_path", "mmlu_n"),
                                       ("urdummlu", "urdummlu_path", "urdummlu_n")):
                         items = load_mcq(str(ROOT / cap_cfg[pk]))[: cap_cfg[nk]]
-                        row[k] = evaluate_mcq(runner, items, max_tokens=cap_cfg["max_tokens"])["accuracy"]
+                        cres = evaluate_mcq(runner, items, max_tokens=cap_cfg["max_tokens"])
+                        row[k] = cres["accuracy"]
+                        row[f"{k}_n_unparsed"] = cres["n_unparsed"]
+                        cap_items += [{"model": model, "arm": arm, "set": k, **it}
+                                      for it in cres["per_item"]]
                 results += recs
                 table.append(row)
             finally:
@@ -203,6 +207,8 @@ def main(argv=None) -> int:
         r["run_debug"] = debug
     write_jsonl(out_dir / "results.jsonl", results)
     write_csv(out_dir / "mitigation.csv", table)
+    if cap_items:  # same MCQ item IDs across arms (paper App. G: identifiers preserved)
+        write_jsonl(out_dir / "capability_items.jsonl", cap_items)
 
     # identical eval IDs across arms (per model)
     main_recs = [r for r in results if not r.get("probe")]

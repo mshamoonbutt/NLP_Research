@@ -16,8 +16,9 @@ Unseen-domain ablation (NOT free: it needs fresh training runs)
 
 Data-efficiency N-curve (nested prefixes of one seeded ordering)
     python scripts/exp9_ablations.py ncurve --model phi3
-  -> prints the runnable budgets from pairs_manifest.json ({50,100,200,all}
-     up to the available count) and the exact exp7/exp8 commands.
+  -> prints the runnable budgets from pairs_manifest.json (configs/dpo.yaml
+     n_curve {25,50,100} + all, up to the available count) and the exact
+     exp7/exp8 commands.
 
 Condition transfer (CS-trained model on RU/UR) is read from Exp 8 results.
 The beta sweep is cut.

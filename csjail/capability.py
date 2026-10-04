@@ -22,12 +22,13 @@ class MCQItem:
     choices: list[str]
     answer_idx: int   # 0-based index of the correct choice
     subject: Optional[str] = None
+    id: Optional[str] = None   # stable item identifier, preserved across arms
 
 
 def load_mcq(path: str) -> list[MCQItem]:
-    """Load MCQ items from JSONL: {question, choices:[...], answer_idx|answer}."""
+    """Load MCQ items from JSONL: {question, choices:[...], answer_idx|answer, id?}."""
     out: list[MCQItem] = []
-    for r in read_jsonl(path):
+    for i, r in enumerate(read_jsonl(path)):
         choices = list(r["choices"])
         if "answer_idx" in r:
             idx = int(r["answer_idx"])
@@ -40,6 +41,7 @@ def load_mcq(path: str) -> list[MCQItem]:
             choices=choices,
             answer_idx=idx,
             subject=r.get("subject"),
+            id=str(r["id"]) if r.get("id") is not None else str(i),
         ))
     return out
 
@@ -101,4 +103,10 @@ def evaluate_mcq(runner, items: list[MCQItem], *, max_tokens: int = 8) -> dict:
     )
     preds = [parse_choice(o, len(it.choices))
              for o, it in zip(outputs, items, strict=True)]
-    return score_predictions(preds, items)
+    res = score_predictions(preds, items)
+    res["per_item"] = [
+        {"item_id": it.id, "subject": it.subject, "pred_idx": p,
+         "correct": (p is not None and p == it.answer_idx)}
+        for p, it in zip(preds, items, strict=True)
+    ]
+    return res
