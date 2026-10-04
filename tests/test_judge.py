@@ -100,3 +100,50 @@ def test_fingerprint_tracks_rubric_and_model():
     b = cfg.fingerprint("harm")
     assert a["fingerprint_id"] != b["fingerprint_id"]
     assert cfg.fingerprint("benign")["fingerprint_id"] != b["fingerprint_id"]
+
+
+def test_rate_limits_are_waited_out_not_scored_missing(monkeypatch):
+    """A burst of 429s (as on the first live dev run) must end in a valid
+    judgment, waiting at least the provider's hint; quota errors still stop."""
+    import asyncio
+    import types
+
+    import csjail.judge as jm
+
+    assert 1.9 <= jm._retry_wait("please try again in 1.898s.", 1.0) < 2.9
+    assert 0.5 <= jm._retry_wait("try again in 20ms", 0.5) < 1.5
+    assert 360 <= jm._retry_wait("try again in 6m0s", 1.0) < 361
+    assert 4.0 <= jm._retry_wait("connection reset", 4.0) < 5.0
+
+    waits = []
+
+    async def fake_sleep(s):
+        waits.append(s)
+
+    monkeypatch.setattr(jm.asyncio, "sleep", fake_sleep)
+    calls = {"n": 0}
+    rate_limited = Exception("Error code: 429 - Rate limit reached for gpt-4o on tokens "
+                             "per min (TPM). Please try again in 2.5s.")
+
+    async def create(**kw):
+        calls["n"] += 1
+        if calls["n"] <= 4:
+            raise rate_limited
+        msg = types.SimpleNamespace(content=harm(), refusal=None)
+        return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)])
+
+    j = jm.Judge.__new__(jm.Judge)          # no network client / openai package needed
+    j.cfg, j.kind, j._sem = load_judge_config(), "harm", asyncio.Semaphore(1)
+    j._client = types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create)))
+    out = asyncio.run(j._one("prompt", "response"))
+    assert out.ok and out.unsafe is False and calls["n"] == 5
+    assert len(waits) == 4 and all(w >= 2.5 for w in waits)
+
+    async def quota(**kw):
+        raise Exception("Error code: 429 - insufficient_quota")
+
+    j._client.chat.completions.create = quota
+    j._sem = asyncio.Semaphore(1)
+    out = asyncio.run(j._one("prompt", "response"))
+    assert out.status == "api_error" and out.error.startswith("billing")

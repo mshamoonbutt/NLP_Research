@@ -24,6 +24,8 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import random
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -201,6 +203,21 @@ def parse_benign(raw: str) -> Judgment:
     return Judgment("parse_error", "benign", raw=raw, error="no JSON object with 'refused'")
 
 
+_RETRY_HINT = re.compile(r"try again in (?:(\d+)m)?([\d.]+)(ms|s)\b")
+
+
+def _retry_wait(emsg: str, backoff: float) -> float:
+    """Seconds to wait before retrying a failed call: the provider's
+    'try again in ...' hint when present (rate limits), never less than the
+    exponential backoff, plus jitter so concurrent workers do not retry in
+    lockstep and trip the same per-minute limit again."""
+    m = _RETRY_HINT.search(emsg)
+    hint = 0.0
+    if m:
+        hint = int(m.group(1) or 0) * 60 + float(m.group(2)) / (1000 if m.group(3) == "ms" else 1)
+    return max(hint, backoff) + random.uniform(0, 1)
+
+
 def rule_judgment(response: str, kind: str) -> Optional[Judgment]:
     """Deterministic classification that needs no API call: empty output."""
     if response is not None and response.strip() == "":
@@ -280,8 +297,8 @@ class Judge:
                     return Judgment("api_error", self.kind, error=f"auth: {e}")
                 if "insufficient_quota" in emsg or "billing" in emsg:
                     return Judgment("api_error", self.kind, error=f"billing: {e}")
-                await asyncio.sleep(delay)
-                delay = min(delay * 2, 30.0)
+                await asyncio.sleep(_retry_wait(emsg, delay))
+                delay = min(delay * 2, 60.0)
         return Judgment("api_error", self.kind, error=f"max_retries: {last_err}")
 
     async def score_many(self, pairs: list[tuple[str, str]], *,
