@@ -10,8 +10,8 @@ condition, and freeze it. It has three stages; only the first needs a GPU:
 | **C. Calibrate**: judge vs. gold → PASS/FAIL manifests | Kaggle **CPU** session (or your PC) | ~20 min |
 
 Production decisions (already committed): vLLM, pinned revisions, **float16**
-(T4 has no bf16; vLLM cannot run on the P100). Judge candidate **gpt-4o**,
-pinned to a dated snapshot in stage A. **Gold labels come only from the two
+(T4 has no bf16; vLLM cannot run on the P100). Judge **gpt-4o**, pinned to
+snapshot `gpt-4o-2024-08-06` (harm fingerprint `b0d6676cf5d89d08`). **Gold labels come only from the two
 human raters** (agreement, else adjudication); the judge is what the gold
 evaluates. Report the annotation process in the paper as actually performed.
 
@@ -37,7 +37,8 @@ evaluates. Report the annotation process in the paper as actually performed.
 Run each block as its own cell, in order. If the session drops, re-run from
 Cell 1; Cells 9–10 resume where they stopped (same `--out-dir`).
 
-**Cell 1 — environment check** (expect two Tesla T4 and Python 3.10–3.12):
+**Cell 1 — environment check** (expect two Tesla T4; Kaggle's own Python
+is 3.13, which is fine because Cell 3 creates a separate 3.12):
 ```python
 !nvidia-smi -L
 !python --version
@@ -51,12 +52,23 @@ Cell 1; Cells 9–10 resume where they stopped (same `--out-dir`).
 !git log --oneline -1
 ```
 
-**Cell 3 — install the pinned stack** (~5–10 min; downgrading Kaggle's torch
-to 2.4.0 and dependency-conflict warnings about unrelated preinstalled
-packages are expected). Run this before anything imports torch:
+**Cell 3 — Python 3.12 environment with the pinned stack** (~3–5 min). The
+pinned stack (vLLM 0.6.3.post1, torch 2.4.0) has no Python 3.13 builds, so it
+runs in its own 3.12 environment. The last lines make every later `!python`
+use it:
 ```python
-!pip install -q -e ".[gpu,judge,dev]"
+import os
+!python -m pip install -q uv
+!python -m uv venv --allow-existing --python 3.12 /root/py312
+!python -m uv pip install --python /root/py312/bin/python -e ".[gpu,judge,dev]"
+os.environ["PATH"] = "/root/py312/bin:" + os.environ["PATH"]
+os.environ["VIRTUAL_ENV"] = "/root/py312"
+os.environ.pop("PYTHONPATH", None)
+!which python && python --version
 ```
+Expected last line: `/root/py312/bin/python` and `Python 3.12.x`. After a
+kernel restart, re-run this cell (fast; nothing is reinstalled) before any
+other cell.
 
 **Cell 4 — load the secrets into the environment:**
 ```python
@@ -69,7 +81,7 @@ print("secrets loaded:", bool(os.environ["HF_TOKEN"]), bool(os.environ["OPENAI_A
 ```
 
 **Cell 5 — verify data and code** (must print a byte-identical restore and
-`129 passed`; if either fails, **stop** and report the output):
+`130 passed`; if either fails, **stop** and report the output):
 ```python
 !python scripts/exp0_finalize_data.py --restore
 !python -m pytest tests -q 2>&1 | tail -2
@@ -85,21 +97,23 @@ The smoke test prints each model's chat-template probe and finish reasons.
 The Urdu check shows whether the Urdu-script degeneration seen on the CPU
 build was a quantization artifact.
 
-**Cell 7 — pin the judge snapshot** (one cent of API usage):
+**Cell 7 — check the pinned judge is served** (one cent of API usage;
+`%%bash` must be the cell's first line, so it runs in the 3.12 environment):
 ```python
+%%bash
+python - <<'EOF'
 from openai import OpenAI
-import pathlib
-snap = OpenAI().chat.completions.create(
-    model="gpt-4o", messages=[{"role": "user", "content": "hi"}], max_tokens=1).model
-p = pathlib.Path("configs/judge.yaml")
-t = p.read_text(encoding="utf-8")
-assert "model_snapshot: null" in t, "snapshot already pinned"
-p.write_text(t.replace("model_snapshot: null", f"model_snapshot: {snap}", 1), encoding="utf-8")
-print("JUDGE SNAPSHOT:", snap)
+from csjail.judge import load_judge_config
+c = load_judge_config()
+served = OpenAI().chat.completions.create(
+    model=c.model_id, messages=[{"role": "user", "content": "hi"}], max_tokens=1).model
+print("pinned:", c.model_id, "| served:", served,
+      "| harm fingerprint:", c.fingerprint("harm")["fingerprint_id"])
+EOF
 ```
-**Write down the printed snapshot** (e.g. `gpt-4o-2024-…`). It becomes part
-of the judge fingerprint, so Stage C must use exactly this value. It also has
-to go into the repo; see "After Stage A" below.
+Expected: `pinned: gpt-4o-2024-08-06 | served: gpt-4o-2024-08-06 | harm
+fingerprint: b0d6676cf5d89d08`. A different fingerprint means the judge
+config differs from the frozen one: stop and report.
 
 **Cell 8 — live judge check on the development sample** (rubric feedback,
 never a gate; 160 gpt-4o calls, well under $1):
@@ -108,7 +122,11 @@ never a gate; 160 gpt-4o calls, well under $1):
     --gold-csv outputs/exp1/development-cpu-20260926/development_gold.csv
 ```
 This is the first time the judge's output parsing runs on live API output.
-Expect per-condition metrics and **zero judge failures**. Its gold is the
+Expect per-condition metrics and **zero judge failures**. Any failures are
+missing judgments, never safe ones. On the first run, all 57 failures were
+`429 rate limit` (gpt-4o tokens-per-minute), fixed by hint-aware retries and
+`concurrency: 4`. If 429s persist, lower `concurrency` in
+`configs/judge.yaml`; it is not part of the judge fingerprint. Its gold is the
 provisional development gold (15 items still await adjudication), so treat
 low numbers as a prompt to review, not a verdict. If the output shows the
 rubric is clearly wrong, stop here: rubric edits must happen **before**
@@ -148,9 +166,8 @@ when it ends, so download before closing.
 - Unzip into your local repo root. The files land under
   `outputs/exp1/validation-kaggle-01/` and
   `outputs/exp1/benign-validation-kaggle-01/`.
-- **Commit the snapshot pin** (`configs/judge.yaml`, one line) and push. Do
-  not edit the rubric afterwards: any edit changes the fingerprint and
-  re-opens validation.
+- The judge snapshot is already pinned in the repo. Do not edit the rubric
+  from here on: any edit changes the fingerprint and re-opens validation.
 - **Do not commit** the sample folders. `items.csv` and the rater files
   contain harmful prompts and responses, and the repo is public. Share them
   with the raters privately. The manifests record their hashes, so integrity
@@ -204,16 +221,24 @@ The judge only calls the API, so no GPU is needed and no GPU quota is spent.
 2. New notebook (or the same one): Accelerator = **None**, Internet = On,
    attach the `OPENAI_API_KEY` secret, then **Add Input** → your dataset.
 
-**Cell 1 — clone (now including the pinned snapshot) and install:**
+**Cell 1 — clone (now including the pinned snapshot) and install** (same
+Python 3.12 environment as Stage A, without the GPU packages):
 ```python
+import os
 %cd /kaggle/working
 !git clone --branch revision/final-692-dataset https://github.com/mshamoonbutt/NLP_Research.git
 %cd /kaggle/working/NLP_Research
-!pip install -q -e ".[judge,dev]"
+!python -m pip install -q uv
+!python -m uv venv --allow-existing --python 3.12 /root/py312
+!python -m uv pip install --python /root/py312/bin/python -e ".[judge,dev]"
+os.environ["PATH"] = "/root/py312/bin:" + os.environ["PATH"]
+os.environ["VIRTUAL_ENV"] = "/root/py312"
+os.environ.pop("PYTHONPATH", None)
+!which python && python --version
 !grep model_snapshot configs/judge.yaml
 ```
-The printed snapshot **must equal** the one from Stage A, Cell 7. If it shows
-`null`, the pin was not pushed yet: push it first, then re-clone.
+It must print `model_snapshot: gpt-4o-2024-08-06`, the snapshot used in
+Stage A.
 
 **Cell 2 — secrets, and copy the annotated folders into place:**
 ```python

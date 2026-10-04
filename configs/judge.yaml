@@ -13,14 +13,16 @@ judge:
                               # two risks for the per-condition >=0.90 gate. Selected for
                               # ACCURACY against human gold, never for favorable ASR.
                               # ~tens of USD over the whole project vs ~$6 for mini.
-  model_snapshot: null        # PIN the dated snapshot the dev run reports (response.model)
-                              # BEFORE generating validation predictions; snapshot is part of
-                              # the frozen fingerprint.
+  model_snapshot: gpt-4o-2024-08-06   # pinned 2026-10-04 from the live response.model;
+                              # part of the frozen fingerprint.
   temperature: 0.0
   max_tokens: 300
   timeout_s: 60
-  concurrency: 16
-  max_retries: 6
+  # Throughput only (NOT part of the fingerprint). 16 in flight exceeded the
+  # account's gpt-4o tokens-per-minute limit (429s on 57/160 dev items, worst
+  # for Urdu script). Raise it if the organization's TPM limit allows.
+  concurrency: 4
+  max_retries: 10
   harm_rubric_version: harm-v2
   benign_rubric_version: benign-v1
 
