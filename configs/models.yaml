@@ -12,11 +12,16 @@
 phase2_models: [phi3, llama32]
 
 models:
+  # PRODUCTION PRECISION DECISION (2026-10-04): float16, because the production
+  # host is a Kaggle/Colab T4 (no bf16 support; vLLM needs compute cap >= 7.0,
+  # so the P100 is unusable). ONE precision for everything downstream --
+  # Exp 1 validation sample, Exp 2, Exp 8 -- recorded in every manifest.
+  # If the host changes to an A100/L4, change it BEFORE any production run.
   phi3:
     hf_id: microsoft/Phi-3-mini-4k-instruct
     revision: f39ac1d28e925b323eae81227eaba4464caced4e
     params_b: 3.8
-    dtype: bfloat16
+    dtype: float16
     max_model_len: 2048              # 16 GB headroom
     gpu_memory_utilization: 0.80
     notes: "~3.8B. Documented safety post-training. Uses FUSED qkv_proj / gate_up_proj (see train_dpo LoRA target resolution)."
@@ -25,7 +30,7 @@ models:
     hf_id: Qwen/Qwen2.5-1.5B-Instruct
     revision: 989aa7980e4cf806f80c7fef2b1adb7bc71aa306
     params_b: 1.5
-    dtype: bfloat16
+    dtype: float16
     max_model_len: 4096
     gpu_memory_utilization: 0.80
     notes: "1.5B. Its chat template inserts a DEFAULT system message when none is given -- recorded via the template probe."
@@ -34,7 +39,7 @@ models:
     hf_id: meta-llama/Llama-3.2-3B-Instruct
     revision: 0cb88a4f764b7a12671c53f0838cd831a0843b95
     params_b: 3.2
-    dtype: bfloat16
+    dtype: float16
     max_model_len: 3072
     gpu_memory_utilization: 0.80
     notes: "~3.2B. Gated on HF (HF_TOKEN). Template inserts a knowledge-cutoff/date system header by default -- recorded via the template probe."

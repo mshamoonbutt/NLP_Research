@@ -259,3 +259,64 @@ def test_resume_conflict_rules():
     assert resume_conflict(prev, {"dataset_version": "v1", "judge_fingerprint_id": "j"}) is None
     assert "dataset_version" in resume_conflict(prev, {"dataset_version": "v2"})
     assert "judge" in resume_conflict({"judge_fingerprint_id": "a"}, {"judge_fingerprint_id": "b"})
+
+
+def test_benign_sampler_wiring(env):
+    """Benign sampler -> rater files -> calibrate_judge --kind benign consumes them."""
+    import csv
+
+    tmp = env["tmp"]
+    sampler = load_script("benign_sample_for_annotation")
+    sd = tmp / "benign_val"
+    args = ["--role", "validation", "--models", "qwen25", "phi3", "--n", "6",
+            "--seed", "7", "--out-dir", str(sd)]
+    assert sampler.main(args) == 0
+    sman = json.loads((sd / "sample_manifest.json").read_text(encoding="utf-8"))
+    assert sman["n_items"] == 12 and sman["families"] == [] and sman["split_id"] is None
+    for k in ("role", "sample_kind", "dataset_version", "seed", "models",
+              "items_sha256", "item_ids"):
+        assert k in sman
+    # resume reuses the cache; a changed plan is refused
+    FakeRunner.calls = 0
+    assert sampler.main(args) == 0
+    assert FakeRunner.calls == 0
+    assert sampler.main(args[:-3] + ["8", "--out-dir", str(sd)]) == 1
+
+    def fill(name, rater_id):
+        rows = list(csv.DictReader((sd / name).open(encoding="utf-8")))
+        for r in rows:
+            r["rater_id"] = rater_id
+            r["refused"] = "true" if r["response"].startswith("Main madad nahi") else "false"
+            r["response_kind"] = ("refusal" if r["refused"] == "true" else "safe_helpful")
+        with (sd / name).open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            w.writeheader()
+            w.writerows(rows)
+
+    fill("rater1.csv", "R1")
+    fill("rater2.csv", "R2")
+    # disagreement listing: perfect agreement -> empty todo; one flipped label -> one row
+    disagree = load_script("exp1_disagreements")
+    assert disagree.main(["--sample-dir", str(sd), "--kind", "benign"]) == 0
+    todo = list(csv.DictReader((sd / "adjudication_todo.csv").open(encoding="utf-8")))
+    assert todo == []
+    rows = list(csv.DictReader((sd / "rater2.csv").open(encoding="utf-8")))
+    rows[0]["refused"] = "true" if rows[0]["refused"] == "false" else "false"
+    rows[1]["refused"] = ""                                  # unlabeled -> back to rater
+    with (sd / "rater2.csv").open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    assert disagree.main(["--sample-dir", str(sd), "--kind", "benign"]) == 2
+    todo = list(csv.DictReader((sd / "adjudication_todo.csv").open(encoding="utf-8")))
+    assert [t["item_id"] for t in todo] == [rows[0]["item_id"]]
+    assert todo[0]["gold_refused"] == "" and todo[0]["rater1_refused"] != todo[0]["rater2_refused"]
+    fill("rater2.csv", "R2")                                 # restore agreement
+    calibrate = load_script("calibrate_judge")
+    out_man = sd / "manifest_benign.json"
+    rc = calibrate.main(["--sample-dir", str(sd), "--kind", "benign",
+                         "--manifest-out", str(out_man)])
+    assert rc in (0, 1, 2)                      # gate result; plumbing must not error (3)
+    man = json.loads(out_man.read_text(encoding="utf-8"))
+    assert man["judge_fingerprint"]["rubric_kind"] == "benign"
+    assert man["result"]["status"] in ("PASS", "FAIL", "INSUFFICIENT_EVIDENCE")
