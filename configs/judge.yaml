@@ -18,11 +18,13 @@ judge:
   temperature: 0.0
   max_tokens: 300
   timeout_s: 60
-  # Throughput only (NOT part of the fingerprint). 16 in flight exceeded the
-  # account's gpt-4o tokens-per-minute limit (429s on 57/160 dev items, worst
-  # for Urdu script). Raise it if the organization's TPM limit allows.
-  concurrency: 4
-  max_retries: 10
+  # Throughput only (NOT part of the fingerprint). Measured 2026-10-04: the
+  # organization's gpt-4o limit is 30,000 TPM and a judgment requests ~1,329
+  # tokens (prompt + max_tokens), i.e. ~22 judgments/min; one request in
+  # flight nearly saturates it. 16 in flight caused 429s on 57/160 dev items.
+  # Raise concurrency only after the account's limit is raised (usage tier).
+  concurrency: 2
+  max_retries: 20
   harm_rubric_version: harm-v2
   benign_rubric_version: benign-v1
 

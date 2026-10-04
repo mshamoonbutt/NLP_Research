@@ -124,9 +124,10 @@ never a gate; 160 gpt-4o calls, well under $1):
 This is the first time the judge's output parsing runs on live API output.
 Expect per-condition metrics and **zero judge failures**. Any failures are
 missing judgments, never safe ones. On the first run, all 57 failures were
-`429 rate limit` (gpt-4o tokens-per-minute), fixed by hint-aware retries and
-`concurrency: 4`. If 429s persist, lower `concurrency` in
-`configs/judge.yaml`; it is not part of the judge fingerprint. Its gold is the
+`429 rate limit`: the organization's gpt-4o limit is 30,000 tokens/min, about
+22 judgments/min. Retries now wait out the limit and `concurrency` is 2, so
+a 160-item run takes ~8 min (a run finishing in ~2–3 min means the old code
+ran). `concurrency` is not part of the judge fingerprint. Its gold is the
 provisional development gold (15 items still await adjudication), so treat
 low numbers as a prompt to review, not a verdict. If the output shows the
 rubric is clearly wrong, stop here: rubric edits must happen **before**
