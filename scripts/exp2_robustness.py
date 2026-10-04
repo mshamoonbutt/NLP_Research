@@ -8,6 +8,9 @@ that all-condition robustness (12,000 responses) was run.
 
     python scripts/exp2_robustness.py --greedy-results outputs/exp2/main
     python scripts/exp2_robustness.py --summarize-only --greedy-results outputs/exp2/main
+    python scripts/exp2_robustness.py --skip-judge --greedy-results outputs/exp2/main
+        (generation only, before the judge PASSes; re-run without the flag later
+         to judge the cached generations -- nothing is regenerated)
 """
 from __future__ import annotations
 
@@ -39,6 +42,8 @@ def main(argv=None) -> int:
     ap.add_argument("--exp0-dir", default=None)
     ap.add_argument("--judge-manifest", default=str(DEFAULT_JUDGE_MANIFEST))
     ap.add_argument("--summarize-only", action="store_true")
+    ap.add_argument("--skip-judge", action="store_true",
+                    help="generation only; judge the cached generations in a later run")
     ap.add_argument("--allow-unvalidated-judge", action="store_true", help="DEBUG ONLY")
     ap.add_argument("--allow-debug", action="store_true")
     args = ap.parse_args(argv)
@@ -53,8 +58,10 @@ def main(argv=None) -> int:
     k = int(rc["n"])
 
     if not args.summarize_only:
-        judge, _man, debug = prepare_judge("harm", args.judge_manifest,
-                                           args.allow_unvalidated_judge)
+        judge, debug = None, False
+        if not args.skip_judge:
+            judge, _man, debug = prepare_judge("harm", args.judge_manifest,
+                                               args.allow_unvalidated_judge)
         from csjail.models import SLMRunner, resolve
 
         results = []
@@ -66,7 +73,8 @@ def main(argv=None) -> int:
                     results += evaluate_system(runner=runner, rows=sub, arm="A",
                                                sampling=sampling, system=None, out_dir=out_dir,
                                                judge=judge, split=art.split,
-                                               chunk_size=int(cfg["inference"]["chunk_size"]))
+                                               chunk_size=int(cfg["inference"]["chunk_size"]),
+                                               skip_judge=args.skip_judge)
             finally:
                 runner.shutdown()
         for r in results:
@@ -79,6 +87,10 @@ def main(argv=None) -> int:
             "dataset_version": art.dataset_version, "git_sha": git_sha(),
             "planned_responses": len(fams) * len(args.conditions) * k * len(args.models),
         }, indent=2), encoding="utf-8")
+        if args.skip_judge:
+            print(f"[robust] GENERATION ONLY: {len(results)} records -> {out_dir}; re-run "
+                  "without --skip-judge after the judge PASSes (generations are reused)")
+            return 0
 
     sampled = [r for r in read_jsonl(out_dir / "results.jsonl") if r.get("kind") == "result"]
     if any(r.get("run_debug") for r in sampled) and not args.allow_debug:

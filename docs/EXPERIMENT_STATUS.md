@@ -37,7 +37,28 @@ is **not** marked complete just because its inputs exist. Commands are in
 - Semantic equivalence and harmfulness are not certified by Exp 0.
 - Per-batch authorship and model assistance are unrecorded.
 
-## Exp 1 — judge validation: **DEVELOPMENT IN PROGRESS; FINAL VALIDATION PENDING**
+## Exp 1 — judge validation: **STAGE A DONE (2026-10-04); HUMAN ANNOTATION IN PROGRESS**
+
+Stage A (Kaggle T4, vLLM 0.6.3.post1, float16, pinned revisions; see
+`docs/KAGGLE_EXP1_GUIDE.md`):
+- **Judge frozen for validation:** gpt-4o, snapshot `gpt-4o-2024-08-06`, rubric
+  harm-v2, harm fingerprint `b0d6676cf5d89d08` (benign `f9aec59096cb12cf`).
+- **Live judge check (development sample, feedback only):** 160/160 parsed,
+  0 failures. The first attempt lost 57/160 to `429` tokens-per-minute limits
+  (organization limit 30,000 TPM for gpt-4o, ~22 judgments/min); fixed by
+  hint-aware retries and concurrency 2. Development support is below the gate
+  minimums, so its metrics are not evidence.
+- **Harm validation sample** `outputs/exp1/validation-kaggle-01`: 720 items =
+  60 train-pool families (D1–D6 9/10/10/9/11/11; 0 overlap with the
+  development and pilot samples; 0 eval families) × 4 conditions × 3 models.
+  Prompts byte-identical to the frozen release; items hash matches the
+  manifest; 0 empty responses; finish `length` 276/720 (512-token cap).
+- **Benign validation sample** `outputs/exp1/benign-validation-kaggle-01`:
+  150 probes × phi3/llama32 = 300 items; probe-file hash matches.
+- Rater files are blank, independently shuffled, with no judge output in the
+  folders. Raw text is gitignored; only the manifests are committed.
+
+Earlier development evidence (kept for provenance):
 
 Evidence inspected:
 - `outputs/exp1/judge_validation_manifest*.json`: **absent**. No validated
@@ -93,8 +114,9 @@ gitignored under `outputs/smoke/`).
 | Live **generation** smoke: Ollama Q8_0, 3 models × 4 conditions × 2 training families, generation-only | **PASSED**: 24/24 records, 24 unique keys, 0 failures, finish 15 stop / 9 length; the resumed re-run produced **0** new generations; metrics correctly NA (0/2 scored, bounds 0–1) |
 | Live **judge** smoke: gpt-4o-mini on the **harmless fixture** only | **BLOCKED**: API reached and authenticated, but all 8 calls returned `429 insufficient_quota` (no credits). They were handled as missing (never safe) and will be retried. Judge parsing on live output is **not verified** |
 | Official chat templates at pinned revisions | Qwen2.5: default system "You are Qwen…" (same as the Ollama build); Phi-3: no default system. **Llama-3.2: not fetched (gated; needs `HF_TOKEN`)** (`outputs/checks/official_chat_templates.json`) |
-| Benign Urdu-script controls (Ollama) | qwen25/phi3: wrong or degenerate Urdu-script answers, fluent English. llama32: mostly coherent Urdu script with some script contamination. This points to model weakness rather than a setup error; Q8 vs bf16 still to be checked on the GPU |
-| Production backend (vLLM, bf16, GPU) | **NOT RUN**: no CUDA GPU here |
+| Benign Urdu-script controls (Ollama) | qwen25/phi3: wrong or degenerate Urdu-script answers, fluent English. llama32: mostly coherent Urdu script with some script contamination |
+| Benign Urdu-script controls (vLLM fp16, production) | **Same pattern as Q8** (`outputs/checks/urdu_sanity_vllm.json`): repeat-word share and script share nearly identical to Ollama Q8. qwen25/phi3 loop or produce meaningless Urdu script and mistranslate a one-line sentence; llama32 answers correctly (e.g. Islamabad) with some Devanagari contamination. **Degeneration is a model property, not a quantization artifact.** Implication: low UR ASR for qwen25/phi3 must be read with the response-type and comprehension analyses |
+| Production backend (vLLM, fp16, Kaggle T4) | **Working**: 3-model sequential loads without OOM; Exp 1 samples generated |
 | Full Exp 2 (9,492 greedy + 6,000 robustness responses) | **NOT RUN** (by design in this task) |
 
 ## Exp 3–4b: not run (need Exp 2 results)

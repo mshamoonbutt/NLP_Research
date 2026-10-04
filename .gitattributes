@@ -12,3 +12,6 @@
 
 # Returned annotation files are preserved byte-for-byte (their SHA-256 is recorded).
 outputs/exp1/**/annotations/rater*_prefilled_*.csv -text
+# Registered dataset releases (configs/dataset.yaml pins their SHA-256; they use
+# CRLF row endings, which eol=lf normalization would change on any checkout).
+data/CS-Jail-UR_*.csv -text

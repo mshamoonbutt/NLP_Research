@@ -124,9 +124,10 @@ never a gate; 160 gpt-4o calls, well under $1):
 This is the first time the judge's output parsing runs on live API output.
 Expect per-condition metrics and **zero judge failures**. Any failures are
 missing judgments, never safe ones. On the first run, all 57 failures were
-`429 rate limit` (gpt-4o tokens-per-minute), fixed by hint-aware retries and
-`concurrency: 4`. If 429s persist, lower `concurrency` in
-`configs/judge.yaml`; it is not part of the judge fingerprint. Its gold is the
+`429 rate limit`: the organization's gpt-4o limit is 30,000 tokens/min, about
+22 judgments/min. Retries now wait out the limit and `concurrency` is 2, so
+a 160-item run takes ~8 min (a run finishing in ~2–3 min means the old code
+ran). `concurrency` is not part of the judge fingerprint. Its gold is the
 provisional development gold (15 items still await adjudication), so treat
 low numbers as a prompt to review, not a verdict. If the output shows the
 rubric is clearly wrong, stop here: rubric edits must happen **before**
@@ -160,6 +161,17 @@ models = 300 items; ~10 min):
 Download `exp1_stageA.zip` from the right-hand **Output** panel (or the file
 browser under `/kaggle/working`). An interactive session's files are lost
 when it ends, so download before closing.
+
+### Background run (recommended for anything long)
+
+Interactive sessions end when the browser is idle, and their files are wiped.
+`notebooks/kaggle_gpu_background.ipynb` runs the GPU work headless instead:
+Kaggle → **File → Import Notebook** → upload it → set GPU T4 x2, Internet On,
+attach `HF_TOKEN` → set its flags → **Save Version → Save & Run All
+(Commit)**. It regenerates the Exp 1 samples (same seeded families; set
+`REGENERATE_EXP1 = False` if you already downloaded `exp1_stageA.zip`),
+then runs Exp 2 main and robustness generation-only (~3.5–4.5 h in total).
+Download `gpu_outputs.zip` from the finished version's **Output** tab.
 
 ### After Stage A
 
