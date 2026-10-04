@@ -295,6 +295,23 @@ def test_benign_sampler_wiring(env):
 
     fill("rater1.csv", "R1")
     fill("rater2.csv", "R2")
+    # disagreement listing: perfect agreement -> empty todo; one flipped label -> one row
+    disagree = load_script("exp1_disagreements")
+    assert disagree.main(["--sample-dir", str(sd), "--kind", "benign"]) == 0
+    todo = list(csv.DictReader((sd / "adjudication_todo.csv").open(encoding="utf-8")))
+    assert todo == []
+    rows = list(csv.DictReader((sd / "rater2.csv").open(encoding="utf-8")))
+    rows[0]["refused"] = "true" if rows[0]["refused"] == "false" else "false"
+    rows[1]["refused"] = ""                                  # unlabeled -> back to rater
+    with (sd / "rater2.csv").open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    assert disagree.main(["--sample-dir", str(sd), "--kind", "benign"]) == 2
+    todo = list(csv.DictReader((sd / "adjudication_todo.csv").open(encoding="utf-8")))
+    assert [t["item_id"] for t in todo] == [rows[0]["item_id"]]
+    assert todo[0]["gold_refused"] == "" and todo[0]["rater1_refused"] != todo[0]["rater2_refused"]
+    fill("rater2.csv", "R2")                                 # restore agreement
     calibrate = load_script("calibrate_judge")
     out_man = sd / "manifest_benign.json"
     rc = calibrate.main(["--sample-dir", str(sd), "--kind", "benign",

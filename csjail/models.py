@@ -194,17 +194,28 @@ class SLMRunner:
         return self.spec.hf_id
 
     def shutdown(self) -> None:
-        try:
-            import gc
+        # vLLM 0.6.x keeps the weights reachable through its parallel state and
+        # executor; without tearing those down, the next model loaded in the
+        # same process (3-model sweeps on one 15 GB T4) runs out of memory.
+        import contextlib
+        import gc
 
+        with contextlib.suppress(Exception):
+            from vllm.distributed.parallel_state import (  # noqa: WPS433
+                destroy_distributed_environment, destroy_model_parallel,
+            )
+            destroy_model_parallel()
+            destroy_distributed_environment()
+        with contextlib.suppress(Exception):
+            del self._llm.llm_engine.model_executor
+        with contextlib.suppress(Exception):
+            del self._llm
+        gc.collect()
+        with contextlib.suppress(Exception):
             import torch  # noqa: WPS433
 
-            del self._llm
-            gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-        except Exception:  # pragma: no cover
-            pass
 
 
 def runtime_info() -> dict[str, Any]:
