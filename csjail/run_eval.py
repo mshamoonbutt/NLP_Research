@@ -146,8 +146,12 @@ def main(argv: list[str] | None = None) -> int:
 
     judge, judge_man, debug = (None, None, False)
     if not args.skip_judge:
-        judge, judge_man, debug = prepare_judge("harm", args.judge_manifest,
-                                                args.allow_unvalidated_judge)
+        try:
+            judge, judge_man, debug = prepare_judge("harm", args.judge_manifest,
+                                                    args.allow_unvalidated_judge)
+        except RuntimeError as e:             # missing API key or client package
+            print(f"[eval] FAIL (input): {e}", file=sys.stderr)
+            return 3
     debug = debug or args.allow_unpinned_models or args.allow_fallback_template \
         or bool(args.max_families) or args.backend != "vllm"
 
@@ -166,6 +170,7 @@ def main(argv: list[str] | None = None) -> int:
     from csjail.models import CachedRunner, NotCached, resolve
 
     model_prov = dict((prev or {}).get("models") or {})
+    n_api_failed = 0
     if args.judge_only:
         lacking = [m for m in args.models if m not in model_prov]
         if args.skip_judge or lacking:
@@ -191,6 +196,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         finally:
             runner.shutdown()
+        n_api_failed += sum(1 for r in results if r.get("judge_status") == "api_error")
         for r in results:
             r["run_debug"] = debug
         write_jsonl(out_dir / f"results.{model}.jsonl", results)   # one file per model
@@ -216,6 +222,11 @@ def main(argv: list[str] | None = None) -> int:
     write_text_lf(out_dir / "run_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
     print(f"[eval] {n_results} result records -> {out_dir}/results.<model>.jsonl"
           + ("  [DEBUG RUN]" if debug else "") + ("  [GENERATION ONLY]" if args.skip_judge else ""))
+    if n_api_failed:
+        print(f"[eval] INCOMPLETE: {n_api_failed} judgments failed at the API (e.g. an exhausted "
+              f"budget). Finished judgments are cached in {out_dir}/judgments.jsonl; re-run the "
+              "same command to judge only the rest.", file=sys.stderr)
+        return 4
     print(f"[eval] summarize: python -m csjail.aggregate {out_dir}")
     return 0
 

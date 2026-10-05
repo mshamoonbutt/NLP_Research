@@ -63,8 +63,12 @@ def main(argv=None) -> int:
     if not args.summarize_only:
         judge, debug = None, False
         if not args.skip_judge:
-            judge, _man, debug = prepare_judge("harm", args.judge_manifest,
-                                               args.allow_unvalidated_judge)
+            try:
+                judge, _man, debug = prepare_judge("harm", args.judge_manifest,
+                                                   args.allow_unvalidated_judge)
+            except RuntimeError as e:         # missing API key or client package
+                print(f"[robust] FAIL (input): {e}", file=sys.stderr)
+                return 3
         from csjail.models import CachedRunner, NotCached, SLMRunner, resolve
 
         if args.judge_only:
@@ -103,6 +107,12 @@ def main(argv=None) -> int:
             return 0
 
     sampled = [r for r in read_jsonl(out_dir / "results.jsonl") if r.get("kind") == "result"]
+    n_api_failed = sum(1 for r in sampled if r.get("judge_status") == "api_error")
+    if n_api_failed:
+        print(f"[robust] INCOMPLETE: {n_api_failed} judgments failed at the API (e.g. an exhausted "
+              f"budget). Finished judgments are cached in {out_dir}/judgments.jsonl; re-run the "
+              "same command to judge only the rest.", file=sys.stderr)
+        return 4
     if any(r.get("run_debug") for r in sampled) and not args.allow_debug:
         print("FAIL: sampled results come from a debug run", file=sys.stderr)
         return 1

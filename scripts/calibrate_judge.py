@@ -12,7 +12,9 @@ Wilson CIs, support, confusion matrices, failure rates and per-model
 breakdowns. Writes a judge validation manifest; Exp 2 refuses to judge unless
 that manifest is PASS for the identical judge fingerprint.
 
-Exit codes: 0 PASS, 1 FAIL, 2 INSUFFICIENT_EVIDENCE, 3 bad input.
+Exit codes: 0 PASS, 1 FAIL, 2 INSUFFICIENT_EVIDENCE, 3 bad input, 4 incomplete
+(API failures such as an exhausted budget; finished predictions are kept in
+judge_predictions_<kind>_<fingerprint>.jsonl and a re-run judges only the rest).
 
 `--smoke` runs the legacy English-only 30+30 check: a plumbing smoke test,
 never a certification, and it never writes a manifest.
@@ -26,12 +28,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from csjail.artifacts import sha256_text  # noqa: E402
 from csjail.judge import Judge, load_judge_config  # noqa: E402
 from csjail.judge_validation import (  # noqa: E402
     FAIL, INSUFFICIENT, PASS, ValidationInputError, build_gold, evaluate, read_csv,
     write_manifest,
 )
-from csjail.utils.io import read_jsonl, sha256_file, write_jsonl  # noqa: E402
+from csjail.outcomes import STATUS_OK  # noqa: E402
+from csjail.pipeline import JsonlCache  # noqa: E402
+from csjail.utils.io import read_jsonl, sha256_file  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 EXIT = {PASS: 0, FAIL: 1, INSUFFICIENT: 2}
@@ -124,12 +129,36 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 3
     else:
-        js = Judge(cfg, kind=args.kind).score_sync([(it["prompt"], it["response"]) for it in items])
-        saved = {it["item_id"]: {"item_id": it["item_id"],
-                                 "judge_fingerprint_id": fp["fingerprint_id"],
-                                 **j.as_record_fields()} for it, j in zip(items, js)}
-        write_jsonl(sd / f"judge_predictions_{args.kind}_{fp['fingerprint_id']}.jsonl",
-                    list(saved.values()))
+        # Resumable: each chunk is appended as soon as it is judged, and a re-run
+        # reuses every OK prediction for the identical prompt+response.
+        cache = JsonlCache(sd / f"judge_predictions_{args.kind}_{fp['fingerprint_id']}.jsonl",
+                           "item_id")
+        pair = {it["item_id"]: sha256_text(it["prompt"] + "\x00" + it["response"]) for it in items}
+        todo = [it for it in items
+                if cache.records.get(it["item_id"], {}).get("judge_status") != STATUS_OK
+                or cache.records[it["item_id"]].get("pair_sha256") != pair[it["item_id"]]]
+        print(f"[calibrate] {len(items) - len(todo)} cached predictions reused, "
+              f"{len(todo)} to judge")
+        try:
+            judge = Judge(cfg, kind=args.kind) if todo else None
+        except RuntimeError as e:                 # missing API key or client package
+            print(f"FAIL (input): {e}", file=sys.stderr)
+            return 3
+        for start in range(0, len(todo), 64):
+            chunk = todo[start:start + 64]
+            js = judge.score_sync([(it["prompt"], it["response"]) for it in chunk])
+            cache.append({"item_id": it["item_id"], "judge_fingerprint_id": fp["fingerprint_id"],
+                          "pair_sha256": pair[it["item_id"]], **j.as_record_fields()}
+                         for it, j in zip(chunk, js, strict=True))
+        saved = {it["item_id"]: cache.records[it["item_id"]] for it in items}
+        api_failed = [i for i, r in saved.items() if r.get("judge_status") == "api_error"]
+        if api_failed:
+            print(f"[calibrate] INCOMPLETE: {len(api_failed)} items not judged because the API "
+                  f"failed (e.g. {saved[api_failed[0]].get('judge_error', '')[:160]!r}). The "
+                  f"{len(items) - len(api_failed)} finished predictions are saved; re-run the "
+                  "same command to judge only the rest. No verdict or manifest written.",
+                  file=sys.stderr)
+            return 4
     key = "judge_refused" if args.kind == "benign" else "judge_unsafe"
     preds = {i: {"status": r.get("judge_status"), "value": r.get(key),
                  "response_kind": r.get("judge_response_kind")} for i, r in saved.items()}
