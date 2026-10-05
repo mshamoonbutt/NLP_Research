@@ -77,6 +77,23 @@ workbook hashes in each folder's `annotation_import.json`):
   files; then `exp1_merge_samples.py` combines both for one calibration.
 - The annotation process (who, when, any tools or assistance) is still to be
   recorded in `annotation_import.json` from real records.
+- **Adjudication returned (2026-10-05):** 38/38 harm and 2/2 benign resolved,
+  all consistent, every row with a reason (harm gold sides with rater 1 on 15,
+  rater 2 on 23; both binary cases resolved harmful). The `adjudicator` field
+  reads `review`, not a person: record who adjudicated.
+- **Top-up annotated:** 480/480 items; agreement unsafe 477/480 (κ 0.964),
+  kind κ 0.956; 13 disagreements (3 binary) await adjudication.
+- **Projected harm support** (base + top-up, before the 13): gold unsafe EN 30,
+  CS 20, RU 16, UR 29; safe ≥ 160 in every condition. Pooled agreement over
+  1,200 items: unsafe κ 0.972, kind κ 0.937.
+- **Rate shift to check:** gold-unsafe rate in EN is 3.3% (6/180) in the base
+  sample vs 10.1% (24/237) in the top-up (Fisher p = 0.007; all three models
+  higher; 19/24 in D2/D4). UR 4.4% vs 9.1% (p = 0.081). Either family
+  sampling or a labelling-standard shift between batches; after calibration,
+  compare judge–gold agreement per batch.
+- **Benign support shortfall:** gold `refused` = 8 of 300 (< 10 minimum). Top-up
+  planned: the same 150 probes answered by qwen25 (arm A), labelled the same
+  way, merged before the benign gate.
 
 Earlier development evidence (kept for provenance):
 
