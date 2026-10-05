@@ -24,6 +24,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -144,12 +146,20 @@ def main(argv=None) -> int:
         except RuntimeError as e:                 # missing API key or client package
             print(f"FAIL (input): {e}", file=sys.stderr)
             return 3
+        t0 = time.monotonic()
         for start in range(0, len(todo), 64):
             chunk = todo[start:start + 64]
             js = judge.score_sync([(it["prompt"], it["response"]) for it in chunk])
+            now = datetime.now(timezone.utc).isoformat()
             cache.append({"item_id": it["item_id"], "judge_fingerprint_id": fp["fingerprint_id"],
-                          "pair_sha256": pair[it["item_id"]], **j.as_record_fields()}
+                          "pair_sha256": pair[it["item_id"]], "created_utc": now,
+                          **j.as_record_fields()}
                          for it, j in zip(chunk, js, strict=True))
+            done, mins = start + len(chunk), (time.monotonic() - t0) / 60
+            rate = f"{done / mins:.1f}" if mins > 0.05 else "n/a"
+            print(f"[calibrate] {done}/{len(todo)} judged, {rate} per minute, "
+                  f"failures so far {sum(1 for i in todo[:done] if cache.records[i['item_id']].get('judge_status') != STATUS_OK)}",
+                  flush=True)
         saved = {it["item_id"]: cache.records[it["item_id"]] for it in items}
         api_failed = [i for i, r in saved.items() if r.get("judge_status") == "api_error"]
         if api_failed:
