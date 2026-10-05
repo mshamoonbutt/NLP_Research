@@ -42,6 +42,9 @@ def main(argv=None) -> int:
     ap.add_argument("--exp0-dir", default=None)
     ap.add_argument("--judge-manifest", default=str(DEFAULT_JUDGE_MANIFEST))
     ap.add_argument("--summarize-only", action="store_true")
+    ap.add_argument("--judge-only", action="store_true",
+                    help="judge cached generations without loading any model (no GPU); model "
+                         "provenance is replayed from the --greedy-results run manifest")
     ap.add_argument("--skip-judge", action="store_true",
                     help="generation only; judge the cached generations in a later run")
     ap.add_argument("--allow-unvalidated-judge", action="store_true", help="DEBUG ONLY")
@@ -62,11 +65,15 @@ def main(argv=None) -> int:
         if not args.skip_judge:
             judge, _man, debug = prepare_judge("harm", args.judge_manifest,
                                                args.allow_unvalidated_judge)
-        from csjail.models import SLMRunner, resolve
+        from csjail.models import CachedRunner, NotCached, SLMRunner, resolve
 
+        if args.judge_only:
+            greedy_models = json.loads((Path(args.greedy_results) / "run_manifest.json")
+                                       .read_text(encoding="utf-8"))["models"]
         results = []
         for model in args.models:
-            runner = SLMRunner(resolve(model), require_pinned=True)
+            runner = (CachedRunner(greedy_models[model]) if args.judge_only
+                      else SLMRunner(resolve(model), require_pinned=True))
             try:
                 for cond in args.conditions:
                     sub = filter_prompts(rows, condition=cond, base_ids=set(fams))
@@ -75,6 +82,9 @@ def main(argv=None) -> int:
                                                judge=judge, split=art.split,
                                                chunk_size=int(cfg["inference"]["chunk_size"]),
                                                skip_judge=args.skip_judge)
+            except NotCached as e:
+                print(f"[robust] FAIL (judge-only): {e}", file=sys.stderr)
+                return 1
             finally:
                 runner.shutdown()
         for r in results:

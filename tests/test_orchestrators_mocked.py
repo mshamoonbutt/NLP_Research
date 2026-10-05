@@ -59,6 +59,13 @@ class FakeRunner:
         pass
 
 
+class NoModel:
+    """Replaces SLMRunner where loading a model would be a bug (judge-only runs)."""
+
+    def __init__(self, *a, **kw):
+        raise AssertionError("judge-only mode must not load a model")
+
+
 SAFE = ('{"unsafe": false, "response_kind": "refusal", "compliance_degree": "none", '
         '"contains_refusal": true, "output_language_mismatch": false, "rationale": "x"}')
 UNSAFE = ('{"unsafe": true, "response_kind": "harmful_compliance", "compliance_degree": "full", '
@@ -151,6 +158,46 @@ def test_full_wiring(env, monkeypatch):
     iso = json.loads((out2 / "exp3" / "isolation_results.json").read_text(encoding="utf-8"))
     assert len(iso["holm"]) == 6 and iso["holm"][0]["family_size"] == 6
 
+    # Exp 1 top-up drawn from the Exp 2 run: no generation, the exact Exp 2 responses
+    import csv
+    sd2 = tmp / "exp1_topup"
+    FakeRunner.calls = 0
+    assert exp1.main(["--exp0-dir", exp0_dir, "--role", "validation", "--models", "qwen25", "phi3",
+                      "--n-per-model-condition", "2", "--conditions", "EN", "UR", "--seed", "43",
+                      "--exclude-sample-dirs", str(sd), "--from-results", str(out2),
+                      "--out-dir", str(sd2)]) == 0
+    assert FakeRunner.calls == 0
+    exp2_resp = {(r["model"], r["row_id"]): r["response"] for r in recs}
+    top = list(csv.DictReader((sd2 / "items.csv").open(encoding="utf-8")))
+    assert len(top) == 2 * 2 * 2 and {t["condition"] for t in top} == {"EN", "UR"}
+    assert all(t["response"] == exp2_resp[(t["model"], t["row_id"])] for t in top)
+    tman = json.loads((sd2 / "sample_manifest.json").read_text(encoding="utf-8"))
+    assert tman["responses_from_run"] == str(out2) and not set(tman["families"]) & set(sman["families"])
+
+    def fill(d, name, rid):
+        rows = list(csv.DictReader((d / name).open(encoding="utf-8")))
+        for r in rows:
+            u = r["response"].startswith("UNSAFE")
+            r.update(rater_id=rid, unsafe=str(u).lower(), compliance_degree="full" if u else "none",
+                     response_kind="harmful_compliance" if u else "refusal")
+        with (d / name).open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            w.writeheader()
+            w.writerows(rows)
+
+    for d in (sd, sd2):
+        fill(d, "rater1.csv", "R1")
+        fill(d, "rater2.csv", "R2")
+    merge = load_script("exp1_merge_samples")
+    md = tmp / "exp1_merged"
+    assert merge.main(["--sample-dirs", str(sd), str(sd2), "--out-dir", str(md)]) == 0
+    mman = json.loads((md / "sample_manifest.json").read_text(encoding="utf-8"))
+    assert mman["n_items"] == 24 + 8 and len(mman["merged_from"]) == 2
+    assert merge.main(["--sample-dirs", str(sd), str(sd), "--out-dir", str(tmp / "dup")]) == 1
+    rc = load_script("calibrate_judge").main(["--sample-dir", str(md),
+                                               "--manifest-out", str(tmp / "merged_man.json")])
+    assert rc in (0, 1, 2)                    # a gate verdict, never an input error (3)
+
     # unvalidated judge is refused for production
     bad = ["--exp0-dir", exp0_dir, "--out-dir", str(tmp / "x"), "--models", "qwen25",
            "--judge-manifest", str(tmp / "missing.json")]
@@ -212,9 +259,9 @@ def test_robustness_and_comprehension_wiring(env, monkeypatch):
     # generation-only first (no judge needed), then the judged run reuses every generation
     assert rob.main(rob_args + ["--skip-judge"]) == 0
     assert not (tmp / "rob" / "robustness_summary.json").exists()
-    FakeRunner.calls = 0
-    assert rob.main(rob_args) == 0
-    assert FakeRunner.calls == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)     # judging needs no model now
+    assert rob.main(rob_args + ["--judge-only"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
     summ = json.loads((tmp / "rob" / "robustness_summary.json").read_text(encoding="utf-8"))
     assert "qwen25/CS-RU" in summ["contrast"]
     n = sum(1 for _ in (tmp / "rob" / "results.jsonl").open(encoding="utf-8"))
@@ -326,3 +373,21 @@ def test_benign_sampler_wiring(env):
     man = json.loads(out_man.read_text(encoding="utf-8"))
     assert man["judge_fingerprint"]["rubric_kind"] == "benign"
     assert man["result"]["status"] in ("PASS", "FAIL", "INSUFFICIENT_EVIDENCE")
+
+
+def test_judge_only_needs_no_model(env, monkeypatch):
+    tmp, exp0_dir = env["tmp"], str(env["exp0"])
+    from csjail import aggregate, run_eval
+    out = tmp / "judge_only"
+    base = ["--exp0-dir", exp0_dir, "--out-dir", str(out), "--models", "qwen25"]
+    assert run_eval.main(base + ["--skip-judge", "--conditions", "EN", "CS"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    judge = base + ["--judge-manifest", str(env["man"]), "--judge-only"]
+    assert run_eval.main(judge + ["--conditions", "EN", "CS"]) == 0
+    recs = aggregate.load_results([out])
+    assert len(recs) == 2 * 12 and all(r["judge_status"] == "ok" for r in recs)
+    # RU/UR were never generated: abort, never generate or score them as missing
+    assert run_eval.main(judge) == 1
+    assert run_eval.main(judge + ["--skip-judge"]) == 1
+    assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(tmp / "empty"), "--models",
+                          "qwen25", "--judge-manifest", str(env["man"]), "--judge-only"]) == 1

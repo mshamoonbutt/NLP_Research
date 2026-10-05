@@ -116,6 +116,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-families", type=int, default=None, help="debug cap")
     ap.add_argument("--backend", choices=["vllm", "ollama"], default="vllm",
                     help="ollama = CPU/quantized smoke backend; such runs are always DEBUG")
+    ap.add_argument("--judge-only", action="store_true",
+                    help="judge an existing generation-only run without loading any model "
+                         "(no GPU); every generation must already be cached in --out-dir")
     ap.add_argument("--skip-judge", action="store_true",
                     help="generation only: every metric stays unavailable until a validated "
                          "judge scores the cached generations (re-run without this flag)")
@@ -160,13 +163,20 @@ def main(argv: list[str] | None = None) -> int:
               "--out-dir", file=sys.stderr)
         return 1
 
-    from csjail.models import resolve
+    from csjail.models import CachedRunner, NotCached, resolve
 
     model_prov = dict((prev or {}).get("models") or {})
+    if args.judge_only:
+        lacking = [m for m in args.models if m not in model_prov]
+        if args.skip_judge or lacking:
+            print(f"[eval] FAIL: --judge-only needs an existing run of {lacking or args.models} "
+                  f"in {out_dir} and cannot be combined with --skip-judge", file=sys.stderr)
+            return 1
     n_results = 0
     for model in args.models:
-        runner = make_runner(args.backend, resolve(model), allow_unpinned=args.allow_unpinned_models,
-                             allow_fallback_template=args.allow_fallback_template)
+        runner = (CachedRunner(model_prov[model]) if args.judge_only else
+                  make_runner(args.backend, resolve(model), allow_unpinned=args.allow_unpinned_models,
+                              allow_fallback_template=args.allow_fallback_template))
         try:
             model_prov[model] = runner.provenance()
             results = []
@@ -176,6 +186,9 @@ def main(argv: list[str] | None = None) -> int:
                     runner=runner, rows=sub, arm="A", sampling=sampling, system=None,
                     out_dir=out_dir, judge=judge, split=art.split,
                     chunk_size=int(cfg["inference"]["chunk_size"]), skip_judge=args.skip_judge)
+        except NotCached as e:
+            print(f"[eval] FAIL (judge-only): {e}", file=sys.stderr)
+            return 1
         finally:
             runner.shutdown()
         for r in results:

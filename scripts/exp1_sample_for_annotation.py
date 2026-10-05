@@ -44,7 +44,7 @@ from csjail.artifacts import resolve_exp0, sha256_json  # noqa: E402
 from csjail.data import CONDITIONS, family_domains  # noqa: E402
 from csjail.pipeline import JsonlCache, run_generation  # noqa: E402
 from csjail.splits import proportional_stratified_indices, trainable_families  # noqa: E402
-from csjail.utils.io import write_text_lf  # noqa: E402
+from csjail.utils.io import read_jsonl, write_text_lf  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 RATER_FIELDS = ["item_id", "rater_id", "prompt", "response", "unsafe", "response_kind",
@@ -70,6 +70,35 @@ def make_runner(backend: str, model: str):
     from csjail.models import SLMRunner
 
     return SLMRunner(resolve(model), require_pinned=True)
+
+
+def from_results(run_dir: str, models: list[str], sub: list, art, sampling: dict):
+    """Responses for `sub` taken from a finished Exp 2 run instead of generated.
+    The run must be a non-debug production run on the same release, split,
+    sampling and pinned model revisions; every requested row must be present."""
+    from csjail.models import resolve
+
+    run = Path(run_dir)
+    man = json.loads((run / "run_manifest.json").read_text(encoding="utf-8"))
+    want = {"dataset_version": art.dataset_version, "split_id": art.split_id,
+            "backend": "vllm", "debug": False, "sampling": sampling}
+    bad = {k: man.get(k) for k, v in want.items() if man.get(k) != v}
+    bad.update({f"{m}.revision": (man.get("models") or {}).get(m, {}).get("revision")
+                for m in models
+                if (man.get("models") or {}).get(m, {}).get("revision") != resolve(m).revision})
+    if bad:
+        raise ValueError(f"{run} is not a compatible production run: {bad}")
+    want_rows = {r.id for r in sub}
+    gens, prov = {}, {}
+    for m in models:
+        recs = {r["row_id"]: r for r in read_jsonl(run / f"results.{m}.jsonl")
+                if r["row_id"] in want_rows and r.get("arm", "A") == "A"}
+        missing = sorted(want_rows - recs.keys())
+        if missing:
+            raise ValueError(f"{run}: {m} lacks {len(missing)} rows, e.g. {missing[:3]}")
+        gens[m] = [recs[r.id] for r in sub]
+        prov[m] = {**man["models"][m], "responses_from_run": str(run)}
+    return gens, prov
 
 
 def _csv(path: Path, fields: list[str], rows: list[dict]) -> None:
@@ -98,6 +127,9 @@ def main(argv=None) -> int:
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--chunk-size", type=int, default=8, help="generations persisted per chunk")
     ap.add_argument("--out-dir", default=None, help="re-use to resume an interrupted run")
+    ap.add_argument("--from-results", default=None,
+                    help="take responses from this finished Exp 2 run dir instead of generating "
+                         "(same production settings verified; no GPU needed)")
     args = ap.parse_args(argv)
 
     if len(set(args.models)) < 2:
@@ -130,6 +162,8 @@ def main(argv=None) -> int:
     }
     if list(args.conditions) != list(CONDITIONS):  # older plans (all four) stay resumable
         plan["conditions"] = list(args.conditions)
+    if args.from_results:
+        plan["from_results"] = args.from_results
     plan_path = out_dir / "sample_plan.json"
     if plan_path.exists():
         old = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -153,7 +187,14 @@ def main(argv=None) -> int:
                  key=lambda r: (r.condition, r.base_id))
     cache = JsonlCache(out_dir / "generations.jsonl", "gen_key")
     gens_by_model, model_prov = {}, {}
-    for model in args.models:
+    if args.from_results:
+        try:
+            gens_by_model, model_prov = from_results(args.from_results, args.models, sub, art,
+                                                     eval_cfg["sampling"])
+        except ValueError as e:
+            print(f"FAIL: {e}", file=sys.stderr)
+            return 1
+    for model in ([] if args.from_results else args.models):
         runner = make_runner(args.backend, model)
         try:
             model_prov[model] = runner.provenance()
@@ -210,6 +251,7 @@ def main(argv=None) -> int:
             "role", "sample_kind", "dataset_version", "split_id", "seed", "models",
             "n_per_model_condition", "families", "excluded_families_from")},
         "source_pool": "train_pool", "generation_backend": args.backend,
+        "responses_from_run": args.from_results,
         "conditions": list(args.conditions),
         "n_items": len(items), "item_ids": [it["item_id"] for it in items],
         "items_sha256": sha256_json(items), "sampling": sampling.as_dict(),

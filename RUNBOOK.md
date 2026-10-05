@@ -103,6 +103,10 @@ python scripts/exp1_sample_for_annotation.py --role validation --models qwen25 p
   fields; guide: `docs/exp1_rater_guide.md`). Full walkthrough:
   `docs/KAGGLE_EXP1_GUIDE.md`. Report the annotation process in the paper
   exactly as it was actually performed (including any assistance used).
+- Returned Excel workbooks: `scripts/exp1_import_rater_xlsx.py --sample-dir <val> --rater1 X --rater2 Y`
+  validates and converts them to the rater CSVs. A support top-up can reuse Exp 2
+  responses (`exp1_sample_for_annotation.py ... --from-results outputs/exp2/main`)
+  and is combined with `scripts/exp1_merge_samples.py` before calibration.
 - List disagreements with `scripts/exp1_disagreements.py --sample-dir <val>`
   (writes `adjudication_todo.csv`; no judge involved), adjudicate them into
   `adjudication.csv`, then run:
@@ -141,8 +145,9 @@ Full runs [GPU], not executed:
 ```bash
 # generation-only while Exp 1 is pending: responses are produced now, every metric stays NA
 python -m csjail.run_eval --out-dir outputs/exp2/main --skip-judge
-# after a PASS judge manifest exists: the same command without --skip-judge judges the cached generations
-python -m csjail.run_eval --out-dir outputs/exp2/main
+# after a PASS judge manifest exists: judge the cached generations on any CPU host (no model is loaded)
+python -m csjail.run_eval --out-dir outputs/exp2/main --judge-only
+python scripts/exp2_robustness.py --judge-only --greedy-results outputs/exp2/main
 bash scripts/run_all_baseline.sh                              # = run_eval + aggregate + Exp 3
 python -m csjail.aggregate outputs/exp2/main                  # full-core table (791 families)
 python -m csjail.aggregate outputs/exp2/main --split eval_main   # the frozen 200-family held-out baseline

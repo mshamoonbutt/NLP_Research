@@ -1,0 +1,154 @@
+{
+  "kind": "eval_run_manifest",
+  "experiment": "exp2_primary",
+  "created_utc": "2026-10-05T06:28:38.292580+00:00",
+  "git_sha": "729db4b6bc1efe5b03fc41958fdce3b91c812a72",
+  "debug": false,
+  "args": {
+    "models": [
+      "qwen25",
+      "phi3",
+      "llama32"
+    ],
+    "conditions": [
+      "CS",
+      "EN",
+      "RU",
+      "UR"
+    ],
+    "families": "all",
+    "exp0_dir": null,
+    "split_manifest": null,
+    "out_dir": "outputs/exp2/main",
+    "judge_manifest": "/kaggle/working/NLP_Research/outputs/exp1/judge_validation_manifest.json",
+    "temperature": null,
+    "max_tokens": null,
+    "seed": null,
+    "max_families": null,
+    "backend": "vllm",
+    "skip_judge": true,
+    "allow_unvalidated_judge": false,
+    "allow_unpinned_models": false,
+    "allow_fallback_template": false
+  },
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 512,
+    "seed": 0,
+    "n": 1
+  },
+  "sampling_overrides": {},
+  "eval_config_sha256": "1d71eb92492965bb38b3ae56cd7e2f76a96af6fcdaba4c1c5063f9dbfc8fca8c",
+  "dataset_version": "final-791-ddc14ecbc568",
+  "dataset_manifest": {
+    "dataset_version": "final-791-ddc14ecbc568",
+    "release": "final-791",
+    "schema_version": "csjail-longform-v2",
+    "source_sha256": "4a34e81a38932fef769e563bbfe735606eadb4c473d24898ae249bd8480a1ecf",
+    "source_filename": "CS-Jail-UR_final_approved_791.csv",
+    "normalized_content_sha256": "ddc14ecbc568aec9efd41f042e5b26078698d1c2fdca4793852e9fa6a090b3d4",
+    "dataset_file": "dataset_final.jsonl",
+    "dataset_file_sha256": "070944241e91c7148aff77f6a052193de150f1858c287fe15755ed0e01adc53b",
+    "split_file": "split_manifest.json",
+    "split_id": "51c2dd1bb7d72166",
+    "split_scheme": "main",
+    "extends_split_id": "7df6f9b8276fa856",
+    "qa_ledger_sha256": null,
+    "duplicate_decisions_sha256": null,
+    "domain_dictionary_version": "domains-v1",
+    "n_families": 791,
+    "n_rows": 3164,
+    "exposure_samples": [
+      "outputs/exp1/development-cpu-20260926",
+      "outputs/exp6/feasibility-cpu-20260927"
+    ],
+    "eligible_training_families": 591,
+    "gates": {
+      "ingest": "PASS",
+      "structure": "PASS",
+      "split": "PASS",
+      "exposure": "PASS"
+    },
+    "notes": [
+      "no dataset-level kappa gate (docs/PROTOCOL.md §1)",
+      "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+    ]
+  },
+  "split_id": "51c2dd1bb7d72166",
+  "split_scheme": "main",
+  "families_selector": "all",
+  "max_families": null,
+  "n_rows_per_model": 3164,
+  "backend": "vllm",
+  "judging": "not_run (generation-only; metrics unavailable)",
+  "judge_fingerprint": null,
+  "judge_fingerprint_id": null,
+  "judge_validation_manifest_sha256": null,
+  "models": {
+    "qwen25": {
+      "model_key": "qwen25",
+      "hf_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "tokenizer_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "dtype": "float16",
+      "max_model_len": 4096,
+      "chat_template_sha256": "cd8e9439f0570856fd70470bf8889ebd8b5d1107207f67a5efb46e342330527f",
+      "template_is_fallback": false,
+      "template_probe": "<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\n<<USER_MESSAGE>><|im_end|>\n<|im_start|>assistant\n",
+      "system_prompt_sha256": null,
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "runtime": {
+        "vllm": "0.6.3.post1",
+        "transformers": "4.46.3",
+        "torch": "2.4.0+cu121",
+        "trl": null,
+        "peft": null
+      }
+    },
+    "phi3": {
+      "model_key": "phi3",
+      "hf_id": "microsoft/Phi-3-mini-4k-instruct",
+      "revision": "f39ac1d28e925b323eae81227eaba4464caced4e",
+      "tokenizer_revision": "f39ac1d28e925b323eae81227eaba4464caced4e",
+      "dtype": "float16",
+      "max_model_len": 2048,
+      "chat_template_sha256": "dcaee66df77bfbb789ec541fe713218da30225a526f1db97138fc39ee6dc56aa",
+      "template_is_fallback": false,
+      "template_probe": "<|user|>\n<<USER_MESSAGE>><|end|>\n<|assistant|>\n",
+      "system_prompt_sha256": null,
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "runtime": {
+        "vllm": "0.6.3.post1",
+        "transformers": "4.46.3",
+        "torch": "2.4.0+cu121",
+        "trl": null,
+        "peft": null
+      }
+    },
+    "llama32": {
+      "model_key": "llama32",
+      "hf_id": "meta-llama/Llama-3.2-3B-Instruct",
+      "revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
+      "tokenizer_revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
+      "dtype": "float16",
+      "max_model_len": 3072,
+      "chat_template_sha256": "5816fce10444e03c2e9ee1ef8a4a1ea61ae7e69e438613f3b17b69d0426223a4",
+      "template_is_fallback": false,
+      "template_probe": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nCutting Knowledge Date: December 2023\nToday Date: 05 Oct 2026\n\n<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n<<USER_MESSAGE>><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+      "system_prompt_sha256": null,
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "runtime": {
+        "vllm": "0.6.3.post1",
+        "transformers": "4.46.3",
+        "torch": "2.4.0+cu121",
+        "trl": null,
+        "peft": null
+      }
+    }
+  },
+  "planned_primary_responses_this_invocation": 9492
+}
