@@ -225,12 +225,26 @@ Download `gpu_outputs.zip` from the finished version's **Output** tab.
 
 ## Stage C — calibration and freeze (Kaggle CPU session)
 
-**Recommended:** the headless notebook `notebooks/kaggle_stageC_judge.ipynb`.
-Upload `outputs/stageC_upload.zip` as a **private** Kaggle dataset, import
-the notebook, set Accelerator None, Internet On, attach `OPENAI_API_KEY`, add
-the dataset as input, then **Save & Run All**. It runs the harm gate, the
-benign gate (if uploaded) and, only after a harm PASS, judges Exp 2 from the
-cache. The manual cells below do the same steps interactively.
+**Recommended:** the headless notebook `notebooks/kaggle_stageC_judge.ipynb`
+(a thin wrapper around the tested `scripts/stagec_run.py`). Upload
+`outputs/stageC_upload.zip` as a **private** Kaggle dataset, import the
+notebook, set Accelerator None, Internet On, attach `OPENAI_API_KEY`, add the
+dataset as input, then **Save & Run All**. It runs the harm gate, the benign
+gate (if uploaded), Exp 2 main judging (only after a harm PASS) and Exp 2
+robustness judging (only after main is complete), all under an 11 h budget.
+
+**Interruptions lose at most one small chunk.** Gate predictions and Exp 2
+judgments are saved as they are made. If the OpenAI budget runs out, API calls
+stop, the step exits with code 4 and no verdict is written; if the time budget
+is reached, the step exits with 124. Either way `stageC_outputs.zip` is always
+written. **To continue:** add that zip as an extra input (Add Input → this
+notebook's previous version's output, or upload it as a private dataset) and
+Save & Run All again. Finished work is reused, never re-paid. Corrected
+adjudications go into a new version of the upload dataset; they take
+precedence over copies in old bundles.
+
+The manual cells below do the same steps interactively, without the resume
+handling.
 
 The judge only calls the API, so no GPU is needed and no GPU quota is spent.
 

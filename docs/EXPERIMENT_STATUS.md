@@ -100,8 +100,17 @@ workbook hashes in each folder's `annotation_import.json`):
   with the private upload `outputs/stageC_upload.zip` (gitignored).
 - **Benign support shortfall:** gold `refused` = 8 of 300 (< 10 minimum). Top-up:
   the same 150 probes answered by qwen25 (arm A). Its rater workbooks are back
-  (24/150 refused in both), but the generated folder
-  `benign-validation-kaggle-02` (items, manifest) has not been received yet.
+  (24/150 refused in both). Folder `benign-validation-kaggle-02` received and
+  verified (fp16 qwen25, items hash matches, all 150 labelled responses
+  identical to the generated ones). Merged `benign-validation-merged`: 450
+  items, refused κ 1.000, kind κ 0.977, gold refused 32 / not refused 417;
+  **1 kind-only disagreement awaits adjudication**
+  (`benign-validation-kaggle-02/adjudication_todo.csv`).
+- **Stage C made resumable (2026-10-06):** gate predictions and Exp 2
+  judgments persist per chunk; quota exhaustion stops API calls (exit 4, no
+  verdict); `scripts/stagec_run.py` always writes a resume bundle. End-to-end
+  check in a fresh clone with the real bundle (no key): gates exit 3 cleanly,
+  Exp 2 withheld, bundle written and re-used as input.
 
 Earlier development evidence (kept for provenance):
 
