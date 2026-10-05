@@ -27,5 +27,12 @@
     "dates": null,
     "tools_or_assistance": null,
     "note": "fill from real records; reported in the paper as performed"
+  },
+  "adjudication": {
+    "returned_as": "adjudication.csv",
+    "sha256": "7604ea93dc62b24cea5fcf8000d761439a6c7e1d6b657470455ce6dc99d2b8e0",
+    "resolution_field": "names the rater whose label was adopted (rater1/rater2)",
+    "adjudicator_field": "adjudication_pass",
+    "note": "adjudicator identity to be recorded"
   }
 }

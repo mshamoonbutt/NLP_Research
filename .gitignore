@@ -84,3 +84,6 @@ outputs/smoke/
 
 # Returned rater workbooks contain prompts and responses
 outputs/exp1/**/*.xlsx
+
+# Upload/download bundles contain prompts and responses
+outputs/**/*.zip

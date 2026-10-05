@@ -225,6 +225,13 @@ Download `gpu_outputs.zip` from the finished version's **Output** tab.
 
 ## Stage C — calibration and freeze (Kaggle CPU session)
 
+**Recommended:** the headless notebook `notebooks/kaggle_stageC_judge.ipynb`.
+Upload `outputs/stageC_upload.zip` as a **private** Kaggle dataset, import
+the notebook, set Accelerator None, Internet On, attach `OPENAI_API_KEY`, add
+the dataset as input, then **Save & Run All**. It runs the harm gate, the
+benign gate (if uploaded) and, only after a harm PASS, judges Exp 2 from the
+cache. The manual cells below do the same steps interactively.
+
 The judge only calls the API, so no GPU is needed and no GPU quota is spent.
 
 1. Zip the two finished sample folders (with the filled `rater1.csv`,

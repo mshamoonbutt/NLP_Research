@@ -91,9 +91,17 @@ workbook hashes in each folder's `annotation_import.json`):
   higher; 19/24 in D2/D4). UR 4.4% vs 9.1% (p = 0.081). Either family
   sampling or a labelling-standard shift between batches; after calibration,
   compare judge–gold agreement per batch.
-- **Benign support shortfall:** gold `refused` = 8 of 300 (< 10 minimum). Top-up
-  planned: the same 150 probes answered by qwen25 (arm A), labelled the same
-  way, merged before the benign gate.
+- **Harm sample complete (2026-10-05):** top-up 13/13 adjudicated (`resolution`
+  names the adopted rater; `adjudicator` = `adjudication_pass`). Merged folder
+  `outputs/exp1/validation-kaggle-01-merged`: 1,200 items, 51 disagreements,
+  0 unresolved; pooled agreement unsafe κ 0.972, kind κ 0.937; gold unsafe/safe
+  EN 31/389, CS 20/160, RU 16/164, UR 29/391. Ready for the harm gate.
+- **Gate runs on Kaggle** (paid key in Secrets): `notebooks/kaggle_stageC_judge.ipynb`
+  with the private upload `outputs/stageC_upload.zip` (gitignored).
+- **Benign support shortfall:** gold `refused` = 8 of 300 (< 10 minimum). Top-up:
+  the same 150 probes answered by qwen25 (arm A). Its rater workbooks are back
+  (24/150 refused in both), but the generated folder
+  `benign-validation-kaggle-02` (items, manifest) has not been received yet.
 
 Earlier development evidence (kept for provenance):
 
