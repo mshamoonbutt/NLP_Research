@@ -10,10 +10,14 @@
    newest, then uploads last. Judge outputs exist only in resume bundles (the
    newest wins); annotation files come from the upload, so corrected
    adjudications in a re-uploaded dataset replace the copies in old bundles.
-2. Refuses to run unless the configured judge is the frozen one.
+2. Prints the configured judge and its fingerprint (production judging is
+   gated by require_validated_judge: the PASS manifest must match it).
 3. Steps, each bounded by the remaining time budget (killed at the limit):
    harm gate -> benign gate (if uploaded) -> Exp 2 main judging (only with a
    PASS harm manifest) -> Exp 2 robustness judging (only after main is done).
+   With --dev-sample-dir, the ONLY step is a rubric-iteration run on that
+   development sample (calibrate_judge writes a feedback report, never a
+   manifest); use it while revising the rubric.
    Every step caches its work as it goes, so a killed or budget-starved step
    loses at most one chunk and the next run continues from the cache.
 4. ALWAYS (even after errors) writes --out-zip: a resume bundle with the
@@ -41,13 +45,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 UPLOAD, RESUME = "CSJAIL_STAGEC_UPLOAD", "CSJAIL_STAGEC_RESUME"
-FROZEN_HARM_FINGERPRINT = "b0d6676cf5d89d08"     # Exp 1 judge: gpt-4o-2024-08-06, harm-v2
-HARM_DIR = "outputs/exp1/validation-kaggle-01-merged"
+HARM_DIR = "outputs/exp1/validation-v2-merged"     # top-up 1 (EN/UR) + top-up 2 (CS/RU)
 BENIGN_DIR = "outputs/exp1/benign-validation-merged"
-DEV_DIR = "outputs/exp1/development-cpu-20260926"
+DEV_DIR = "outputs/exp1/rubric-dev-01"             # rubric-iteration set (base 720 items)
 HARM_MANIFEST = "outputs/exp1/judge_validation_manifest.json"
 KEEP = ("outputs/exp1/judge_validation_manifest.json",
-        "outputs/exp1/judge_validation_manifest_benign.json", HARM_DIR, BENIGN_DIR, "outputs/exp2")
+        "outputs/exp1/judge_validation_manifest_benign.json", HARM_DIR, BENIGN_DIR, DEV_DIR,
+        "outputs/exp2")
 
 
 def now() -> str:
@@ -90,8 +94,11 @@ def run_step(cmd: list[str], timeout_s: int) -> int:
         return 124
 
 
-def plan(robustness: bool) -> list[tuple[str, list[str], callable]]:
+def plan(robustness: bool, dev_sample_dir: str | None = None) -> list[tuple[str, list[str], callable]]:
     py = sys.executable
+    if dev_sample_dir:
+        return [("rubric_dev", [py, "scripts/calibrate_judge.py", "--sample-dir", dev_sample_dir],
+                 lambda st: (ROOT / dev_sample_dir).is_dir())]
     return [
         ("harm_gate", [py, "scripts/calibrate_judge.py", "--sample-dir", HARM_DIR,
                        "--development-sample-dir", DEV_DIR],
@@ -150,10 +157,14 @@ def main(argv=None) -> int:
     ap.add_argument("--time-budget-h", type=float, default=11.0,
                     help="no step runs past this many hours from the start (Kaggle stops at 12)")
     ap.add_argument("--no-robustness", action="store_true")
+    ap.add_argument("--dev-sample-dir", default=None,
+                    help="rubric iteration: judge only this development sample (feedback "
+                         "report, no manifest, no Exp 2)")
     args = ap.parse_args(argv)
     t0 = time.monotonic()
     left = lambda: int(args.time_budget_h * 3600 - (time.monotonic() - t0))  # noqa: E731
-    status = {"started_utc": now(), "inputs": [], "steps": {}, "errors": []}
+    status = {"started_utc": now(), "mode": "rubric_dev" if args.dev_sample_dir else "gates+exp2",
+              "inputs": [], "steps": {}, "errors": []}
     try:
         status["inputs"] = collect_inputs(Path(args.input_root), Path(args.scratch), ROOT)
         if not status["inputs"]:
@@ -162,11 +173,11 @@ def main(argv=None) -> int:
         print("[stagec] inputs (applied in this order):", *status["inputs"], sep="\n  ")
         from csjail.judge import load_judge_config
         c = load_judge_config()
-        fp = c.fingerprint("harm")["fingerprint_id"]
-        print(f"[stagec] judge {c.model_id} | harm fingerprint {fp}")
-        if fp != FROZEN_HARM_FINGERPRINT:
-            raise RuntimeError(f"judge config differs from the frozen one ({fp})")
-        for name, cmd, ready in plan(not args.no_robustness):
+        status["judge"] = {"model": c.model_id, "harm_rubric_version": c.harm_rubric_version,
+                           "harm_fingerprint": c.fingerprint("harm")["fingerprint_id"],
+                           "benign_fingerprint": c.fingerprint("benign")["fingerprint_id"]}
+        print(f"[stagec] judge {status['judge']}")
+        for name, cmd, ready in plan(not args.no_robustness, args.dev_sample_dir):
             if not ready(status):
                 status["steps"][name] = "skipped: prerequisite not met"
             elif left() < 300:
@@ -182,6 +193,8 @@ def main(argv=None) -> int:
         status["harm_gate_pass"] = harm_passed()
         status["gates"] = {"harm": gate_progress(ROOT / HARM_DIR, "harm"),
                            "benign": gate_progress(ROOT / BENIGN_DIR, "benign")}
+        if args.dev_sample_dir:
+            status["gates"]["rubric_dev"] = gate_progress(ROOT / args.dev_sample_dir, "harm")
         status["judgments"] = {k: judgment_counts(ROOT / k / "judgments.jsonl")
                                for k in ("outputs/exp2/main", "outputs/exp2/robustness")}
         print("[stagec] status:", json.dumps(status, indent=2), flush=True)

@@ -11,7 +11,9 @@ condition, and freeze it. It has three stages; only the first needs a GPU:
 
 Production decisions (already committed): vLLM, pinned revisions, **float16**
 (T4 has no bf16; vLLM cannot run on the P100). Judge **gpt-4o**, pinned to
-snapshot `gpt-4o-2024-08-06` (harm fingerprint `b0d6676cf5d89d08`). **Gold labels come only from the two
+snapshot `gpt-4o-2024-08-06`; the harm rubric is under revision (harm-v3), so
+the harm fingerprint is whatever the run prints, frozen only by a PASS
+manifest. **Gold labels come only from the two
 human raters** (agreement, else adjudication); the judge is what the gold
 evaluates. Report the annotation process in the paper as actually performed.
 
@@ -112,8 +114,9 @@ print("pinned:", c.model_id, "| served:", served,
 EOF
 ```
 Expected: `pinned: gpt-4o-2024-08-06 | served: gpt-4o-2024-08-06 | harm
-fingerprint: b0d6676cf5d89d08`. A different fingerprint means the judge
-config differs from the frozen one: stop and report.
+fingerprint: <hash>`. The hash changes with every rubric edit; the one
+recorded in a PASS manifest is the frozen judge, and production judging
+refuses any other.
 
 **Cell 8 — live judge check on the development sample** (rubric feedback,
 never a gate; 160 gpt-4o calls, well under $1):
@@ -222,6 +225,26 @@ Download `gpu_outputs.zip` from the finished version's **Output** tab.
    becomes the paper's annotation and AI-assistance statement.
 
 ---
+
+## Stage B2 — rubric revision loop (added 2026-10-06)
+
+The first harm gate attempt (rubric harm-v2) would have failed on precision
+in every condition, so the rubric is being revised. The loop keeps
+development and validation on disjoint families:
+
+- **Development set** `outputs/exp1/rubric-dev-01`: the first 720-item
+  sample (60 families, all conditions), role `development`, gold complete.
+  `calibrate_judge.py` on it writes a feedback report, never a manifest.
+- **Validation set** `outputs/exp1/validation-v2-merged`: top-up 1 (80
+  families, EN/UR, gold complete) + top-up 2 (80 new families, CS/RU,
+  `validation-kaggle-01-topup2`, being annotated). Built with
+  `exp1_merge_samples.py` once top-up 2 is adjudicated.
+
+Each iteration: edit `harm_rubric_prompt` in `configs/judge.yaml` (bump
+`harm_rubric_version`), push, run the Stage C notebook with
+`RUBRIC_DEV_ONLY = True` (~35 min, ~$2.5), read the per-condition precision
+and recall in the printed report, repeat. Rubric edits stop before the
+validation run; the validation verdict is final for that rubric.
 
 ## Stage C — calibration and freeze (Kaggle CPU session)
 

@@ -125,7 +125,12 @@ workbook hashes in each folder's `annotation_import.json`):
   P 0.28, top-up P 0.40), so it is a judge problem, not a labelling shift.
   Thresholds are not lowered. The rubric (or judge model) must be revised on
   development data and validated on families it was not tuned on.
-- **Proposed split for the revision (pending team decision):** development =
+- **Decision (2026-10-06): Option B below; the judge stays gpt-4o-2024-08-06
+  (recall 0.79–1.00 shows the model detects harm; the failure is the decision
+  procedure). Rubric revised to harm-v3: an ordered procedure (intelligibility
+  → relevance → assistance → degree) ahead of the unchanged definitions, and
+  response_kind decided before unsafe. Iterated on `rubric-dev-01` (role
+  development: feedback reports only).** Split: development =
   `validation-kaggle-01` (60 families, all four conditions, 720 items, gold
   complete); validation = `validation-kaggle-01-topup1` (80 families, EN/UR,
   480 items, gold complete) + `validation-kaggle-01-topup2` (80 new families,

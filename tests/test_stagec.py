@@ -18,12 +18,15 @@ def load():
     return mod
 
 
-ADJ = "outputs/exp1/validation-kaggle-01-merged/adjudication.csv"
+HARM_DIR = "outputs/exp1/validation-v2-merged"
+DEV_DIR = "outputs/exp1/rubric-dev-01"
+ADJ = f"{HARM_DIR}/adjudication.csv"
 JUDGMENTS = "outputs/exp2/main/judgments.jsonl"
 
 
 def bundle(root: Path, marker: str, stamp: str, files: dict | None = None) -> Path:
-    (root / "outputs" / "exp1" / "validation-kaggle-01-merged").mkdir(parents=True)
+    (root / HARM_DIR).mkdir(parents=True)
+    (root / DEV_DIR).mkdir(parents=True)
     for rel, text in (files or {}).items():
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         (root / rel).write_text(text, encoding="utf-8")
@@ -58,7 +61,7 @@ def run_driver(sc, tmp_path, monkeypatch, codes, *extra):
     calls, passed = [], {"v": False}
 
     def fake_step(cmd, timeout_s):
-        name = next(n for n, c, _ in sc.plan(True) if c == cmd)
+        name = next(n for n, c, _ in sc.plan(True) + sc.plan(True, DEV_DIR) if c == cmd)
         calls.append(name)
         if name == "harm_gate" and codes.get(name) == 0:
             passed["v"] = True
@@ -84,6 +87,16 @@ def test_exp2_judged_only_after_pass_and_robustness_only_after_main(tmp_path, mo
     assert status["steps"]["exp2_main"] == 4
     assert status["steps"]["exp2_robustness"].startswith("skipped")
     assert sc.RESUME in names and "outputs/exp2/main/generations.jsonl" in names
+
+
+def test_dev_mode_runs_only_the_rubric_iteration(tmp_path, monkeypatch):
+    sc = load()
+    rc, calls, status, names = run_driver(sc, tmp_path, monkeypatch, {"rubric_dev": 0},
+                                          "--dev-sample-dir", DEV_DIR)
+    assert rc == 0 and calls == ["rubric_dev"] and status["mode"] == "rubric_dev"
+    assert "harm_gate" not in status["steps"] and "exp2_main" not in status["steps"]
+    assert status["judge"]["harm_rubric_version"] and status["gates"]["rubric_dev"]
+    assert sc.RESUME in names
 
 
 def test_failed_gate_blocks_exp2_judging(tmp_path, monkeypatch):
