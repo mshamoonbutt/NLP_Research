@@ -227,6 +227,33 @@ class SLMRunner:
                 torch.cuda.empty_cache()
 
 
+class NotCached(BaseException):
+    """A judge-only run met a prompt with no cached generation. Deliberately not
+    an Exception: the generation loop records Exceptions as retryable failures,
+    and a judge-only run must stop instead."""
+
+
+class CachedRunner:
+    """Stand-in for SLMRunner when every generation is already cached, so a
+    judging pass needs no GPU. It replays the provenance recorded when the
+    generations were made, so cache keys match; any cache miss raises NotCached."""
+
+    def __init__(self, provenance: dict) -> None:
+        self._prov = dict(provenance)
+
+    def provenance(self, system: Optional[str] = None) -> dict[str, Any]:
+        if system is not None:
+            raise NotCached("judge-only mode covers runs without a system prompt only")
+        return dict(self._prov)
+
+    def generate(self, prompts: list[str], *args, **kwargs):
+        raise NotCached(f"{len(prompts)} prompts of {self._prov.get('model_key')} have no cached "
+                        "generation; generate them on the GPU host first")
+
+    def shutdown(self) -> None:
+        pass
+
+
 def runtime_info() -> dict[str, Any]:
     import importlib
 

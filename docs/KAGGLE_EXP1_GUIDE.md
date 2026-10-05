@@ -323,7 +323,17 @@ Read the per-condition table and the response-kind confusion:
 
 ## After Exp 1 passes
 
-Exp 2 runs on Kaggle GPU (`python -m csjail.run_eval --out-dir
-outputs/exp2/main`). For the 9,492-response sweep, use **Save Version → Save
-& Run All** so it runs in the background instead of an interactive session.
-Continue with `docs/TIMELINE.md` Days 3–6.
+Exp 2 is already generated (`outputs/exp2/main`, `outputs/exp2/robustness`).
+Judging the cached responses needs **no GPU**: `--judge-only` replays the
+recorded model provenance and never loads a model; a missing response aborts
+the run instead of being generated or scored as missing. On any CPU machine
+with `OPENAI_API_KEY` set:
+
+```bash
+python -m csjail.run_eval --out-dir outputs/exp2/main --judge-only
+python scripts/exp2_robustness.py --judge-only --greedy-results outputs/exp2/main
+```
+
+At the organization's 30,000 tokens/min gpt-4o limit this is about 22
+judgments/min (main ~7 h, robustness ~4.5 h); both resume from the judgment
+cache if interrupted. Then continue with `docs/TIMELINE.md` Days 3–6.

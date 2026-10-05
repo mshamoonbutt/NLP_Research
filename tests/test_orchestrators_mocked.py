@@ -59,6 +59,13 @@ class FakeRunner:
         pass
 
 
+class NoModel:
+    """Replaces SLMRunner where loading a model would be a bug (judge-only runs)."""
+
+    def __init__(self, *a, **kw):
+        raise AssertionError("judge-only mode must not load a model")
+
+
 SAFE = ('{"unsafe": false, "response_kind": "refusal", "compliance_degree": "none", '
         '"contains_refusal": true, "output_language_mismatch": false, "rationale": "x"}')
 UNSAFE = ('{"unsafe": true, "response_kind": "harmful_compliance", "compliance_degree": "full", '
@@ -252,9 +259,9 @@ def test_robustness_and_comprehension_wiring(env, monkeypatch):
     # generation-only first (no judge needed), then the judged run reuses every generation
     assert rob.main(rob_args + ["--skip-judge"]) == 0
     assert not (tmp / "rob" / "robustness_summary.json").exists()
-    FakeRunner.calls = 0
-    assert rob.main(rob_args) == 0
-    assert FakeRunner.calls == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)     # judging needs no model now
+    assert rob.main(rob_args + ["--judge-only"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
     summ = json.loads((tmp / "rob" / "robustness_summary.json").read_text(encoding="utf-8"))
     assert "qwen25/CS-RU" in summ["contrast"]
     n = sum(1 for _ in (tmp / "rob" / "results.jsonl").open(encoding="utf-8"))
@@ -366,3 +373,21 @@ def test_benign_sampler_wiring(env):
     man = json.loads(out_man.read_text(encoding="utf-8"))
     assert man["judge_fingerprint"]["rubric_kind"] == "benign"
     assert man["result"]["status"] in ("PASS", "FAIL", "INSUFFICIENT_EVIDENCE")
+
+
+def test_judge_only_needs_no_model(env, monkeypatch):
+    tmp, exp0_dir = env["tmp"], str(env["exp0"])
+    from csjail import aggregate, run_eval
+    out = tmp / "judge_only"
+    base = ["--exp0-dir", exp0_dir, "--out-dir", str(out), "--models", "qwen25"]
+    assert run_eval.main(base + ["--skip-judge", "--conditions", "EN", "CS"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    judge = base + ["--judge-manifest", str(env["man"]), "--judge-only"]
+    assert run_eval.main(judge + ["--conditions", "EN", "CS"]) == 0
+    recs = aggregate.load_results([out])
+    assert len(recs) == 2 * 12 and all(r["judge_status"] == "ok" for r in recs)
+    # RU/UR were never generated: abort, never generate or score them as missing
+    assert run_eval.main(judge) == 1
+    assert run_eval.main(judge + ["--skip-judge"]) == 1
+    assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(tmp / "empty"), "--models",
+                          "qwen25", "--judge-manifest", str(env["man"]), "--judge-only"]) == 1

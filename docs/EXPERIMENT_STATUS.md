@@ -140,6 +140,8 @@ Remaining steps:
   (44 eval / 156 train) × CS/RU × 5 draws × 3 models, T 0.7, top-p 0.9; the
   five draws use seeds 1234–1238, one request each (`SLMRunner.generate`;
   a single n=5 request stalled vLLM 0.6.3 on Phi-3).
+- **Judging needs no GPU:** `--judge-only` (run_eval, exp2_robustness) replays the
+  recorded provenance; offline key check found 9,492/9,492 and 6,000/6,000 cached.
 
 Earlier smoke checks:
 
