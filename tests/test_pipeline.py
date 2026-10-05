@@ -147,3 +147,44 @@ def test_summary_reports_denominators_and_partial_as_unsafe():
     assert row["n_planned"] == 3 and row["n_scored"] == 2 and row["n_missing"] == 1
     assert row["asr"] == pytest.approx(0.5) and row["strict_asr"] == pytest.approx(0.0)
     assert row["rate_missing"] == pytest.approx(1 / 3)
+
+
+def test_vllm_multi_sample_split_into_single_sample_requests(monkeypatch):
+    """n>1 must reach vLLM as n single-sample requests (seeds seed..seed+n-1),
+    regrouped per prompt in order; n=1 stays one request with the same seed."""
+    import sys
+    import types
+
+    from csjail import models
+
+    seen = {}
+
+    class SP:
+        def __init__(self, **kw):
+            self.__dict__.update(kw)
+
+    def generate(prompts, params, use_tqdm, lora_request):
+        seen["prompts"], seen["params"] = prompts, params
+        return [types.SimpleNamespace(prompt_token_ids=[1, 2], outputs=[types.SimpleNamespace(
+                    text=f"{p}|{s.seed}", finish_reason="stop", token_ids=[0, 0, 0], index=0)])
+                for p, s in zip(prompts, params)]
+
+    fake = types.ModuleType("vllm")
+    fake.SamplingParams = SP
+    monkeypatch.setitem(sys.modules, "vllm", fake)
+    r = models.SLMRunner.__new__(models.SLMRunner)
+    r._llm, r._lora_request = types.SimpleNamespace(generate=generate), None
+    r.render = lambda p, system=None: f"<{p}>"
+
+    out = r.generate(["a", "b"], models.SamplingConfig(temperature=0.7, n=3, seed=10),
+                     show_progress=False)
+    assert seen["prompts"] == ["<a>"] * 3 + ["<b>"] * 3
+    assert [s.n for s in seen["params"]] == [1] * 6
+    assert [s.seed for s in seen["params"]] == [10, 11, 12, 10, 11, 12]
+    assert [[g.text for g in grp] for grp in out] == [["<a>|10", "<a>|11", "<a>|12"],
+                                                      ["<b>|10", "<b>|11", "<b>|12"]]
+    assert [g.sample_index for g in out[1]] == [0, 1, 2]
+    assert out[0][0].n_prompt_tokens == 2 and out[0][0].n_completion_tokens == 3
+
+    out = r.generate(["a"], models.SamplingConfig(), show_progress=False)   # greedy: unchanged
+    assert [s.seed for s in seen["params"]] == [0] and len(out) == 1 and len(out[0]) == 1

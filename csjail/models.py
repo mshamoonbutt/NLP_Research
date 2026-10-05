@@ -160,15 +160,24 @@ class SLMRunner:
         from vllm import SamplingParams  # noqa: WPS433
 
         rendered = [self.render(p, system=system) for p in prompts]
-        sp = SamplingParams(temperature=sampling.temperature, top_p=sampling.top_p,
-                            max_tokens=sampling.max_tokens, seed=sampling.seed, n=sampling.n)
-        outs = self._llm.generate(rendered, sp, use_tqdm=show_progress,
-                                  lora_request=self._lora_request)
+        n = sampling.n
+        # vLLM 0.6.x preempts a multi-sample (n>1) request by swapping it to CPU,
+        # which stalled Phi-3 on a 15 GB T4 for hours. n single-sample requests
+        # (seeds seed..seed+n-1) are preempted by recompute, like greedy ones.
+        params = [SamplingParams(temperature=sampling.temperature, top_p=sampling.top_p,
+                                 max_tokens=sampling.max_tokens, n=1,
+                                 seed=None if sampling.seed is None else sampling.seed + i)
+                  for i in range(n)]
+        outs = self._llm.generate([r for r in rendered for _ in range(n)], params * len(rendered),
+                                  use_tqdm=show_progress, lora_request=self._lora_request)
         result = []
-        for o in outs:
-            n_prompt = len(o.prompt_token_ids) if o.prompt_token_ids is not None else None
-            result.append([GenOutput(c.text, c.index, c.finish_reason, n_prompt, len(c.token_ids))
-                           for c in sorted(o.outputs, key=lambda c: c.index)])
+        for j in range(len(rendered)):
+            group = []
+            for i, o in enumerate(outs[j * n:(j + 1) * n]):
+                c = o.outputs[0]
+                n_prompt = len(o.prompt_token_ids) if o.prompt_token_ids is not None else None
+                group.append(GenOutput(c.text, i, c.finish_reason, n_prompt, len(c.token_ids)))
+            result.append(group)
         return result
 
     def generate_text(self, prompts: list[str], sampling: SamplingConfig = SamplingConfig(), *,
