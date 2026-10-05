@@ -37,7 +37,7 @@ is **not** marked complete just because its inputs exist. Commands are in
 - Semantic equivalence and harmfulness are not certified by Exp 0.
 - Per-batch authorship and model assistance are unrecorded.
 
-## Exp 1 — judge validation: **STAGE A DONE (2026-10-04); HUMAN ANNOTATION IN PROGRESS**
+## Exp 1 — judge validation: **ANNOTATION RETURNED (2026-10-05); ADJUDICATION + TOP-UP PENDING**
 
 Stage A (Kaggle T4, vLLM 0.6.3.post1, float16, pinned revisions; see
 `docs/KAGGLE_EXP1_GUIDE.md`):
@@ -57,6 +57,26 @@ Stage A (Kaggle T4, vLLM 0.6.3.post1, float16, pinned revisions; see
   150 probes × phi3/llama32 = 300 items; probe-file hash matches.
 - Rater files are blank, independently shuffled, with no judge output in the
   folders. Raw text is gitignored; only the manifests are committed.
+
+Annotation (returned 2026-10-05, imported with `scripts/exp1_import_rater_xlsx.py`;
+workbook hashes in each folder's `annotation_import.json`):
+- **Harm, 720 items:** pre-adjudication agreement on `unsafe` 718/720
+  (κ 0.978), on `response_kind` 682/720 (κ 0.925). 38 items need adjudication
+  (2 binary, 36 kind-only). 0 internally inconsistent rows.
+- **Benign, 300 items:** `refused` 300/300 (κ 1.000), `response_kind`
+  298/300 (κ 0.964). 2 kind-only items need adjudication.
+- **Support shortfall:** gold unsafe per condition (both raters) EN 6,
+  CS 20, RU 14, UR 8. The declared minimum is 10, so EN and UR cannot pass on
+  this sample. Low rates: qwen25/phi3 Urdu-script responses are almost all
+  unintelligible (52/60, 55/60), and English compliance is rare.
+- **Top-up (declared rule: new train-pool families, next seed):**
+  `outputs/exp1/validation-kaggle-01-topup1`, 80 families (seed 43) × EN/UR ×
+  3 models = 480 items, responses taken verbatim from the Exp 2 production
+  run (`--from-results`; same release, split, sampling, revisions). Sized for
+  P(EN gold unsafe ≥ 10) ≈ 0.96 at the observed rate. Raters fill blank
+  files; then `exp1_merge_samples.py` combines both for one calibration.
+- The annotation process (who, when, any tools or assistance) is still to be
+  recorded in `annotation_import.json` from real records.
 
 Earlier development evidence (kept for provenance):
 
@@ -103,7 +123,25 @@ Remaining steps:
    probe responses and blank rater files; gate with
    `calibrate_judge.py --kind benign`.
 
-## Exp 2 — main evaluation: **NOT RUN** (smoke checks only)
+## Exp 2 — main evaluation: **GENERATION DONE (2026-10-05); JUDGING PENDING THE EXP 1 PASS**
+
+- **Main sweep** `outputs/exp2/main` (raw text gitignored; `run_manifest.json`
+  committed): 9,492/9,492 generations ok = 791 families × 4 conditions × 3
+  models; vLLM fp16 on a Kaggle T4, pinned revisions, greedy, non-debug, git
+  `729db4b`. The 200 eval families are 2,400 rows.
+- **Share hitting the 512-token cap**, by condition (EN/CS/RU/UR): qwen25
+  .09/.09/.10/.58; phi3 .06/.28/.55/.66; llama32 .07/.56/.76/.63. Mostly long
+  or looping non-English output; report truncation with the results.
+- **Reproducibility:** regenerating the 720 Exp 1 items in this run gave
+  byte-identical text for 78% (qwen25 93%, phi3 76%, llama32 66%). Greedy fp16
+  output depends on batch composition; the paper already states greedy is not
+  bitwise reproducible.
+- **Robustness** `outputs/exp2/robustness`: 6,000/6,000 ok = 200 families
+  (44 eval / 156 train) × CS/RU × 5 draws × 3 models, T 0.7, top-p 0.9; the
+  five draws use seeds 1234–1238, one request each (`SLMRunner.generate`;
+  a single n=5 request stalled vLLM 0.6.3 on Phi-3).
+
+Earlier smoke checks:
 
 Summary: `outputs/checks/exp2_smoke_summary.json` (raw smoke outputs are
 gitignored under `outputs/smoke/`).

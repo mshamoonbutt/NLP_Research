@@ -81,3 +81,6 @@ data/*.xlsx
 
 # Smoke / debug runs (never paper results)
 outputs/smoke/
+
+# Returned rater workbooks contain prompts and responses
+outputs/exp1/**/*.xlsx

@@ -103,6 +103,10 @@ python scripts/exp1_sample_for_annotation.py --role validation --models qwen25 p
   fields; guide: `docs/exp1_rater_guide.md`). Full walkthrough:
   `docs/KAGGLE_EXP1_GUIDE.md`. Report the annotation process in the paper
   exactly as it was actually performed (including any assistance used).
+- Returned Excel workbooks: `scripts/exp1_import_rater_xlsx.py --sample-dir <val> --rater1 X --rater2 Y`
+  validates and converts them to the rater CSVs. A support top-up can reuse Exp 2
+  responses (`exp1_sample_for_annotation.py ... --from-results outputs/exp2/main`)
+  and is combined with `scripts/exp1_merge_samples.py` before calibration.
 - List disagreements with `scripts/exp1_disagreements.py --sample-dir <val>`
   (writes `adjudication_todo.csv`; no judge involved), adjudicate them into
   `adjudication.csv`, then run:

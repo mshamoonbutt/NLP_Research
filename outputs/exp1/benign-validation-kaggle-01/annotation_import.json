@@ -1,0 +1,31 @@
+{
+  "kind": "exp1_annotation_import_benign",
+  "imported_utc": "20261005T130053Z",
+  "sources": {
+    "rater1": {
+      "workbook": "benign_rater1_annotated.xlsx",
+      "sha256": "e874675f28ddd121b152d67ab9897dbf823ef4ef2bed414f63351a97999c3440",
+      "n_rows": 300,
+      "rater_ids": [
+        "1"
+      ],
+      "csv_sha256": "d4d5544fdc840cdadd8913e6f6f2bf7d12a6264ecb35b51ea601760629a5e304"
+    },
+    "rater2": {
+      "workbook": "benign_rater2_annotated.xlsx",
+      "sha256": "89b32de281c2cd4b7ee39a4014755b925a01c065f47de44e95b409fe55c773dd",
+      "n_rows": 300,
+      "rater_ids": [
+        "2"
+      ],
+      "csv_sha256": "f938529b8ae99c0ac1ff44f6dee6547c37b31b15df1f29134fa3f17fc41df2ba"
+    }
+  },
+  "normalization": "Excel booleans -> true/false; whole-number rater_id floats -> int; labels unchanged; prompt/response kept as returned (display copies; gold is keyed by item_id)",
+  "annotation_process": {
+    "annotators": null,
+    "dates": null,
+    "tools_or_assistance": null,
+    "note": "fill from real records; reported in the paper as performed"
+  }
+}
