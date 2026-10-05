@@ -111,6 +111,21 @@ def test_missing_inputs_still_package_and_report(tmp_path, monkeypatch):
         assert "no input bundle" in json.loads(z.read("STAGEC_STATUS.json"))["errors"][0]
 
 
+def test_gate_progress_counts_saved_predictions(tmp_path):
+    sc = load()
+    d = tmp_path / "sample"
+    d.mkdir()
+    (d / "items.csv").write_text("item_id,prompt\n" + "".join(f"i{n},p\n" for n in range(5)),
+                                 encoding="utf-8")
+    assert sc.gate_progress(d, "harm") == {"n_items": 5, "predictions": {}, "remaining": 5}
+    preds = d / "judge_predictions_harm_abc.jsonl"
+    preds.write_text("".join(json.dumps({"item_id": f"i{n}", "judge_status": s}) + "\n"
+                             for n, s in enumerate(["ok", "ok", "ok", "api_error", "api_error"])),
+                     encoding="utf-8")
+    assert sc.gate_progress(d, "harm") == {"n_items": 5, "predictions": {"ok": 3, "api_error": 2},
+                                           "remaining": 2}
+
+
 def test_bundle_round_trips_as_next_input(tmp_path, monkeypatch):
     sc = load()
     _, _, _, _ = run_driver(sc, tmp_path, monkeypatch, {"harm_gate": 0, "exp2_main": 0})

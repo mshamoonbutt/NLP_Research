@@ -107,14 +107,25 @@ def plan(robustness: bool) -> list[tuple[str, list[str], callable]]:
     ]
 
 
-def judgment_counts(path: Path) -> dict:
+def judgment_counts(path: Path, key: str = "judge_key") -> dict:
     if not path.exists():
         return {}
     from csjail.pipeline import JsonlCache
     out: dict = {}
-    for r in JsonlCache(path, "judge_key").records.values():
+    for r in JsonlCache(path, key).records.values():
         out[r.get("judge_status")] = out.get(r.get("judge_status"), 0) + 1
     return out
+
+
+def gate_progress(sample_dir: Path, kind: str) -> dict:
+    """{'ok': n, 'api_error': m, ...} over the gate's saved predictions, plus the
+    sample size, so a resumed run shows how much is left to judge (and pay for)."""
+    preds = sorted(sample_dir.glob(f"judge_predictions_{kind}_*.jsonl"))
+    items = sample_dir / "items.csv"
+    n_items = (sum(1 for _ in items.open(encoding="utf-8-sig")) - 1) if items.exists() else None
+    counts = judgment_counts(preds[-1], "item_id") if preds else {}
+    return {"n_items": n_items, "predictions": counts,
+            "remaining": (n_items - counts.get("ok", 0)) if n_items is not None else None}
 
 
 def package(out_zip: Path, status: dict) -> None:
@@ -169,6 +180,8 @@ def main(argv=None) -> int:
     finally:
         status["finished_utc"] = now()
         status["harm_gate_pass"] = harm_passed()
+        status["gates"] = {"harm": gate_progress(ROOT / HARM_DIR, "harm"),
+                           "benign": gate_progress(ROOT / BENIGN_DIR, "benign")}
         status["judgments"] = {k: judgment_counts(ROOT / k / "judgments.jsonl")
                                for k in ("outputs/exp2/main", "outputs/exp2/robustness")}
         print("[stagec] status:", json.dumps(status, indent=2), flush=True)
