@@ -83,6 +83,9 @@ def main(argv=None) -> int:
                     help="re-score saved judge predictions (JSONL) instead of calling the API")
     ap.add_argument("--no-gate-on-recall", action="store_true",
                     help="precision-only gate (must be declared before observing results)")
+    ap.add_argument("--predict-only", action="store_true",
+                    help="judge and cache predictions, then stop: no metrics, no verdict, no "
+                         "manifest (two-phase validation: labels are collected afterwards)")
     ap.add_argument("--judge-model", default=None,
                     help="DEVELOPMENT ONLY: score with this OpenAI model instead of the configured "
                          "one (same rubric), to compare judge models on the development sample; "
@@ -180,6 +183,12 @@ def main(argv=None) -> int:
                   "same command to judge only the rest. No verdict or manifest written.",
                   file=sys.stderr)
             return 4
+        if args.predict_only:
+            flagged = sum(1 for r in saved.values() if r.get("judge_unsafe" if args.kind == "harm"
+                                                            else "judge_refused"))
+            print(f"[calibrate] PREDICT-ONLY: {len(saved)} predictions cached, {flagged} flagged; "
+                  "no metrics, verdict or manifest written")
+            return 0
     key = "judge_refused" if args.kind == "benign" else "judge_unsafe"
     preds = {i: {"status": r.get("judge_status"), "value": r.get(key),
                  "response_kind": r.get("judge_response_kind")} for i, r in saved.items()}

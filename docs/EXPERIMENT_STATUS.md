@@ -210,6 +210,22 @@ workbook hashes in each folder's `annotation_import.json`):
   `third-review-v2`: all 960 validation items, blind, for the validation
   gold (original gold where the third review agrees, adjudication otherwise,
   by an adjudicator who is not one of the original raters).
+- **Amendment (2026-10-06, before any validation review): two-phase
+  validation replaces the full 960-item third review** (`third-review-v2`
+  withdrawn, never issued). Phase 1: the frozen gpt-4o rubric (chosen on the
+  corrected dev gold) predicts all 960 validation items once (`stagec_run
+  --validation-predict`, no verdict). Phase 2: the independent reviewer labels,
+  blind, ALL judge-flagged items + a random 25% of unflagged items per
+  condition (~320 items instead of 960). Gold = original where the reviewer
+  agrees, adjudication otherwise. Precision is exact on the flagged items;
+  recall uses inverse-probability weighting of the sampled misses; gate
+  thresholds and support minimums unchanged. Re-reviewing only judge/gold
+  disagreements is explicitly excluded (it would bias the judge's score
+  upward). `exp1_gold_audit.py make-two-phase` / `score-two-phase`; the
+  score step writes the production manifest, and the final Kaggle run no
+  longer re-scores against the original (lenient) validation gold. The
+  audit reviewer was a new, independent person (per the team, 2026-10-06);
+  initials still to be recorded.
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
