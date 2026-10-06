@@ -95,6 +95,9 @@ def main(argv=None) -> int:
                          "from csjail.judge.OPENAI_COMPATIBLE (e.g. deepseek)")
     ap.add_argument("--judge-concurrency", type=int, default=None,
                     help="DEVELOPMENT ONLY: parallel requests for the comparison judge")
+    ap.add_argument("--judge-max-tokens", type=int, default=None,
+                    help="DEVELOPMENT ONLY: output budget for the comparison judge; reasoning models "
+                         "(e.g. gpt-oss) spend it on thinking first, so 300 leaves no answer")
     ap.add_argument("--manifest-out", default=None,
                     help="default outputs/exp1/judge_validation_manifest[_benign].json")
     ap.add_argument("--gold-csv", default=None,
@@ -135,7 +138,7 @@ def main(argv=None) -> int:
         return 3
 
     cfg = load_judge_config()
-    if args.judge_model or args.judge_provider or args.judge_concurrency:
+    if args.judge_model or args.judge_provider or args.judge_concurrency or args.judge_max_tokens:
         if role != "development" or not args.judge_model:
             print("FAIL (input): --judge-model/--judge-provider/--judge-concurrency are for "
                   "development samples only (and need --judge-model); the validation judge is "
@@ -144,7 +147,8 @@ def main(argv=None) -> int:
         import dataclasses
         cfg = dataclasses.replace(cfg, model=args.judge_model, model_snapshot=None,
                                   provider=args.judge_provider or cfg.provider,
-                                  concurrency=args.judge_concurrency or cfg.concurrency)
+                                  concurrency=args.judge_concurrency or cfg.concurrency,
+                                  max_tokens=args.judge_max_tokens or cfg.max_tokens)
     fp = cfg.fingerprint(args.kind)
     if args.predictions_from:
         saved = {r["item_id"]: r for r in read_jsonl(args.predictions_from)}
