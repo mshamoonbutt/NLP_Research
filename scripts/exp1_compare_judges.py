@@ -47,17 +47,44 @@ RULE = {
 }
 
 
-def final_labels() -> tuple[list[dict], dict[str, bool], dict[str, str]]:
+def returned(out: Path):
+    return next((out / n for n in ("reviewer_returned.csv", "reviewer_returned.xlsx")
+                 if (out / n).exists()), None)
+
+
+def final_labels():
+    """(items, {item_id: final unsafe}, {item_id: row for final_labels.csv}, provenance).
+    The reviewer's label wins on every item they labelled (rounds 1-3); the original
+    annotators' label is kept alongside. Rounds without reviewer_id are recorded, not hidden."""
     items, gold = ga.dev_items_and_gold()
-    reviewed = ga.review_labels(ga.OUT, ga.OUT / "reviewer_returned.xlsx")
-    for out, strict in ((ga.OUT2, False), (ga.OUT3, True)):   # round 2 file lacks reviewer_id
-        for name in ("reviewer_returned.csv", "reviewer_returned.xlsx"):
-            if (out / name).exists():
-                reviewed.update(ga.review_labels(out, out / name, require_reviewer_id=strict))
-                break
+    reviewed, rows, prov = {}, {}, {}
+    for out in (ga.OUT, ga.OUT2, ga.OUT3):
+        path = returned(out)
+        if path is None:
+            continue
+        reviewed.update(ga.review_labels(out, path, require_reviewer_id=False))
+        key = {k["audit_id"]: k["item_id"] for k in ga.read_csv(out / "AUDIT_KEY_do_not_share.csv")}
+        got = {key[r["audit_id"]]: r for r in ga.load_review(path)}
+        rows.update({i: dict(r, round=out.name) for i, r in got.items()})
+        prov[out.name] = {"n": len(got), "reviewer_id_missing": sum(
+            not (r.get("reviewer_id") or "").strip() for r in got.values())}
     labels = {i: reviewed.get(i, g["value"]) for i, g in gold.items()}
-    source = {i: "independent_reviewer" if i in reviewed else "original_annotators" for i in gold}
-    return items, labels, source
+    table = {}
+    for it in items:
+        i, r = it["item_id"], rows.get(it["item_id"]) or {}
+        table[i] = {"item_id": i, "model": it["model"], "condition": it["condition"],
+                    "unsafe": str(labels[i]).lower(),
+                    "response_kind": (r.get("response_kind") or "").strip() or gold[i].get("response_kind"),
+                    "compliance_degree": (r.get("compliance_degree") or "").strip(),
+                    "label_source": r.get("round", "original_annotators"),
+                    "original_unsafe": str(gold[i]["value"]).lower(),
+                    "original_response_kind": gold[i].get("response_kind")}
+    pairs = [(labels[i], gold[i]["value"]) for i in gold]
+    prov["reviewer_vs_original"] = {
+        "n": len(pairs), "kappa": metrics(pairs)["kappa"], "agree": sum(a == b for a, b in pairs),
+        "original_safe_to_harmful": sum(a and not b for a, b in pairs),
+        "original_harmful_to_safe": sum(b and not a for a, b in pairs)}
+    return items, labels, table, prov
 
 
 def judge_name(fp: str, folder: Path) -> str:
@@ -92,8 +119,9 @@ def metrics(pairs: list[tuple[bool, bool]]) -> dict:
     f1 = 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else None
     pe = ((tp + fp) * (tp + fn) + (fn + tn) * (fp + tn)) / n ** 2 if n else None
     kappa = ((tp + tn) / n - pe) / (1 - pe) if n and pe is not None and pe < 1 else None
+    # flag_ratio: judge-flagged / truly harmful = the factor by which the judge's ASR is off
     return {"n": n, "tp": tp, "fp": fp, "fn": fn, "tn": tn, "precision": prec, "recall": rec,
-            "f1": f1, "kappa": kappa}
+            "f1": f1, "kappa": kappa, "flag_ratio": (tp + fp) / (tp + fn) if tp + fn else None}
 
 
 def compare(items: list[dict], labels: dict[str, bool], preds: dict[str, dict[str, bool]]) -> dict:
@@ -118,13 +146,11 @@ def fmt(x) -> str:
 
 def main() -> int:
     folder = ga.DEV
-    items, labels, source = final_labels()
+    items, labels, table, prov = final_labels()
     with (folder / "final_labels.csv").open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["item_id", "model", "condition", "unsafe", "label_source"])
+        w = csv.DictWriter(f, fieldnames=list(next(iter(table.values()))))
         w.writeheader()
-        w.writerows({"item_id": it["item_id"], "model": it["model"], "condition": it["condition"],
-                     "unsafe": str(labels[it["item_id"]]).lower(),
-                     "label_source": source[it["item_id"]]} for it in items)
+        w.writerows(table[it["item_id"]] for it in items)
     ids = set(labels)
     runs = {V2_RUN.stem.rsplit("_", 1)[1]: V2_RUN} if V2_RUN.exists() else {}
     runs.update({p.stem.rsplit("_", 1)[1]: p for p in sorted(folder.glob("judge_predictions_harm_*.jsonl"))})
@@ -133,12 +159,15 @@ def main() -> int:
     n_unsafe = {c: sum(labels[it["item_id"]] for it in items if it["condition"] == c) for c in CONDS}
     res.update({"kind": "exp1_judge_comparison", "created_utc": datetime.now(timezone.utc).isoformat(),
                 "n_items": len(ids), "unsafe_per_language": n_unsafe,
-                "n_reviewer_labels": sum(s == "independent_reviewer" for s in source.values()),
+                "n_reviewer_labels": sum(r["label_source"] != "original_annotators" for r in table.values()),
+                "label_provenance": prov,
                 "rule": RULE})
     write_text_lf(ROOT / "outputs/exp1/judge_comparison.json", json.dumps(res, indent=2))
     print(f"{len(ids)} items | harmful per language "
           + ", ".join(f"{c} {n}" for c, n in n_unsafe.items())
-          + f" | {res['n_reviewer_labels']} labels from the independent reviewer\n")
+          + f" | {res['n_reviewer_labels']} labels from the independent reviewer")
+    missing = {k: v["reviewer_id_missing"] for k, v in prov.items() if "reviewer_id_missing" in v}
+    print(f"reviewer_id missing per round: {missing}\n")
     print(f"{'judge':22} {'P':>5} {'R':>5} {'F1':>5} {'kappa':>5} {'macroF1':>7}  "
           + "  ".join(f"{c} P/R" for c in CONDS) + "  missing")
     for name, t in sorted(res["table"].items(), key=lambda kv: -kv[1]["macro_f1"]):

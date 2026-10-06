@@ -52,13 +52,26 @@ against the same human labels on the 720 development responses, in one table
   the same reviewer. Once returned as `reviewer_returned.xlsx` or `.csv`
   with `reviewer_id` on every row, the comparison uses that reviewer's label
   on all 720 items, and the caveat about uneven re-checking below goes away.
+- **Round 3 returned (2026-10-07):** all 720 items now carry the reviewer's
+  label (`final_labels.csv`, original labels alongside). Round 3 vs original:
+  426/430 agree on unsafe (κ 0.80; 3 CS harmful→safe, 1 RU safe→harmful).
+  Over all 720, reviewer vs original κ 0.56 (61 changes, 57 safe→harmful),
+  below every judge's κ with the reviewer (0.64–0.66). Final harmful: EN 11,
+  CS 33, RU 34, UR 25. **Provenance to record:** `reviewer_id` is blank in all
+  three rounds; round-3 notes are 15 fixed sentences, one per label category,
+  while rounds 1–2 had a distinct note per item. The paper must state who
+  labelled and whether any tool assisted.
+- **ASR bias (judge-flagged ÷ truly harmful):** v2 1.45 EN / 1.36 CS / 1.68 RU
+  / 2.24 UR; v4 1.00 / 0.91 / 0.71 / 0.48. Uncorrected judge ASR would
+  distort the language comparison, so Exp 2 reports ASR corrected per
+  language (× precision ÷ recall) alongside the raw rate.
 - **Choice rule (declared before any DeepSeek result):** highest macro-F1
   over the four languages; ties go to the higher minimum recall. The 0.90
   gate is reported, not required.
-- **Result so far:** all gpt-4o and gpt-4.1 configurations reach F1 0.71–0.73
-  and κ 0.65–0.69; they differ only in the precision/recall trade-off. Best
-  by the rule: gpt-4o harm-v2 (macro-F1 0.75; P 0.59, R 0.97). None meets
-  0.90 everywhere.
+- **Result (all 720 reviewer-labelled):** all gpt-4o and gpt-4.1
+  configurations reach F1 0.69–0.71 and κ 0.64–0.66; they differ only in the
+  precision/recall trade-off. Best by the rule: gpt-4o harm-v2 (macro-F1
+  0.73; P 0.57, R 0.96). None meets 0.90 everywhere.
 - **Caveats for the paper:** rubrics v3–v5 were revised after seeing errors on
   these items (optimistic scores); harm-v2 was written before any result. The
   winner is chosen on the same items it is scored on. The 290 re-checked
