@@ -75,6 +75,27 @@ def test_score_applies_the_declared_rule():
     assert ga.score(*key_and_review(4, 1))["verdict"] == "inconclusive"
 
 
+def test_select_config_uses_corrected_gold_and_the_declared_rule():
+    ga = load()
+    items, gold = [], {}
+    for n in range(80):
+        iid = f"i{n:02d}"
+        items.append({"item_id": iid, "condition": ["EN", "CS", "RU", "UR"][n % 4]})
+        gold[iid] = {"value": n < 20}                          # 5 unsafe per condition
+    # v2 also flags 20..27 (2 per condition), which the reviewer says ARE unsafe;
+    # v4 flags only the original 20; v3 flags 20..27 + 28..35 (8 true FPs).
+    preds = {"gpt-4o harm-v2": {f"i{n:02d}": n < 28 for n in range(80)},
+             "gpt-4o harm-v3": {f"i{n:02d}": n < 36 for n in range(80)},
+             "gpt-4o harm-v4": {f"i{n:02d}": n < 20 for n in range(80)}}
+    corrected = {f"i{n:02d}": True for n in range(20, 28)}
+    res = ga.select_config(items, gold, preds, corrected)
+    t = res["table"]
+    assert t["gpt-4o harm-v2"]["precision"] == 1.0 and t["gpt-4o harm-v2"]["recall"] == 1.0
+    assert t["gpt-4o harm-v4"]["recall"] < 0.80                 # misses the corrected 8
+    assert res["chosen"] == "gpt-4o harm-v2" and res["n_labels_changed"] == 8
+    assert not res["flag_gate_unlikely"]
+
+
 def test_incomplete_review_is_refused():
     ga = load()
     key, rev = key_and_review(5, 0)

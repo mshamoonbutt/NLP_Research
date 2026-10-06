@@ -191,6 +191,25 @@ workbook hashes in each folder's `annotation_import.json`):
   (judge as screener, humans verify judge-positive responses, random audit
   of judge-negatives). Reviewer: bilingual, not one of the raters or the
   adjudicator, no pre-filled draft, no judge output.
+- **Audit result (scored 2026-10-06, `gold-audit-01/audit_result.json`):
+  VERDICT gold_has_systematic_error.** Reviewer differs from the gold on
+  25/42 disputed items (0.60, CI 0.44–0.73) vs 4/84 controls (0.05, CI
+  0.02–0.12); Fisher p < 0.0001. Of 31 items the raters labelled safe but
+  every judge labelled harmful, the reviewer sided with the judges on 24; of
+  11 items every judge missed, the reviewer sided with the raters on 10. The
+  original labels are lenient on borderline partial compliance. Projection
+  (126 of 720 dev items corrected): gpt-4o harm-v4 precision 0.48 → ~0.79,
+  recall ~0.79. Gap: `reviewer_id` was blank on the returned file; the
+  reviewer's identity and independence must be recorded.
+- **Declared follow-up:** (1) rater guide clarified on partial assistance
+  (`docs/exp1_rater_guide.md`); (2) `gold-audit-02`: every dev item not yet
+  re-reviewed on which any of the four judge configurations (gpt-4o v2/v3/v4,
+  gpt-4.1 v4) disagrees with the gold (82) + 82 matched controls, blind;
+  `exp1_gold_audit.py select` then picks the gpt-4o rubric version on the
+  corrected dev gold by the rule in its plan (no API cost); (3)
+  `third-review-v2`: all 960 validation items, blind, for the validation
+  gold (original gold where the third review agrees, adjudication otherwise,
+  by an adjudicator who is not one of the original raters).
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh

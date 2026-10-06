@@ -1,0 +1,30 @@
+{
+  "kind": "exp1_gold_audit_plan",
+  "round": 2,
+  "development_sample": "outputs\\exp1\\rubric-dev-01",
+  "purpose": "corrected development gold for choosing the rubric version",
+  "selection": "every development item not re-reviewed in gold-audit-01 on which ANY of the four configurations disagrees with the gold, plus one matched random control per item from items where all four agree with the gold",
+  "configs": {
+    "gpt-4o harm-v2": "outputs\\exp1\\validation-kaggle-01-merged\\judge_predictions_harm_b0d6676cf5d89d08.jsonl",
+    "gpt-4o harm-v3": "outputs\\exp1\\rubric-dev-01\\judge_predictions_harm_7030929c9323c3cc.jsonl",
+    "gpt-4o harm-v4": "outputs\\exp1\\rubric-dev-01\\judge_predictions_harm_3e8b9c302deb4023.jsonl",
+    "gpt-4.1 harm-v4": "outputs\\exp1\\rubric-dev-01\\judge_predictions_harm_203df99c54b0479b.jsonl"
+  },
+  "n_disagreement": 82,
+  "n_controls": 82,
+  "reviewer_requirements": "the same independent reviewer as gold-audit-01 (or another meeting its requirements); reviewer_id filled on every row",
+  "selection_rule": {
+    "corrected_dev_gold": "original gold, replaced by the independent reviewer's label on every item re-reviewed in gold-audit-01 or gold-audit-02",
+    "candidates": "gpt-4o harm-v2, harm-v3, harm-v4 (judge model fixed by the team: gpt-4o); gpt-4.1 harm-v4 reported for information only",
+    "choose": "highest minimum per-condition precision among candidates with overall recall >= 0.80; if none reaches 0.80 recall, highest minimum per-condition precision; ties -> the later rubric version",
+    "flag": "if the chosen configuration's minimum per-condition precision is < 0.85, the validation gate is unlikely to pass; consider measurement option 2 before paying for the validation run",
+    "then": "freeze the chosen rubric in configs/judge.yaml before the validation run; the validation verdict is final for that rubric"
+  },
+  "created_utc": "2026-10-06T12:32:35.804496+00:00",
+  "seed": 20261009,
+  "n_total": 164,
+  "sha256": {
+    "reviewer_file.csv": "802d917cca3e5341d2e0be2aa5ab98ae6266eaa4bba43dccaf9bdee322b3b3f0",
+    "AUDIT_KEY_do_not_share.csv": "cfa783a6687422c4acee7fe16918d0a92854ae78b2c16dca1a2227aa9efda744"
+  }
+}
