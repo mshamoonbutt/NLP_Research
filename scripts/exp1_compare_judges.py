@@ -121,6 +121,7 @@ def metrics(pairs: list[tuple[bool, bool]]) -> dict:
     kappa = ((tp + tn) / n - pe) / (1 - pe) if n and pe is not None and pe < 1 else None
     # flag_ratio: judge-flagged / truly harmful = the factor by which the judge's ASR is off
     return {"n": n, "tp": tp, "fp": fp, "fn": fn, "tn": tn, "precision": prec, "recall": rec,
+            "specificity": tn / (tn + fp) if tn + fp else None,
             "f1": f1, "kappa": kappa, "flag_ratio": (tp + fp) / (tp + fn) if tp + fn else None}
 
 
@@ -144,6 +145,32 @@ def fmt(x) -> str:
     return " -- " if x is None else f"{x:.2f}"
 
 
+def write_selected_manifest(res: dict, fps: dict[str, str]) -> int:
+    """Production manifest (status SELECTED) for the comparison winner; the configured
+    judge must BE the winner, so config and manifest cannot drift apart."""
+    from csjail.judge import load_judge_config
+    from csjail.judge_validation import SELECTED, write_manifest
+    from csjail.utils.io import sha256_file
+    fp = load_judge_config().fingerprint("harm")
+    if fp["fingerprint_id"] != fps[res["best"]]:
+        print(f"FAIL: configs/judge.yaml is {fp['fingerprint_id']}, the winner {res['best']} is "
+              f"{fps[res['best']]}; set the config to the winner first", file=sys.stderr)
+        return 3
+    t = res["table"][res["best"]]
+    out = ROOT / "outputs/exp1/judge_validation_manifest.json"
+    write_manifest(out, fingerprint=fp,
+                   result={"status": SELECTED, "design": "exp1_judge_comparison", "judge": res["best"],
+                           "rule": res["rule"], "overall": t["overall"], "per_language": t["per_language"],
+                           "macro_f1": t["macro_f1"], "meets_090_everywhere": t["meets_090_everywhere"],
+                           "n_items": res["n_items"], "unsafe_per_language": res["unsafe_per_language"]},
+                   sample_manifest={"development_sample": "outputs/exp1/rubric-dev-01",
+                                    "items_sha256": sha256_file(ga.DEV / "items.csv")},
+                   gold_sha256={"final_labels.csv": sha256_file(ga.DEV / "final_labels.csv")},
+                   gold_report=res["label_provenance"])
+    print(f"[compare] production manifest (SELECTED, {res['best']}) -> {out}")
+    return 0
+
+
 def main() -> int:
     folder = ga.DEV
     items, labels, table, prov = final_labels()
@@ -154,7 +181,8 @@ def main() -> int:
     ids = set(labels)
     runs = {V2_RUN.stem.rsplit("_", 1)[1]: V2_RUN} if V2_RUN.exists() else {}
     runs.update({p.stem.rsplit("_", 1)[1]: p for p in sorted(folder.glob("judge_predictions_harm_*.jsonl"))})
-    preds = {judge_name(fp, folder): load_predictions(p, ids) for fp, p in runs.items()}
+    fps = {judge_name(fp, folder): fp for fp in runs}
+    preds = {name: load_predictions(runs[fp], ids) for name, fp in fps.items()}
     res = compare(items, labels, preds)
     n_unsafe = {c: sum(labels[it["item_id"]] for it in items if it["condition"] == c) for c in CONDS}
     res.update({"kind": "exp1_judge_comparison", "created_utc": datetime.now(timezone.utc).isoformat(),
@@ -177,7 +205,7 @@ def main() -> int:
               + "  ".join(f"{fmt(t['per_language'][c]['precision'])}/{fmt(t['per_language'][c]['recall'])}"
                           for c in CONDS) + f"  {t['n_missing']}")
     print(f"\nbest by the declared rule (macro-F1): {res['best']} -> outputs/exp1/judge_comparison.json")
-    return 0
+    return write_selected_manifest(res, fps) if "--write-manifest" in sys.argv else 0
 
 
 if __name__ == "__main__":

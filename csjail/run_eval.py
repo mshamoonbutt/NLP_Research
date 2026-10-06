@@ -211,7 +211,8 @@ def main(argv: list[str] | None = None) -> int:
         "families_selector": args.families, "max_families": args.max_families,
         "n_rows_per_model": len(rows), "backend": args.backend,
         "judging": "not_run (generation-only; metrics unavailable)" if args.skip_judge
-                   else ("UNVALIDATED judge (debug)" if judge_man is None else "validated judge"),
+                   else ("UNVALIDATED judge (debug)" if judge_man is None
+                         else f"judge {judge_man['status']} in Exp 1"),
         "judge_fingerprint": judge.fingerprint if judge else None,
         "judge_fingerprint_id": judge.fingerprint["fingerprint_id"] if judge else None,
         "judge_validation_manifest_sha256": (sha256_file(args.judge_manifest)

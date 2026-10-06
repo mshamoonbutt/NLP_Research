@@ -202,7 +202,7 @@ def test_openai_compatible_provider_uses_its_endpoint_and_key(monkeypatch):
     monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(AsyncOpenAI=FakeClient))
     monkeypatch.setenv("DEEPSEEK_API_KEY", "ds-test")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    base = load_judge_config()
+    base = dataclasses.replace(load_judge_config(), provider="openai", model="gpt-4o")
     ds = dataclasses.replace(base, provider="deepseek", model="deepseek-flash", model_snapshot=None)
     jm.Judge(ds, kind="harm")
     assert seen["base_url"] == "https://api.deepseek.com" and seen["api_key"] == "ds-test"

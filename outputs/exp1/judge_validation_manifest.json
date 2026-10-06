@@ -1,0 +1,131 @@
+{
+  "kind": "judge_validation_manifest",
+  "created_utc": "2026-10-06T20:05:40.736552+00:00",
+  "status": "SELECTED",
+  "judge_fingerprint": {
+    "provider": "ollama",
+    "model": "deepseek-v4.1-flash:cloud",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "b0248df31f1d9da2"
+  },
+  "sample_manifest": {
+    "development_sample": "outputs/exp1/rubric-dev-01",
+    "items_sha256": "c9c25adfbf28b2d2fff25760ea1fa9bcb40a9da02da90bf6cc0c830bf99363e3"
+  },
+  "gold_files_sha256": {
+    "final_labels.csv": "18d81c3c3f1de20a9e6fb7dd41c05f5cb4bf7d23cf445f52c7e64ab1c43ca0a6"
+  },
+  "gold_report": {
+    "gold-audit-01": {
+      "n": 126,
+      "reviewer_id_missing": 126
+    },
+    "gold-audit-02": {
+      "n": 164,
+      "reviewer_id_missing": 164
+    },
+    "gold-audit-03": {
+      "n": 430,
+      "reviewer_id_missing": 430
+    },
+    "reviewer_vs_original": {
+      "n": 720,
+      "kappa": 0.5601842579611453,
+      "agree": 659,
+      "original_safe_to_harmful": 57,
+      "original_harmful_to_safe": 4
+    }
+  },
+  "result": {
+    "status": "SELECTED",
+    "design": "exp1_judge_comparison",
+    "judge": "deepseek-v4.1-flash:cloud harm-v2",
+    "rule": {
+      "declared": "2026-10-07, before any DeepSeek result",
+      "choose": "highest macro-F1 (mean of the four language F1 scores); ties -> higher minimum per-language recall",
+      "reference_only": "precision and recall >= 0.90 per language (the original gate) is reported, not required",
+      "caveat": "rubrics v3-v5 were revised after seeing errors on these items, so their scores are optimistic; harm-v2 was written before any result"
+    },
+    "overall": {
+      "n": 720,
+      "tp": 89,
+      "fp": 33,
+      "fn": 14,
+      "tn": 584,
+      "precision": 0.7295081967213115,
+      "recall": 0.8640776699029126,
+      "specificity": 0.946515397082658,
+      "f1": 0.7911111111111111,
+      "kappa": 0.7527544787678639,
+      "flag_ratio": 1.1844660194174756
+    },
+    "per_language": {
+      "EN": {
+        "n": 180,
+        "tp": 10,
+        "fp": 5,
+        "fn": 1,
+        "tn": 164,
+        "precision": 0.6666666666666666,
+        "recall": 0.9090909090909091,
+        "specificity": 0.9704142011834319,
+        "f1": 0.7692307692307693,
+        "kappa": 0.7517241379310347,
+        "flag_ratio": 1.3636363636363635
+      },
+      "CS": {
+        "n": 180,
+        "tp": 29,
+        "fp": 7,
+        "fn": 4,
+        "tn": 140,
+        "precision": 0.8055555555555556,
+        "recall": 0.8787878787878788,
+        "specificity": 0.9523809523809523,
+        "f1": 0.8405797101449275,
+        "kappa": 0.8028673835125448,
+        "flag_ratio": 1.0909090909090908
+      },
+      "RU": {
+        "n": 180,
+        "tp": 30,
+        "fp": 8,
+        "fn": 4,
+        "tn": 138,
+        "precision": 0.7894736842105263,
+        "recall": 0.8823529411764706,
+        "specificity": 0.9452054794520548,
+        "f1": 0.8333333333333334,
+        "kappa": 0.7918272937548189,
+        "flag_ratio": 1.1176470588235294
+      },
+      "UR": {
+        "n": 180,
+        "tp": 20,
+        "fp": 13,
+        "fn": 5,
+        "tn": 142,
+        "precision": 0.6060606060606061,
+        "recall": 0.8,
+        "specificity": 0.9161290322580645,
+        "f1": 0.6896551724137931,
+        "kappa": 0.6313993174061434,
+        "flag_ratio": 1.32
+      }
+    },
+    "macro_f1": 0.7831997462807059,
+    "meets_090_everywhere": false,
+    "n_items": 720,
+    "unsafe_per_language": {
+      "EN": 11,
+      "CS": 33,
+      "RU": 34,
+      "UR": 25
+    }
+  }
+}

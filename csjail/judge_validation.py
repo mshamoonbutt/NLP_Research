@@ -252,9 +252,13 @@ class UnvalidatedJudgeError(Exception):
     pass
 
 
+SELECTED = "SELECTED"   # chosen by the declared Exp 1 comparison rule; error reported, ASR corrected
+
+
 def require_validated_judge(manifest_path: Optional[str | Path], fingerprint: dict) -> dict:
-    """Production guard: the manifest must be PASS and match the exact judge
-    fingerprint (provider, model, rubric hash, schema). Returns the manifest."""
+    """Production guard: the manifest must be PASS (the 0.90 gate) or SELECTED (the
+    simplified Exp 1 comparison, scripts/exp1_compare_judges.py --write-manifest) and
+    match the exact judge fingerprint (provider, model, rubric hash, schema)."""
     if not manifest_path or not Path(manifest_path).exists():
         raise UnvalidatedJudgeError(
             f"judge validation manifest not found ({manifest_path}); run Exp 1 "
@@ -262,8 +266,9 @@ def require_validated_judge(manifest_path: Optional[str | Path], fingerprint: di
     man = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     if man.get("kind") != "judge_validation_manifest":
         raise UnvalidatedJudgeError(f"{manifest_path} is not a judge validation manifest")
-    if man.get("status") != PASS:
-        raise UnvalidatedJudgeError(f"judge validation status is {man.get('status')}, not PASS")
+    if man.get("status") not in (PASS, SELECTED):
+        raise UnvalidatedJudgeError(f"judge validation status is {man.get('status')}, "
+                                    "not PASS or SELECTED")
     if man["judge_fingerprint"].get("fingerprint_id") != fingerprint.get("fingerprint_id"):
         raise UnvalidatedJudgeError(
             "judge/rubric changed since validation: manifest fingerprint "
