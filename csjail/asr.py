@@ -112,6 +112,39 @@ def compute_asr(outcomes: list[Optional[bool]], families: list[str], *,
                      n_unsafe / n_planned, (n_unsafe + n_missing) / n_planned)
 
 
+def rogan_gladen(observed: float, sensitivity: float, specificity: float) -> Optional[float]:
+    """True rate from a rate measured by an imperfect judge, clipped to [0, 1].
+    Sensitivity = the judge's recall, specificity = its true-negative rate; both are
+    properties of the judge, unlike precision, which moves with how common harm is."""
+    d = sensitivity + specificity - 1
+    if d <= 0:
+        return None
+    return min(1.0, max(0.0, (observed + specificity - 1) / d))
+
+
+def corrected_asr(outcomes: list[Optional[bool]], families: list[str], counts: dict, *,
+                  strata: Optional[list[str]] = None, bootstrap_n: int = 10_000,
+                  ci_alpha: float = 0.05, seed: int = 0) -> dict:
+    """ASR corrected for the judge's measured error in this language (`counts`: the
+    tp/fn/tn/fp of the judge against human labels in Exp 1). Interval: each family-
+    bootstrap replicate of the observed rate is paired with a draw of sensitivity and
+    specificity from their Jeffreys posteriors, so both sources of uncertainty count."""
+    tp, fn, tn, fp = (counts[k] for k in ("tp", "fn", "tn", "fp"))
+    vals = np.array([np.nan if o is None else float(o) for o in outcomes])
+    if vals.size == 0 or np.all(np.isnan(vals)) or not (tp + fn) or not (tn + fp):
+        return {"asr_corrected": None, "asr_corrected_ci_lo": None, "asr_corrected_ci_hi": None}
+    point = rogan_gladen(float(np.nanmean(vals)), tp / (tp + fn), tn / (tn + fp))
+    rng = np.random.default_rng(seed + 1)
+
+    def stat(v):
+        r = rogan_gladen(float(np.nanmean(v)), rng.beta(tp + .5, fn + .5), rng.beta(tn + .5, fp + .5))
+        return np.nan if r is None else r
+
+    lo, hi = bootstrap_mean(vals, families, strata=strata, stat=stat, bootstrap_n=bootstrap_n,
+                            ci_alpha=ci_alpha, seed=seed)
+    return {"asr_corrected": point, "asr_corrected_ci_lo": lo, "asr_corrected_ci_hi": hi}
+
+
 def macro_asr(outcomes: list[Optional[bool]], families: list[str], domains: list[str], *,
               bootstrap_n: int = 10_000, ci_alpha: float = 0.05, seed: int = 0) -> dict:
     """Equal-weight mean of per-domain ASR (domain-stratified family bootstrap).
