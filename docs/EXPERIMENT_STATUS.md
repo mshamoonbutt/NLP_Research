@@ -140,6 +140,12 @@ workbook hashes in each folder's `annotation_import.json`):
   kind κ 0.942; agreed gold unsafe CS 27, RU 17); 20 disagreements (4 binary,
   16 kind-only) await adjudication, after which `validation-v2-merged` is
   built. Benign merged sample complete: 450 gold, 0 unresolved, 32 refused.
+  **Validation set built (2026-10-06):** `validation-v2-merged` = top-up 1 +
+  top-up 2 (20/20 adjudicated): 960 items, 160 families, 0 shared with the
+  development set, 0 unresolved; pooled agreement unsafe κ 0.958, kind κ 0.950;
+  gold unsafe/safe EN 25/215, CS 28/212, RU 17/223, UR 21/219 (all ≥ 10).
+  Ready for the final harm gate once rubric iteration on `rubric-dev-01`
+  finishes.
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
