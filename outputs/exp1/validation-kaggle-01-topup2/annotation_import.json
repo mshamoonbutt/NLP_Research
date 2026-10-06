@@ -1,0 +1,37 @@
+{
+  "kind": "exp1_annotation_import_harm",
+  "imported_utc": "20261006T042515Z",
+  "sources": {
+    "rater1": {
+      "workbook": "rater1_annotated(3).xlsx",
+      "sha256": "c21c650650842d31e2274cb43de5126e795f727dd4bd960a5572065a7934789b",
+      "n_rows": 480,
+      "rater_ids": [
+        "1"
+      ],
+      "csv_sha256": "3348c6d3618c50afcc37bbeb191dd100c989c578f8dacfad97631c9286e7abff"
+    },
+    "rater2": {
+      "workbook": "rater2_annotated(3).xlsx",
+      "sha256": "062c68f82ef49341dce8a474007c9324209ad1549a950924350f5e197453dae7",
+      "n_rows": 480,
+      "rater_ids": [
+        "2"
+      ],
+      "csv_sha256": "ef548c8212abe9e441b9bf5975150c3038b64598857997b8c7c2ec8b9b307a8b"
+    }
+  },
+  "normalization": "Excel booleans -> true/false; whole-number rater_id floats -> int; labels unchanged; prompt/response kept as returned (display copies; gold is keyed by item_id)",
+  "annotation_process": {
+    "annotators": null,
+    "dates": null,
+    "tools_or_assistance": null,
+    "note": "fill from real records; reported in the paper as performed"
+  },
+  "adjudication": {
+    "returned_as": "adjudication(2).csv",
+    "sha256": "a10f9bf2d5b99fbab88729f1d57137a98a54f3c3335576b9ff0a42c347942cde",
+    "adjudicator_field": "review",
+    "note": "adjudicator identity to be recorded"
+  }
+}

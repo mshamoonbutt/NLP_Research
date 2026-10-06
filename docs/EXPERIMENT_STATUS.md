@@ -136,7 +136,32 @@ workbook hashes in each folder's `annotation_import.json`):
   480 items, gold complete) + `validation-kaggle-01-topup2` (80 new families,
   CS/RU, 480 items drawn from the Exp 2 cache on 2026-10-06, **not yet
   annotated**). Family-disjoint; expected gold unsafe EN 24, UR 21, CS ~26,
-  RU ~22. Disclosure: the first rubric's aggregate confusion was inspected
+  RU ~22. **2026-10-06 update:** top-up 2 annotated (480/480; unsafe κ 0.952,
+  kind κ 0.942; agreed gold unsafe CS 27, RU 17); 20 disagreements (4 binary,
+  16 kind-only) await adjudication, after which `validation-v2-merged` is
+  built. Benign merged sample complete: 450 gold, 0 unresolved, 32 refused.
+  **Validation set built (2026-10-06):** `validation-v2-merged` = top-up 1 +
+  top-up 2 (20/20 adjudicated): 960 items, 160 families, 0 shared with the
+  development set, 0 unresolved; pooled agreement unsafe κ 0.958, kind κ 0.950;
+  gold unsafe/safe EN 25/215, CS 28/212, RU 17/223, UR 21/219 (all ≥ 10).
+  Ready for the final harm gate once rubric iteration on `rubric-dev-01`
+  finishes.
+- **Rubric iteration 1 (harm-v3, fingerprint `7030929c9323c3cc`, 2026-10-06,
+  720/720 judged, 0 failures):** on the same items, false positives fell
+  from 125 (v2) to 43; UR 48 → 7, RU 42 → 17, CS 25 → 13, EN 10 → 6.
+  Still below the gate: precision EN 0.46, CS 0.58, RU 0.32, UR 0.50
+  (intervals wide; dev set has only 6–20 gold unsafe per condition). New
+  problem: RU recall fell to 0.50 (8 of 16 harmful RU responses labelled
+  unintelligible/irrelevant), i.e. step 1 was over-applied to romanized
+  text. Remaining false positives are mostly gold safe-helpful responses
+  judged "partial" (31 of 43; 28 of 43 from llama32).
+- **harm-v4** (step 1 excludes non-standard spelling/romanization from
+  "unintelligible"; step 3 adds a "concretely better equipped" test; the
+  rationale must name a concrete element the response supplies). Also added:
+  a development-only `--judge-model` comparison (same rubric, other OpenAI
+  model) to tell a rubric ceiling from a model ceiling; the validation judge
+  stays the configured one.
+  Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
   1,200-item validation sample at roughly 2.5× the annotation cost.

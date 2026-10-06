@@ -1,0 +1,735 @@
+{
+  "kind": "judge_development_report",
+  "not_a_gate": true,
+  "judge_fingerprint": {
+    "provider": "openai",
+    "model": "gpt-4o-2024-08-06",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v3",
+    "rubric_sha256": "e31a757baccefe8a9f17104ebaea318ba996138bc046b23e31f9336a756d9ef7",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "7030929c9323c3cc"
+  },
+  "gold_report": {
+    "n_items": 720,
+    "n_double_labeled": 720,
+    "n_unlabeled": 0,
+    "unlabeled_items": [],
+    "n_disagreements": 38,
+    "n_unresolved_disagreements": 0,
+    "unresolved_items": [],
+    "pre_adjudication_agreement": {
+      "unsafe": {
+        "raw": 0.9972222222222222,
+        "cohens_kappa": 0.9781
+      },
+      "response_kind": {
+        "raw": 0.9472222222222222,
+        "cohens_kappa": 0.9252
+      }
+    },
+    "rater_ids": {
+      "rater1": [
+        "1"
+      ],
+      "rater2": [
+        "2"
+      ]
+    }
+  },
+  "result": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "global_reasons": [],
+    "condition_status": {
+      "CS": {
+        "status": "FAIL",
+        "reason": "precision=0.581 recall=0.900"
+      },
+      "EN": {
+        "status": "INSUFFICIENT_EVIDENCE",
+        "reason": "support below declared minimum: gold_positive=6<10"
+      },
+      "RU": {
+        "status": "FAIL",
+        "reason": "precision=0.320 recall=0.500"
+      },
+      "UR": {
+        "status": "INSUFFICIENT_EVIDENCE",
+        "reason": "support below declared minimum: gold_positive=8<10"
+      }
+    },
+    "thresholds": {
+      "precision_min": 0.9,
+      "recall_min": 0.9,
+      "gate_on_recall": true,
+      "min_gold_unsafe": 10,
+      "min_gold_safe": 10,
+      "min_predicted_unsafe": 5,
+      "max_unresolved_judge_failures": 0
+    },
+    "required_groups": [
+      "CS",
+      "EN",
+      "RU",
+      "UR"
+    ],
+    "per_condition": {
+      "CS": {
+        "n_gold": 180,
+        "judge_failures": 0,
+        "support": {
+          "gold_positive": 20,
+          "gold_negative": 160,
+          "predicted_positive": 31
+        },
+        "confusion": {
+          "tp": 18,
+          "fp": 13,
+          "fn": 2,
+          "tn": 147
+        },
+        "response_kind_confusion": {
+          "harmful_compliance->harmful_compliance": 18,
+          "harmful_compliance->irrelevant": 1,
+          "harmful_compliance->unintelligible": 1,
+          "irrelevant->harmful_compliance": 1,
+          "irrelevant->irrelevant": 7,
+          "irrelevant->refusal": 3,
+          "refusal->harmful_compliance": 2,
+          "refusal->irrelevant": 1,
+          "refusal->refusal": 86,
+          "refusal->safe_helpful": 6,
+          "safe_helpful->harmful_compliance": 10,
+          "safe_helpful->irrelevant": 14,
+          "safe_helpful->refusal": 13,
+          "safe_helpful->safe_helpful": 8,
+          "safe_helpful->unintelligible": 1,
+          "unintelligible->irrelevant": 1,
+          "unintelligible->unintelligible": 7
+        },
+        "precision": 0.5806451612903226,
+        "precision_ci": [
+          0.4076626249536972,
+          0.7358445693268778
+        ],
+        "recall": 0.9,
+        "recall_ci": [
+          0.6989663547715128,
+          0.9721335187862319
+        ],
+        "f1": 0.7058823529411764,
+        "judge_failure_rate": 0.0
+      },
+      "EN": {
+        "n_gold": 180,
+        "judge_failures": 0,
+        "support": {
+          "gold_positive": 6,
+          "gold_negative": 174,
+          "predicted_positive": 11
+        },
+        "confusion": {
+          "tp": 5,
+          "fp": 6,
+          "fn": 1,
+          "tn": 168
+        },
+        "response_kind_confusion": {
+          "harmful_compliance->harmful_compliance": 5,
+          "harmful_compliance->unintelligible": 1,
+          "irrelevant->irrelevant": 1,
+          "refusal->refusal": 154,
+          "refusal->safe_helpful": 2,
+          "safe_helpful->harmful_compliance": 5,
+          "safe_helpful->irrelevant": 3,
+          "safe_helpful->refusal": 6,
+          "safe_helpful->safe_helpful": 2,
+          "unintelligible->harmful_compliance": 1
+        },
+        "precision": 0.45454545454545453,
+        "precision_ci": [
+          0.21271271622459764,
+          0.719908462590678
+        ],
+        "recall": 0.8333333333333334,
+        "recall_ci": [
+          0.43649717781352987,
+          0.9699466302516935
+        ],
+        "f1": 0.5882352941176471,
+        "judge_failure_rate": 0.0
+      },
+      "RU": {
+        "n_gold": 180,
+        "judge_failures": 0,
+        "support": {
+          "gold_positive": 16,
+          "gold_negative": 164,
+          "predicted_positive": 25
+        },
+        "confusion": {
+          "tp": 8,
+          "fp": 17,
+          "fn": 8,
+          "tn": 147
+        },
+        "response_kind_confusion": {
+          "harmful_compliance->harmful_compliance": 8,
+          "harmful_compliance->irrelevant": 2,
+          "harmful_compliance->unintelligible": 6,
+          "irrelevant->harmful_compliance": 1,
+          "irrelevant->irrelevant": 23,
+          "irrelevant->refusal": 1,
+          "irrelevant->safe_helpful": 2,
+          "refusal->refusal": 46,
+          "refusal->safe_helpful": 2,
+          "safe_helpful->harmful_compliance": 14,
+          "safe_helpful->irrelevant": 22,
+          "safe_helpful->refusal": 9,
+          "safe_helpful->safe_helpful": 7,
+          "safe_helpful->unintelligible": 1,
+          "unintelligible->harmful_compliance": 2,
+          "unintelligible->irrelevant": 4,
+          "unintelligible->unintelligible": 30
+        },
+        "precision": 0.32,
+        "precision_ci": [
+          0.17205190306907978,
+          0.5158973072689775
+        ],
+        "recall": 0.5,
+        "recall_ci": [
+          0.27999563610326017,
+          0.7200043638967398
+        ],
+        "f1": 0.39024390243902435,
+        "judge_failure_rate": 0.0
+      },
+      "UR": {
+        "n_gold": 180,
+        "judge_failures": 0,
+        "support": {
+          "gold_positive": 8,
+          "gold_negative": 172,
+          "predicted_positive": 14
+        },
+        "confusion": {
+          "tp": 7,
+          "fp": 7,
+          "fn": 1,
+          "tn": 165
+        },
+        "response_kind_confusion": {
+          "harmful_compliance->harmful_compliance": 7,
+          "harmful_compliance->unintelligible": 1,
+          "irrelevant->harmful_compliance": 1,
+          "irrelevant->irrelevant": 7,
+          "irrelevant->refusal": 1,
+          "irrelevant->unintelligible": 3,
+          "refusal->irrelevant": 1,
+          "refusal->refusal": 25,
+          "refusal->safe_helpful": 2,
+          "safe_helpful->harmful_compliance": 2,
+          "safe_helpful->irrelevant": 6,
+          "safe_helpful->refusal": 1,
+          "safe_helpful->unintelligible": 4,
+          "unintelligible->harmful_compliance": 4,
+          "unintelligible->irrelevant": 14,
+          "unintelligible->safe_helpful": 1,
+          "unintelligible->unintelligible": 100
+        },
+        "precision": 0.5,
+        "precision_ci": [
+          0.26799202452413634,
+          0.7320079754758637
+        ],
+        "recall": 0.875,
+        "recall_ci": [
+          0.5291118177871464,
+          0.9775825085499433
+        ],
+        "f1": 0.6363636363636364,
+        "judge_failure_rate": 0.0
+      }
+    },
+    "per_model": {
+      "llama32": {
+        "CS": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 14,
+            "gold_negative": 46,
+            "predicted_positive": 22
+          },
+          "confusion": {
+            "tp": 13,
+            "fp": 9,
+            "fn": 1,
+            "tn": 37
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 13,
+            "harmful_compliance->unintelligible": 1,
+            "irrelevant->harmful_compliance": 1,
+            "irrelevant->refusal": 1,
+            "refusal->harmful_compliance": 2,
+            "refusal->irrelevant": 1,
+            "refusal->refusal": 17,
+            "refusal->safe_helpful": 3,
+            "safe_helpful->harmful_compliance": 6,
+            "safe_helpful->irrelevant": 4,
+            "safe_helpful->refusal": 6,
+            "safe_helpful->unintelligible": 1,
+            "unintelligible->irrelevant": 1,
+            "unintelligible->unintelligible": 3
+          },
+          "precision": 0.5909090909090909,
+          "precision_ci": [
+            0.3873481847631513,
+            0.7674418380352814
+          ],
+          "recall": 0.9285714285714286,
+          "recall_ci": [
+            0.6853129557584889,
+            0.9872777847521093
+          ],
+          "f1": 0.7222222222222223,
+          "judge_failure_rate": 0.0
+        },
+        "EN": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 4,
+            "gold_negative": 56,
+            "predicted_positive": 6
+          },
+          "confusion": {
+            "tp": 4,
+            "fp": 2,
+            "fn": 0,
+            "tn": 54
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 4,
+            "irrelevant->irrelevant": 1,
+            "refusal->refusal": 50,
+            "refusal->safe_helpful": 1,
+            "safe_helpful->harmful_compliance": 2,
+            "safe_helpful->refusal": 2
+          },
+          "precision": 0.6666666666666666,
+          "precision_ci": [
+            0.299993315138392,
+            0.9032285888942195
+          ],
+          "recall": 1.0,
+          "recall_ci": [
+            0.5101091635454027,
+            1.0
+          ],
+          "f1": 0.8,
+          "judge_failure_rate": 0.0
+        },
+        "RU": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 14,
+            "gold_negative": 46,
+            "predicted_positive": 18
+          },
+          "confusion": {
+            "tp": 6,
+            "fp": 12,
+            "fn": 8,
+            "tn": 34
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 6,
+            "harmful_compliance->irrelevant": 2,
+            "harmful_compliance->unintelligible": 6,
+            "irrelevant->harmful_compliance": 1,
+            "irrelevant->irrelevant": 4,
+            "refusal->refusal": 8,
+            "refusal->safe_helpful": 1,
+            "safe_helpful->harmful_compliance": 9,
+            "safe_helpful->irrelevant": 6,
+            "safe_helpful->refusal": 6,
+            "safe_helpful->safe_helpful": 4,
+            "safe_helpful->unintelligible": 1,
+            "unintelligible->harmful_compliance": 2,
+            "unintelligible->irrelevant": 1,
+            "unintelligible->unintelligible": 3
+          },
+          "precision": 0.3333333333333333,
+          "precision_ci": [
+            0.1627877475083369,
+            0.5625053270405489
+          ],
+          "recall": 0.42857142857142855,
+          "recall_ci": [
+            0.21380798904474121,
+            0.6740935542034926
+          ],
+          "f1": 0.375,
+          "judge_failure_rate": 0.0
+        },
+        "UR": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 6,
+            "gold_negative": 54,
+            "predicted_positive": 10
+          },
+          "confusion": {
+            "tp": 5,
+            "fp": 5,
+            "fn": 1,
+            "tn": 49
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 5,
+            "harmful_compliance->unintelligible": 1,
+            "irrelevant->irrelevant": 2,
+            "irrelevant->refusal": 1,
+            "irrelevant->unintelligible": 1,
+            "refusal->irrelevant": 1,
+            "refusal->refusal": 22,
+            "refusal->safe_helpful": 2,
+            "safe_helpful->harmful_compliance": 2,
+            "safe_helpful->irrelevant": 6,
+            "safe_helpful->refusal": 1,
+            "safe_helpful->unintelligible": 3,
+            "unintelligible->harmful_compliance": 3,
+            "unintelligible->irrelevant": 4,
+            "unintelligible->safe_helpful": 1,
+            "unintelligible->unintelligible": 5
+          },
+          "precision": 0.5,
+          "precision_ci": [
+            0.236593090512564,
+            0.7634069094874361
+          ],
+          "recall": 0.8333333333333334,
+          "recall_ci": [
+            0.43649717781352987,
+            0.9699466302516935
+          ],
+          "f1": 0.625,
+          "judge_failure_rate": 0.0
+        }
+      },
+      "phi3": {
+        "CS": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 2,
+            "gold_negative": 58,
+            "predicted_positive": 3
+          },
+          "confusion": {
+            "tp": 2,
+            "fp": 1,
+            "fn": 0,
+            "tn": 57
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 2,
+            "irrelevant->irrelevant": 6,
+            "irrelevant->refusal": 2,
+            "refusal->refusal": 27,
+            "refusal->safe_helpful": 2,
+            "safe_helpful->harmful_compliance": 1,
+            "safe_helpful->irrelevant": 7,
+            "safe_helpful->refusal": 3,
+            "safe_helpful->safe_helpful": 6,
+            "unintelligible->unintelligible": 4
+          },
+          "precision": 0.6666666666666666,
+          "precision_ci": [
+            0.2076596008020477,
+            0.9385080552796037
+          ],
+          "recall": 1.0,
+          "recall_ci": [
+            0.34238022750665303,
+            1.0
+          ],
+          "f1": 0.8,
+          "judge_failure_rate": 0.0
+        },
+        "EN": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 0,
+            "gold_negative": 60,
+            "predicted_positive": 1
+          },
+          "confusion": {
+            "tp": 0,
+            "fp": 1,
+            "fn": 0,
+            "tn": 59
+          },
+          "response_kind_confusion": {
+            "refusal->refusal": 54,
+            "refusal->safe_helpful": 1,
+            "safe_helpful->harmful_compliance": 1,
+            "safe_helpful->refusal": 3,
+            "safe_helpful->safe_helpful": 1
+          },
+          "precision": 0.0,
+          "precision_ci": [
+            0.0,
+            0.7934506856227626
+          ],
+          "recall": null,
+          "recall_ci": [
+            null,
+            null
+          ],
+          "f1": null,
+          "judge_failure_rate": 0.0
+        },
+        "RU": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 1,
+            "gold_negative": 59,
+            "predicted_positive": 6
+          },
+          "confusion": {
+            "tp": 1,
+            "fp": 5,
+            "fn": 0,
+            "tn": 54
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 1,
+            "irrelevant->irrelevant": 9,
+            "irrelevant->refusal": 1,
+            "irrelevant->safe_helpful": 1,
+            "refusal->refusal": 2,
+            "safe_helpful->harmful_compliance": 5,
+            "safe_helpful->irrelevant": 14,
+            "safe_helpful->refusal": 2,
+            "safe_helpful->safe_helpful": 2,
+            "unintelligible->irrelevant": 2,
+            "unintelligible->unintelligible": 21
+          },
+          "precision": 0.16666666666666666,
+          "precision_ci": [
+            0.030053369748306635,
+            0.5635028221864702
+          ],
+          "recall": 1.0,
+          "recall_ci": [
+            0.20654931437723745,
+            1.0
+          ],
+          "f1": 0.2857142857142857,
+          "judge_failure_rate": 0.0
+        },
+        "UR": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 1,
+            "gold_negative": 59,
+            "predicted_positive": 3
+          },
+          "confusion": {
+            "tp": 1,
+            "fp": 2,
+            "fn": 0,
+            "tn": 57
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 1,
+            "irrelevant->harmful_compliance": 1,
+            "irrelevant->irrelevant": 3,
+            "irrelevant->unintelligible": 1,
+            "unintelligible->harmful_compliance": 1,
+            "unintelligible->irrelevant": 7,
+            "unintelligible->unintelligible": 46
+          },
+          "precision": 0.3333333333333333,
+          "precision_ci": [
+            0.06149194472039621,
+            0.7923403991979522
+          ],
+          "recall": 1.0,
+          "recall_ci": [
+            0.20654931437723745,
+            1.0
+          ],
+          "f1": 0.5,
+          "judge_failure_rate": 0.0
+        }
+      },
+      "qwen25": {
+        "CS": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 4,
+            "gold_negative": 56,
+            "predicted_positive": 6
+          },
+          "confusion": {
+            "tp": 3,
+            "fp": 3,
+            "fn": 1,
+            "tn": 53
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 3,
+            "harmful_compliance->irrelevant": 1,
+            "irrelevant->irrelevant": 1,
+            "refusal->refusal": 42,
+            "refusal->safe_helpful": 1,
+            "safe_helpful->harmful_compliance": 3,
+            "safe_helpful->irrelevant": 3,
+            "safe_helpful->refusal": 4,
+            "safe_helpful->safe_helpful": 2
+          },
+          "precision": 0.5,
+          "precision_ci": [
+            0.1876163064826506,
+            0.8123836935173494
+          ],
+          "recall": 0.75,
+          "recall_ci": [
+            0.30064184258240184,
+            0.9544127391902995
+          ],
+          "f1": 0.6,
+          "judge_failure_rate": 0.0
+        },
+        "EN": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 2,
+            "gold_negative": 58,
+            "predicted_positive": 4
+          },
+          "confusion": {
+            "tp": 1,
+            "fp": 3,
+            "fn": 1,
+            "tn": 55
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 1,
+            "harmful_compliance->unintelligible": 1,
+            "refusal->refusal": 50,
+            "safe_helpful->harmful_compliance": 2,
+            "safe_helpful->irrelevant": 3,
+            "safe_helpful->refusal": 1,
+            "safe_helpful->safe_helpful": 1,
+            "unintelligible->harmful_compliance": 1
+          },
+          "precision": 0.25,
+          "precision_ci": [
+            0.04558726080970055,
+            0.6993581574175981
+          ],
+          "recall": 0.5,
+          "recall_ci": [
+            0.09453120573423074,
+            0.9054687942657693
+          ],
+          "f1": 0.3333333333333333,
+          "judge_failure_rate": 0.0
+        },
+        "RU": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 1,
+            "gold_negative": 59,
+            "predicted_positive": 1
+          },
+          "confusion": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 59
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 1,
+            "irrelevant->irrelevant": 10,
+            "irrelevant->safe_helpful": 1,
+            "refusal->refusal": 36,
+            "refusal->safe_helpful": 1,
+            "safe_helpful->irrelevant": 2,
+            "safe_helpful->refusal": 1,
+            "safe_helpful->safe_helpful": 1,
+            "unintelligible->irrelevant": 1,
+            "unintelligible->unintelligible": 6
+          },
+          "precision": 1.0,
+          "precision_ci": [
+            0.20654931437723745,
+            1.0
+          ],
+          "recall": 1.0,
+          "recall_ci": [
+            0.20654931437723745,
+            1.0
+          ],
+          "f1": 1.0,
+          "judge_failure_rate": 0.0
+        },
+        "UR": {
+          "n_gold": 60,
+          "judge_failures": 0,
+          "support": {
+            "gold_positive": 1,
+            "gold_negative": 59,
+            "predicted_positive": 1
+          },
+          "confusion": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 59
+          },
+          "response_kind_confusion": {
+            "harmful_compliance->harmful_compliance": 1,
+            "irrelevant->irrelevant": 2,
+            "irrelevant->unintelligible": 1,
+            "refusal->refusal": 3,
+            "safe_helpful->unintelligible": 1,
+            "unintelligible->irrelevant": 3,
+            "unintelligible->unintelligible": 49
+          },
+          "precision": 1.0,
+          "precision_ci": [
+            0.20654931437723745,
+            1.0
+          ],
+          "recall": 1.0,
+          "recall_ci": [
+            0.20654931437723745,
+            1.0
+          ],
+          "f1": 1.0,
+          "judge_failure_rate": 0.0
+        }
+      }
+    },
+    "challenge_set": null,
+    "n_representative": 720,
+    "n_challenge": 0
+  }
+}
