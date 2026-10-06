@@ -265,6 +265,23 @@ workbook hashes in each folder's `annotation_import.json`):
   reproduces the error. Affects calibrate_judge (chunks of 64) and Exp 2
   judging (chunks of 256); no stored judgment was wrong, only slow or
   `api_error` (which is re-tried on resume).
+- **Option 2 set up (2026-10-06):** `configs/judge.yaml` is the harm-v2 text
+  again (fingerprint `b0d6676cf5d89d08` reproduced), used only as a screener;
+  it has no PASS manifest, so `run_eval` and Exp 6 still refuse it.
+  `scripts/exp2_verify.py` screens the eval_main responses (Kaggle
+  `MODE = "screen"`: 2,400 main + 1,320 robustness), builds the blinded
+  review file (all flagged + 10% of the unflagged per model × condition) and
+  scores the human labels into per-model × condition ASR. Expected review
+  load for main ≈ 650 responses (assuming ~20% flagged). The Kaggle upload
+  now includes the Exp 0 dataset file; without it no Exp 2 judging could run
+  on Kaggle. **Still open under option 2:**
+  - aggregation (`csjail.aggregate`) and Exp 3–5 read per-item judge labels,
+    and need the human-verified labels instead;
+  - Exp 6 preference data needs a labelling decision (screener labels only
+    choose training pairs, so they may be acceptable there);
+  - Exp 8 post-training evaluation needs the same screen-and-verify step per
+    arm;
+  - the paper's methods section must describe the screening design.
 - **Alternative judge under consideration (partner suggestion, 2026-10-06):
   DeepSeek V4.** Not runnable locally on Kaggle or the CPU box (V4-Flash
   ~90–175 GB VRAM; Ollama serves it only as a cloud model). Testable through

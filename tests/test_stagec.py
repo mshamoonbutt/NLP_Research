@@ -59,7 +59,8 @@ def run_driver(sc, tmp_path, monkeypatch, codes, *extra, passed=False):
     bundle(inp / "upload", sc.UPLOAD, "", {"outputs/exp2/main/generations.jsonl": "gens"})
     monkeypatch.setattr(sc, "ROOT", repo)
     calls = []
-    every = sc.plan(True) + sc.plan(True, DEV_DIR) + sc.plan(True, None, (), True)
+    every = (sc.plan(True) + sc.plan(True, DEV_DIR) + sc.plan(True, None, (), True)
+             + sc.plan(True, None, (), False, True))
 
     def fake_step(cmd, timeout_s):
         name = next(n for n, c, _ in every if c == cmd)
@@ -120,6 +121,18 @@ def test_validation_predict_mode_only_caches_predictions(tmp_path, monkeypatch):
     assert rc == 0 and calls == ["validation_predict"] and status["mode"] == "validation_predict"
     cmd = sc.plan(True, None, (), True)[0][1]
     assert "--predict-only" in cmd and sc.HARM_DIR in cmd
+
+
+def test_screen_mode_screens_main_then_robustness_without_a_pass(tmp_path, monkeypatch):
+    sc = load()
+    rc, calls, status, _ = run_driver(sc, tmp_path, monkeypatch, {}, "--screen", passed=False)
+    assert rc == 0 and status["mode"] == "screen"
+    assert calls == ["screen_main", "screen_robustness"]           # no benign sample uploaded here
+    assert "exp2_main" not in status["steps"]                        # never validated judging
+    (tmp_path / "again").mkdir()
+    rc, calls, status, _ = run_driver(sc, tmp_path / "again", monkeypatch, {"screen_main": 4},
+                                      "--screen")
+    assert calls == ["screen_main"] and status["steps"]["screen_robustness"].startswith("skipped")
 
 
 def test_time_budget_skips_work_but_still_packages(tmp_path, monkeypatch):

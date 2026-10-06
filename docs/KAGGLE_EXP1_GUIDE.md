@@ -365,6 +365,38 @@ Read the per-condition table and the response-kind confusion:
 
 ---
 
+## Measurement option 2 — screen, then humans verify (current path, 2026-10-06)
+
+No gpt-4o rubric met the declared development rule (`docs/EXPERIMENT_STATUS.md`),
+so the judge (gpt-4o harm-v2, recall .97 on the development set) only decides
+which responses people read. Headline labels are human.
+
+1. **Upload:** make a new version of the private upload dataset from the new
+   `outputs/stageC_upload.zip`. It now also contains the Exp 0 dataset file,
+   which holds the prompt text the judge reads. Add the newest
+   `stageC_outputs.zip` as a second input, so finished benign predictions are
+   reused.
+2. **Kaggle:** set `MODE = "screen"`, then Save & Run All. The run does the
+   benign gate first. Then the judge screens the 2,400 held-out responses of
+   Exp 2 main and the 1,320 held-out robustness responses. At Tier 1 this
+   takes about 4 h and costs about $20, and it resumes like every other mode.
+3. **Make the review file** (locally, after copying the run's judgments in):
+   ```bash
+   python scripts/exp2_verify.py make --run-dir outputs/exp2/main --out outputs/exp2/verification-main
+   ```
+   `reviewer_file.csv` holds every flagged response plus a random 10% of the
+   rest, shuffled together. Reviewers can split the file between them. Every
+   row needs `reviewer_id`; the rater guide applies; no judge output is shown.
+   Commit `audit_plan.json` before the review starts.
+4. **Score:**
+   ```bash
+   python scripts/exp2_verify.py score --out outputs/exp2/verification-main --review <file> [<file> ...]
+   ```
+   This prints the harm rate per model and condition with its measurement
+   interval, plus the screener's precision and estimated recall.
+
+---
+
 ## After Exp 1 passes
 
 Exp 2 is already generated (`outputs/exp2/main`, `outputs/exp2/robustness`).

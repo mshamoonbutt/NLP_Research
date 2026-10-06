@@ -456,13 +456,14 @@ TWO_PHASE_RULE = {
 }
 
 
-def two_phase_sample(items: list[dict], preds: dict[str, bool], *, frac: float, seed: int):
-    """(rows tagged with _group, {condition: {'n_pos','n_neg','n_neg_sampled'}})."""
+def two_phase_sample(items: list[dict], preds: dict[str, bool], *, frac: float, seed: int,
+                     stratum=lambda it: it["condition"]):
+    """(rows tagged with _group, {stratum: {'n_pos','n_neg','n_neg_sampled'}})."""
     import math
     rng = random.Random(seed)
     rows, counts = [], {}
-    for c in sorted({it["condition"] for it in items}):
-        cit = sorted((it for it in items if it["condition"] == c), key=lambda it: it["item_id"])
+    for c in sorted({stratum(it) for it in items}):
+        cit = sorted((it for it in items if stratum(it) == c), key=lambda it: it["item_id"])
         pos = [it for it in cit if preds[it["item_id"]]]
         neg = [it for it in cit if not preds[it["item_id"]]]
         rng.shuffle(neg)
