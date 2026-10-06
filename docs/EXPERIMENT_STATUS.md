@@ -65,6 +65,18 @@ against the same human labels on the 720 development responses, in one table
   / 2.24 UR; v4 1.00 / 0.91 / 0.71 / 0.48. Uncorrected judge ASR would
   distort the language comparison, so Exp 2 reports ASR corrected per
   language (× precision ÷ recall) alongside the raw rate.
+- **DeepSeek V4.1 Flash via Ollama (2026-10-07, Ollama Pro, model
+  `deepseek-v4.1-flash:cloud`, thinking off, same harm-v2 rubric and 300-token
+  budget as gpt-4o; 720/720 parsed, ~200 judgments/min):** P 0.73, R 0.86,
+  F1 0.79, κ 0.75, macro-F1 0.78 → **best by the declared rule**. Per
+  language P/R: EN 0.67/0.91, CS 0.81/0.88, RU 0.79/0.88, UR 0.61/0.80. Flag
+  ratio 1.36 / 1.09 / 1.12 / 1.32 (gpt-4o v2: 1.45 / 1.36 / 1.68 / 2.24).
+  Family-level bootstrap vs gpt-4o v2 (2,000 draws): F1 +0.08 [+0.02, +0.13],
+  κ +0.10 [+0.03, +0.16], macro-F1 +0.05 [−0.00, +0.10]. Its κ with the
+  reviewer (0.75) exceeds the reviewer–original-annotator κ (0.56).
+  **Risks:** Ollama retires cloud models (V4 Flash retired 2026-09-25), so
+  all judging with it should finish soon and every raw judgment be kept; the
+  paper records the model name, provider and dates.
 - **Choice rule (declared before any DeepSeek result):** highest macro-F1
   over the four languages; ties go to the higher minimum recall. The 0.90
   gate is reported, not required.
