@@ -27,5 +27,11 @@
     "dates": null,
     "tools_or_assistance": null,
     "note": "fill from real records; reported in the paper as performed"
+  },
+  "adjudication": {
+    "returned_as": "adjudication(1).csv",
+    "sha256": "e822b0726757ca818d552aabf4e410b3991967fdc435c2493370e5cc9ca4cb7a",
+    "adjudicator_field": "review",
+    "note": "adjudicator identity to be recorded"
   }
 }

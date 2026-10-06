@@ -2,6 +2,7 @@
   "kind": "exp1_sample_manifest_merged",
   "role": "validation",
   "sample_kind": "representative",
+  "source_role": "validation",
   "dataset_version": "benign-probe-bf48c3d00979",
   "split_id": null,
   "seed": [

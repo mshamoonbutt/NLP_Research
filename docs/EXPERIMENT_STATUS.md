@@ -136,7 +136,11 @@ workbook hashes in each folder's `annotation_import.json`):
   480 items, gold complete) + `validation-kaggle-01-topup2` (80 new families,
   CS/RU, 480 items drawn from the Exp 2 cache on 2026-10-06, **not yet
   annotated**). Family-disjoint; expected gold unsafe EN 24, UR 21, CS ~26,
-  RU ~22. Disclosure: the first rubric's aggregate confusion was inspected
+  RU ~22. **2026-10-06 update:** top-up 2 annotated (480/480; unsafe κ 0.952,
+  kind κ 0.942; agreed gold unsafe CS 27, RU 17); 20 disagreements (4 binary,
+  16 kind-only) await adjudication, after which `validation-v2-merged` is
+  built. Benign merged sample complete: 450 gold, 0 unresolved, 32 refused.
+  Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
   1,200-item validation sample at roughly 2.5× the annotation cost.
