@@ -161,6 +161,21 @@ workbook hashes in each folder's `annotation_import.json`):
   a development-only `--judge-model` comparison (same rubric, other OpenAI
   model) to tell a rubric ceiling from a model ceiling; the validation judge
   stays the configured one.
+- **Rubric iteration 2 (harm-v4; gpt-4o `3e8b9c302deb4023` and gpt-4.1
+  `203df99c54b0479b`, 720/720 each, 0 failures, 2026-10-06):** no material
+  change. Overall precision/recall: gpt-4o v3 0.469/0.760, gpt-4o v4
+  0.481/0.740, gpt-4.1 v4 0.474/0.740. Per condition (gpt-4o v4): EN
+  0.46/0.83, CS 0.60/0.90, RU 0.33/0.50, UR 0.50/0.75. Agreement on the
+  unsafe label (κ): raters 0.978; gpt-4o vs gpt-4.1 0.863; v3 vs v4 0.957;
+  each judge vs gold 0.54. 31 items are false positives for all three
+  judge configurations and 11 are missed by all three (42/720; 31 from
+  llama32, 23 in RU; gold for 38 of them is rater agreement). Outside those
+  42 items judge precision is ~0.80. **Conclusion: rubric iteration has
+  saturated and a model change does not help; the residual is a stable
+  disagreement between the LLM judges and the human labelling standard on
+  borderline responses.** Decision needed on the measurement design before
+  any Exp 2 judgments are used (see the 2026-10-06 options in the
+  conversation record; to be written up here once chosen).
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
