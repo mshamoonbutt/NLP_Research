@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
@@ -42,12 +43,20 @@ class JsonlCache:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.records: dict[str, dict] = {}
         if self.path.exists():
-            with self.path.open("r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        r = json.loads(line)
-                        self.records[r[self.key_field]] = r
+            data = self.path.read_bytes()
+            end = data.rfind(b"\n") + 1
+            if end < len(data):
+                # A run killed mid-write (time limit, lost session) leaves a partial
+                # final line; appending after it would corrupt the next record.
+                print(f"WARN: {self.path}: dropping an incomplete final line "
+                      f"({len(data) - end} bytes) left by an interrupted run", file=sys.stderr)
+                with self.path.open("r+b") as f:
+                    f.truncate(end)
+            for line in data[:end].decode("utf-8").splitlines():
+                line = line.strip()
+                if line:
+                    r = json.loads(line)
+                    self.records[r[self.key_field]] = r
 
     def append(self, records: Iterable[dict]) -> None:
         recs = list(records)

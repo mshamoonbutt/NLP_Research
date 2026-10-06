@@ -391,3 +391,115 @@ def test_judge_only_needs_no_model(env, monkeypatch):
     assert run_eval.main(judge + ["--skip-judge"]) == 1
     assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(tmp / "empty"), "--models",
                           "qwen25", "--judge-manifest", str(env["man"]), "--judge-only"]) == 1
+
+
+class BudgetJudge(FakeJudge):
+    """FakeJudge whose API budget runs out after `budget` real calls (then
+    every call fails like OpenAI's insufficient_quota). Counts calls."""
+    budget = 0
+    calls = 0
+
+    def score_sync(self, pairs, show_progress=True):
+        from csjail.judge import Judgment
+        out = []
+        for p in pairs:
+            if rule_judgment(p[1], self.kind):
+                out += super().score_sync([p])
+                continue
+            BudgetJudge.calls += 1
+            if BudgetJudge.calls > BudgetJudge.budget:
+                out.append(Judgment("api_error", self.kind, error="billing: insufficient_quota"))
+            else:
+                out += super().score_sync([p])
+        return out
+
+
+def test_gate_resumes_after_budget_runs_out(env, monkeypatch):
+    """Budget exhausted mid-gate: exit 4, no manifest, finished predictions kept;
+    the next run judges only the rest and then gives a verdict."""
+    import csv
+
+    tmp = env["tmp"]
+    sd = tmp / "benign_resume"
+    assert load_script("benign_sample_for_annotation").main(
+        ["--role", "validation", "--models", "qwen25", "phi3", "--n", "6", "--out-dir", str(sd)]) == 0
+    for name, rid in (("rater1.csv", "R1"), ("rater2.csv", "R2")):
+        rows = list(csv.DictReader((sd / name).open(encoding="utf-8")))
+        for r in rows:
+            r.update(rater_id=rid, refused="false", response_kind="safe_helpful")
+        with (sd / name).open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            w.writeheader()
+            w.writerows(rows)
+    monkeypatch.setattr(judge_mod, "Judge", BudgetJudge)
+    BudgetJudge.budget, BudgetJudge.calls = 5, 0
+    calibrate = load_script("calibrate_judge")
+    man = tmp / "benign_resume_manifest.json"
+    args = ["--sample-dir", str(sd), "--kind", "benign", "--manifest-out", str(man)]
+    assert calibrate.main(args) == 4 and not man.exists()
+    preds = list((sd).glob("judge_predictions_benign_*.jsonl"))[0]
+    ok = [json.loads(line) for line in preds.read_text(encoding="utf-8").splitlines()]
+    assert sum(r["judge_status"] == "ok" for r in ok) == 5
+    BudgetJudge.budget, BudgetJudge.calls = 10**6, 0           # budget topped up
+    assert calibrate.main(args) in (0, 1, 2) and man.exists()
+    assert BudgetJudge.calls == 12 - 5                        # only the unfinished items
+    BudgetJudge.calls = 0
+    assert calibrate.main(args) in (0, 1, 2) and BudgetJudge.calls == 0   # fully cached
+
+
+def test_exp2_judging_resumes_after_budget_runs_out(env, monkeypatch):
+    tmp, exp0_dir = env["tmp"], str(env["exp0"])
+    from csjail import aggregate, run_eval
+    out = tmp / "budget_run"
+    base = ["--exp0-dir", exp0_dir, "--out-dir", str(out), "--models", "qwen25"]
+    assert run_eval.main(base + ["--skip-judge"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    monkeypatch.setattr(judge_mod, "Judge", BudgetJudge)
+    judge = base + ["--judge-manifest", str(env["man"]), "--judge-only"]
+    BudgetJudge.budget, BudgetJudge.calls = 20, 0
+    assert run_eval.main(judge) == 4                          # incomplete, resumable
+    BudgetJudge.budget, BudgetJudge.calls = 10**6, 0
+    assert run_eval.main(judge) == 0
+    assert BudgetJudge.calls == 48 - 20                       # only the rest was judged
+    recs = aggregate.load_results([out])
+    assert len(recs) == 48 and all(r["judge_status"] == "ok" for r in recs)
+
+
+def test_cache_survives_a_run_killed_mid_write(tmp_path):
+    from csjail.pipeline import JsonlCache
+    p = tmp_path / "judgments.jsonl"
+    c = JsonlCache(p, "k")
+    c.append([{"k": "a", "v": 1}, {"k": "b", "v": 2}])
+    with p.open("ab") as f:                                   # killed mid-record
+        f.write(b'{"k": "c", "v')
+    c = JsonlCache(p, "k")
+    assert set(c.records) == {"a", "b"}
+    c.append([{"k": "c", "v": 3}])
+    assert JsonlCache(p, "k").records["c"]["v"] == 3          # file is valid again
+
+
+def test_quota_exhaustion_stops_api_calls(monkeypatch):
+    import asyncio
+    import types
+
+    import csjail.judge as jm
+
+    async def no_sleep(s):
+        pass
+
+    monkeypatch.setattr(jm.asyncio, "sleep", no_sleep)
+    calls = {"n": 0}
+
+    async def create(**kw):
+        calls["n"] += 1
+        raise Exception("Error code: 429 - insufficient_quota")
+
+    j = jm.Judge.__new__(jm.Judge)
+    j.cfg, j.kind, j._sem = load_judge_config(), "harm", asyncio.Semaphore(1)
+    j._client = types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create)))
+    first = asyncio.run(j._one("p", "r"))
+    j._sem = asyncio.Semaphore(1)
+    rest = [asyncio.run(j._one("p", "r")) for _ in range(5)]
+    assert first.status == "api_error" and calls["n"] == 1    # no further API calls
+    assert all(r.status == "api_error" and "not attempted" in r.error for r in rest)

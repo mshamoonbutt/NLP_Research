@@ -32,6 +32,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample-dirs", nargs="+", required=True)
     ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--role", choices=["validation", "development"], default=None,
+                    help="role of the merged sample (default: the sources' role). "
+                         "'development' turns an annotated sample into a rubric-iteration set: "
+                         "calibrate_judge.py then writes feedback reports, never a manifest.")
     args = ap.parse_args(argv)
     dirs = [Path(d) for d in args.sample_dirs]
     mans = [json.loads((d / "sample_manifest.json").read_text(encoding="utf-8")) for d in dirs]
@@ -68,7 +72,8 @@ def main(argv=None) -> int:
     items = read_csv(out / "items.csv")
     write_text_lf(out / "sample_manifest.json", json.dumps({
         "kind": "exp1_sample_manifest_merged",
-        "role": mans[0]["role"], "sample_kind": "representative",
+        "role": args.role or mans[0]["role"], "sample_kind": "representative",
+        "source_role": mans[0]["role"],
         "dataset_version": mans[0]["dataset_version"], "split_id": mans[0]["split_id"],
         "seed": [m.get("seed") for m in mans],
         "models": sorted({x for m in mans for x in m.get("models", [])}),

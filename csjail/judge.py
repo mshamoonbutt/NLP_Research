@@ -265,10 +265,16 @@ class Judge:
         ruled = rule_judgment(response, self.kind)
         if ruled is not None:
             return ruled
+        if getattr(self, "quota_exhausted", False):
+            return Judgment("api_error", self.kind,
+                            error="billing: not attempted, quota exhausted earlier in this run")
         delay, last_err = 1.0, None
         for attempt in range(self.cfg.max_retries):
             try:
                 async with self._sem:
+                    if getattr(self, "quota_exhausted", False):   # set while we queued
+                        return Judgment("api_error", self.kind, error="billing: not attempted, "
+                                        "quota exhausted earlier in this run")
                     resp = await self._client.chat.completions.create(
                         model=self.cfg.model_id,
                         messages=[{"role": "system", "content": SYSTEM_MSG},
@@ -296,7 +302,14 @@ class Judge:
                 if "401" in emsg or "invalid api key" in emsg:
                     return Judgment("api_error", self.kind, error=f"auth: {e}")
                 if "insufficient_quota" in emsg or "billing" in emsg:
+                    self.quota_exhausted = True
                     return Judgment("api_error", self.kind, error=f"billing: {e}")
+                if "rate limit" in emsg or "rate_limit" in emsg:
+                    # Expected near the tokens-per-minute ceiling: wait what the
+                    # provider asks (plus jitter), never an exponential backoff --
+                    # doubling here cut throughput to ~6 judgments/min at a 22/min limit.
+                    await asyncio.sleep(_retry_wait(emsg, 1.0))
+                    continue
                 await asyncio.sleep(_retry_wait(emsg, delay))
                 delay = min(delay * 2, 60.0)
         return Judgment("api_error", self.kind, error=f"max_retries: {last_err}")

@@ -77,6 +77,69 @@ workbook hashes in each folder's `annotation_import.json`):
   files; then `exp1_merge_samples.py` combines both for one calibration.
 - The annotation process (who, when, any tools or assistance) is still to be
   recorded in `annotation_import.json` from real records.
+- **Adjudication returned (2026-10-05):** 38/38 harm and 2/2 benign resolved,
+  all consistent, every row with a reason (harm gold sides with rater 1 on 15,
+  rater 2 on 23; both binary cases resolved harmful). The `adjudicator` field
+  reads `review`, not a person: record who adjudicated.
+- **Top-up annotated:** 480/480 items; agreement unsafe 477/480 (κ 0.964),
+  kind κ 0.956; 13 disagreements (3 binary) await adjudication.
+- **Projected harm support** (base + top-up, before the 13): gold unsafe EN 30,
+  CS 20, RU 16, UR 29; safe ≥ 160 in every condition. Pooled agreement over
+  1,200 items: unsafe κ 0.972, kind κ 0.937.
+- **Rate shift to check:** gold-unsafe rate in EN is 3.3% (6/180) in the base
+  sample vs 10.1% (24/237) in the top-up (Fisher p = 0.007; all three models
+  higher; 19/24 in D2/D4). UR 4.4% vs 9.1% (p = 0.081). Either family
+  sampling or a labelling-standard shift between batches; after calibration,
+  compare judge–gold agreement per batch.
+- **Harm sample complete (2026-10-05):** top-up 13/13 adjudicated (`resolution`
+  names the adopted rater; `adjudicator` = `adjudication_pass`). Merged folder
+  `outputs/exp1/validation-kaggle-01-merged`: 1,200 items, 51 disagreements,
+  0 unresolved; pooled agreement unsafe κ 0.972, kind κ 0.937; gold unsafe/safe
+  EN 31/389, CS 20/160, RU 16/164, UR 29/391. Ready for the harm gate.
+- **Gate runs on Kaggle** (paid key in Secrets): `notebooks/kaggle_stageC_judge.ipynb`
+  with the private upload `outputs/stageC_upload.zip` (gitignored).
+- **Benign support shortfall:** gold `refused` = 8 of 300 (< 10 minimum). Top-up:
+  the same 150 probes answered by qwen25 (arm A). Its rater workbooks are back
+  (24/150 refused in both). Folder `benign-validation-kaggle-02` received and
+  verified (fp16 qwen25, items hash matches, all 150 labelled responses
+  identical to the generated ones). Merged `benign-validation-merged`: 450
+  items, refused κ 1.000, kind κ 0.977, gold refused 32 / not refused 417;
+  **1 kind-only disagreement awaits adjudication**
+  (`benign-validation-kaggle-02/adjudication_todo.csv`).
+- **Stage C made resumable (2026-10-06):** gate predictions and Exp 2
+  judgments persist per chunk; quota exhaustion stops API calls (exit 4, no
+  verdict); `scripts/stagec_run.py` always writes a resume bundle. End-to-end
+  check in a fresh clone with the real bundle (no key): gates exit 3 cleanly,
+  Exp 2 withheld, bundle written and re-used as input.
+- **First harm-gate attempt (Kaggle, 2026-10-05; judge gpt-4o-2024-08-06,
+  rubric harm-v2):** stopped by exhausted OpenAI credits after 1,185/1,200
+  predictions (benign gate 0/450). No verdict or manifest was written.
+  Preliminary evaluation of the 1,185 finished predictions against the human
+  gold: **the gate would FAIL on precision in every condition** (EN 0.69,
+  CS 0.44, RU 0.26, UR 0.19; recall 0.79–1.00; 181 false positives vs 87
+  true positives). The judge labels responses the raters called
+  unintelligible (90), safe-helpful (64) or irrelevant (22) as harmful
+  compliance, mostly "partial"; 80 of the 101 UR false positives are
+  unintelligible (degenerate Urdu-script output), and 128/181 false positives
+  hit the 512-token cap. The pattern holds in both annotation batches (base
+  P 0.28, top-up P 0.40), so it is a judge problem, not a labelling shift.
+  Thresholds are not lowered. The rubric (or judge model) must be revised on
+  development data and validated on families it was not tuned on.
+- **Decision (2026-10-06): Option B below; the judge stays gpt-4o-2024-08-06
+  (recall 0.79–1.00 shows the model detects harm; the failure is the decision
+  procedure). Rubric revised to harm-v3: an ordered procedure (intelligibility
+  → relevance → assistance → degree) ahead of the unchanged definitions, and
+  response_kind decided before unsafe. Iterated on `rubric-dev-01` (role
+  development: feedback reports only).** Split: development =
+  `validation-kaggle-01` (60 families, all four conditions, 720 items, gold
+  complete); validation = `validation-kaggle-01-topup1` (80 families, EN/UR,
+  480 items, gold complete) + `validation-kaggle-01-topup2` (80 new families,
+  CS/RU, 480 items drawn from the Exp 2 cache on 2026-10-06, **not yet
+  annotated**). Family-disjoint; expected gold unsafe EN 24, UR 21, CS ~26,
+  RU ~22. Disclosure: the first rubric's aggregate confusion was inspected
+  over all 1,200 items (including top-up 1) before this split was declared;
+  no item-level tuning used top-up 1. The alternative is a fully fresh
+  1,200-item validation sample at roughly 2.5× the annotation cost.
 
 Earlier development evidence (kept for provenance):
 

@@ -147,3 +147,63 @@ def test_rate_limits_are_waited_out_not_scored_missing(monkeypatch):
     j._sem = asyncio.Semaphore(1)
     out = asyncio.run(j._one("prompt", "response"))
     assert out.status == "api_error" and out.error.startswith("billing")
+
+
+def test_rate_limit_waits_follow_the_hint_without_growing(monkeypatch):
+    """Ten consecutive rate-limit errors must wait ~the provider's hint each
+    time (no exponential growth), then succeed on the eleventh attempt."""
+    import asyncio
+    import types
+
+    import csjail.judge as jm
+
+    waits = []
+
+    async def fake_sleep(s):
+        waits.append(s)
+
+    monkeypatch.setattr(jm.asyncio, "sleep", fake_sleep)
+    calls = {"n": 0}
+
+    async def create(**kw):
+        calls["n"] += 1
+        if calls["n"] <= 10:
+            raise Exception("Error code: 429 - Rate limit reached for gpt-4o on tokens per min "
+                            "(TPM): Limit 30000, Used 29500, Requested 1329. Please try again in 1.6s.")
+        msg = types.SimpleNamespace(content=harm(), refusal=None)
+        return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)])
+
+    j = jm.Judge.__new__(jm.Judge)
+    j.cfg, j.kind, j._sem = load_judge_config(), "harm", asyncio.Semaphore(1)
+    j._client = types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create)))
+    out = asyncio.run(j._one("prompt", "response"))
+    assert out.ok and calls["n"] == 11
+    assert len(waits) == 10 and all(1.6 <= w < 2.7 for w in waits)   # hint + jitter, no doubling
+
+
+def test_quota_exhausted_while_queued_is_not_sent(monkeypatch):
+    """With concurrency 1, a second request queued behind the one that hits
+    insufficient_quota must return 'not attempted' without calling the API."""
+    import asyncio
+    import types
+
+    import csjail.judge as jm
+
+    calls = {"n": 0}
+
+    async def create(**kw):
+        calls["n"] += 1
+        raise Exception("Error code: 429 - insufficient_quota")
+
+    j = jm.Judge.__new__(jm.Judge)
+    j.cfg, j.kind, j._sem = load_judge_config(), "harm", asyncio.Semaphore(1)
+    j._client = types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create)))
+
+    async def both():
+        return await asyncio.gather(j._one("p1", "r1"), j._one("p2", "r2"))
+
+    a, b = asyncio.run(both())
+    assert calls["n"] == 1
+    assert a.status == "api_error" and b.status == "api_error" and "not attempted" in b.error
