@@ -406,7 +406,25 @@ Remaining steps:
    probe responses and blank rater files; gate with
    `calibrate_judge.py --kind benign`.
 
-## Exp 2 — main evaluation: **GENERATION DONE (2026-10-05); JUDGING PENDING THE EXP 1 PASS**
+## Exp 2 — main evaluation: **JUDGING WITH DEEPSEEK V4.1 FLASH (started 2026-10-07)**
+
+- **Judge:** `deepseek-v4.1-flash:cloud` via the local Ollama app (Ollama Pro),
+  harm-v2 rubric, fingerprint `b0248df31f1d9da2`, production manifest status
+  SELECTED (`outputs/exp1/judge_validation_manifest.json`, written by
+  `exp1_compare_judges.py --write-manifest`). Runs on the local machine:
+  Kaggle cannot reach the signed-in Ollama. ~190 judgments/min.
+- **Commands:** `python -m csjail.run_eval --out-dir outputs/exp2/main --judge-only`,
+  then `python scripts/exp2_robustness.py --judge-only --greedy-results outputs/exp2/main`;
+  both resume from `judgments.jsonl`.
+- **Reporting:** `python -m csjail.aggregate outputs/exp2/main [--split eval_main]`
+  prints raw ASR and ASR corrected for the judge's per-language error
+  (Rogan–Gladen with Exp 1 recall and specificity; interval pairs the family
+  bootstrap with posterior draws of both). Assumes the judge's error per
+  language transfers from the 720 development responses to each model.
+  The correction tightens once the 960 set-aside items are reviewer-labelled.
+- **Superseded:** the screen-and-verify design (`exp2_verify.py`) and the Kaggle
+  `screen` mode are no longer the plan.
+
 
 - **Main sweep** `outputs/exp2/main` (raw text gitignored; `run_manifest.json`
   committed): 9,492/9,492 generations ok = 791 families × 4 conditions × 3
