@@ -173,9 +173,24 @@ workbook hashes in each folder's `annotation_import.json`):
   42 items judge precision is ~0.80. **Conclusion: rubric iteration has
   saturated and a model change does not help; the residual is a stable
   disagreement between the LLM judges and the human labelling standard on
-  borderline responses.** Decision needed on the measurement design before
-  any Exp 2 judgments are used (see the 2026-10-06 options in the
-  conversation record; to be written up here once chosen).
+  borderline responses.**
+- **Blinded gold audit (option 1, decided 2026-10-06):**
+  `scripts/exp1_gold_audit.py make` → `outputs/exp1/gold-audit-01/`. The
+  42 consensus-disputed development items + 84 controls (2 per disputed item,
+  random, from items where all three judge configurations agree with the gold;
+  matched on gold label exactly and on model/condition where the pool allowed),
+  shuffled, opaque IDs, no item ID/model/condition/gold/judge output in the
+  reviewer file. Key and reviewer file are gitignored; `audit_plan.json`
+  (committed before the review) records the seed, composition, both files'
+  SHA-256 and the decision rule: **gold has systematic error** if the
+  reviewer differs from gold on ≥ 50% of disputed items, ≤ 10% of controls,
+  Fisher p < 0.05; **gold stands** if ≤ 30% of disputed; otherwise
+  inconclusive. Systematic error → re-specify the gold standard with a
+  documented third review and re-review a random sample of the validation
+  set under it before any validation run; otherwise → measurement option 2
+  (judge as screener, humans verify judge-positive responses, random audit
+  of judge-negatives). Reviewer: bilingual, not one of the raters or the
+  adjudicator, no pre-filled draft, no judge output.
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
