@@ -235,6 +235,10 @@ def test_repeated_score_sync_calls_do_not_fail_on_contention(monkeypatch):
                 return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)])
             self.chat = types.SimpleNamespace(completions=types.SimpleNamespace(create=create))
 
+        async def close(self):                         # must run inside the loop that used it
+            asyncio.get_running_loop()
+            calls["closed"] = calls.get("closed", 0) + 1
+
     retries = []
 
     def no_retry(emsg, backoff):                        # any retry is the bug (retries hid it)
@@ -251,6 +255,7 @@ def test_repeated_score_sync_calls_do_not_fail_on_contention(monkeypatch):
         out = j.score_sync([("p", f"r{i}") for i in range(6)], show_progress=False)
         assert all(o.ok for o in out), [o.error for o in out if not o.ok][:2]
     assert calls["n"] == 18 and retries == [], retries[:1]   # one request per item, no retries
+    assert calls["closed"] == 3                          # each chunk's client closed in its own loop
 
 
 def test_quota_exhausted_while_queued_is_not_sent(monkeypatch):

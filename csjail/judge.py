@@ -336,17 +336,22 @@ class Judge:
         # semaphore and the HTTP connection pool belong to one loop, so both are made here.
         # Reusing them made every later chunk fail on contention and crawl through retries.
         self._sem = asyncio.Semaphore(self.cfg.concurrency)
-        if getattr(self, "_client_factory", None):
+        fresh = bool(getattr(self, "_client_factory", None))
+        if fresh:
             self._client = self._client_factory()
         tasks = [self._one(p, r) for p, r in pairs]
-        if show_progress:
-            try:
-                from tqdm.asyncio import tqdm as atqdm
+        try:
+            if show_progress:
+                try:
+                    from tqdm.asyncio import tqdm as atqdm
 
-                return await atqdm.gather(*tasks, desc=f"judge[{self.kind}]", total=len(pairs))
-            except ImportError:
-                pass
-        return await asyncio.gather(*tasks)
+                    return await atqdm.gather(*tasks, desc=f"judge[{self.kind}]", total=len(pairs))
+                except ImportError:
+                    pass
+            return await asyncio.gather(*tasks)
+        finally:
+            if fresh and hasattr(self._client, "close"):   # close in THIS loop, before it ends
+                await self._client.close()
 
     def score_sync(self, pairs: list[tuple[str, str]], *,
                    show_progress: bool = True) -> list[Judgment]:
