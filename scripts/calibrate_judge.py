@@ -87,9 +87,14 @@ def main(argv=None) -> int:
                     help="judge and cache predictions, then stop: no metrics, no verdict, no "
                          "manifest (two-phase validation: labels are collected afterwards)")
     ap.add_argument("--judge-model", default=None,
-                    help="DEVELOPMENT ONLY: score with this OpenAI model instead of the configured "
-                         "one (same rubric), to compare judge models on the development sample; "
+                    help="DEVELOPMENT ONLY: score with this model instead of the configured one "
+                         "(same rubric), to compare judge models on the development sample; "
                          "refused for validation samples")
+    ap.add_argument("--judge-provider", default=None,
+                    help="DEVELOPMENT ONLY, with --judge-model: an OpenAI-compatible provider "
+                         "from csjail.judge.OPENAI_COMPATIBLE (e.g. deepseek)")
+    ap.add_argument("--judge-concurrency", type=int, default=None,
+                    help="DEVELOPMENT ONLY: parallel requests for the comparison judge")
     ap.add_argument("--manifest-out", default=None,
                     help="default outputs/exp1/judge_validation_manifest[_benign].json")
     ap.add_argument("--gold-csv", default=None,
@@ -130,13 +135,16 @@ def main(argv=None) -> int:
         return 3
 
     cfg = load_judge_config()
-    if args.judge_model:
-        if role != "development":
-            print("FAIL (input): --judge-model is for development samples only; the validation "
-                  "judge is the configured one", file=sys.stderr)
+    if args.judge_model or args.judge_provider or args.judge_concurrency:
+        if role != "development" or not args.judge_model:
+            print("FAIL (input): --judge-model/--judge-provider/--judge-concurrency are for "
+                  "development samples only (and need --judge-model); the validation judge is "
+                  "the configured one", file=sys.stderr)
             return 3
         import dataclasses
-        cfg = dataclasses.replace(cfg, model=args.judge_model, model_snapshot=None)
+        cfg = dataclasses.replace(cfg, model=args.judge_model, model_snapshot=None,
+                                  provider=args.judge_provider or cfg.provider,
+                                  concurrency=args.judge_concurrency or cfg.concurrency)
     fp = cfg.fingerprint(args.kind)
     if args.predictions_from:
         saved = {r["item_id"]: r for r in read_jsonl(args.predictions_from)}

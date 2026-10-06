@@ -83,6 +83,14 @@ class JudgeConfig:
         return fp
 
 
+# Providers served through the OpenAI client: {name: (base_url or None, API-key env var)}.
+# The provider name is part of the judge fingerprint, so judges never mix silently.
+OPENAI_COMPATIBLE = {
+    "openai": (None, "OPENAI_API_KEY"),
+    "deepseek": ("https://api.deepseek.com", "DEEPSEEK_API_KEY"),
+}
+
+
 def load_judge_config(path: str | Path = CONFIG_PATH) -> JudgeConfig:
     cfg = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     j = cfg["judge"]
@@ -237,16 +245,17 @@ class Judge:
             raise ValueError(f"unknown rubric kind {kind!r}")
         self.cfg = cfg or load_judge_config()
         self.kind = kind
-        if self.cfg.provider != "openai":
+        if self.cfg.provider not in OPENAI_COMPATIBLE:
             raise NotImplementedError(f"provider={self.cfg.provider} not implemented")
         try:
             from openai import AsyncOpenAI  # noqa: WPS433
         except ImportError as e:
             raise RuntimeError("openai package not installed: pip install -e '.[judge]'") from e
-        api_key = os.environ.get("OPENAI_API_KEY")
+        base_url, key_env = OPENAI_COMPATIBLE[self.cfg.provider]
+        api_key = os.environ.get(key_env)
         if not api_key:
-            raise RuntimeError("OPENAI_API_KEY env var is required for the judge")
-        self._client = AsyncOpenAI(api_key=api_key, timeout=self.cfg.timeout_s)
+            raise RuntimeError(f"{key_env} env var is required for the {self.cfg.provider} judge")
+        self._client = AsyncOpenAI(api_key=api_key, base_url=base_url, timeout=self.cfg.timeout_s)
         self._sem = asyncio.Semaphore(self.cfg.concurrency)
 
     @property

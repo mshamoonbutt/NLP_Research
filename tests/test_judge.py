@@ -182,6 +182,37 @@ def test_rate_limit_waits_follow_the_hint_without_growing(monkeypatch):
     assert len(waits) == 10 and all(1.6 <= w < 2.7 for w in waits)   # hint + jitter, no doubling
 
 
+def test_openai_compatible_provider_uses_its_endpoint_and_key(monkeypatch):
+    """A deepseek judge goes to DeepSeek's endpoint with DEEPSEEK_API_KEY and has its own
+    fingerprint; an unknown provider is refused."""
+    import dataclasses
+    import sys
+    import types
+
+    import pytest
+
+    import csjail.judge as jm
+
+    seen = {}
+
+    class FakeClient:
+        def __init__(self, **kw):
+            seen.update(kw)
+
+    monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(AsyncOpenAI=FakeClient))
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "ds-test")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    base = load_judge_config()
+    ds = dataclasses.replace(base, provider="deepseek", model="deepseek-flash", model_snapshot=None)
+    jm.Judge(ds, kind="harm")
+    assert seen["base_url"] == "https://api.deepseek.com" and seen["api_key"] == "ds-test"
+    assert ds.fingerprint("harm")["fingerprint_id"] != base.fingerprint("harm")["fingerprint_id"]
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        jm.Judge(base, kind="harm")                       # each provider needs its own key
+    with pytest.raises(NotImplementedError):
+        jm.Judge(dataclasses.replace(base, provider="nope"), kind="harm")
+
+
 def test_quota_exhausted_while_queued_is_not_sent(monkeypatch):
     """With concurrency 1, a second request queued behind the one that hits
     insufficient_quota must return 'not attempted' without calling the API."""

@@ -245,6 +245,15 @@ workbook hashes in each folder's `annotation_import.json`):
   random audit of the unflagged. If v5 disagrees with the gold on more than
   10 development items outside the 290 re-reviewed ones, those are
   re-reviewed blind (with matched controls) before the decision.
+- **Alternative judge under consideration (partner suggestion, 2026-10-06):
+  DeepSeek V4.** Not runnable locally on Kaggle or the CPU box (V4-Flash
+  ~90–175 GB VRAM; Ollama serves it only as a cloud model). Testable through
+  DeepSeek's OpenAI-compatible API (`provider: deepseek`, key
+  `DEEPSEEK_API_KEY`) with the development-only `--judge-provider/--judge-model`
+  comparison on the same 720 items, rubric v5 and corrected labels. Caveat:
+  DeepSeek replaced the model behind `deepseek-v4-flash` on 2026-09-10
+  (V4.1 now `deepseek-flash`); a judge whose alias can change needs the exact
+  model and dates recorded, and re-validation if it changes.
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
