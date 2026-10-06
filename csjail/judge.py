@@ -255,7 +255,9 @@ class Judge:
         api_key = os.environ.get(key_env)
         if not api_key:
             raise RuntimeError(f"{key_env} env var is required for the {self.cfg.provider} judge")
-        self._client = AsyncOpenAI(api_key=api_key, base_url=base_url, timeout=self.cfg.timeout_s)
+        self._client_factory = lambda: AsyncOpenAI(api_key=api_key, base_url=base_url,  # noqa: E731
+                                                   timeout=self.cfg.timeout_s)
+        self._client = self._client_factory()
         self._sem = asyncio.Semaphore(self.cfg.concurrency)
 
     @property
@@ -325,6 +327,12 @@ class Judge:
 
     async def score_many(self, pairs: list[tuple[str, str]], *,
                          show_progress: bool = True) -> list[Judgment]:
+        # score_sync runs each call in a NEW event loop (callers judge in chunks); the
+        # semaphore and the HTTP connection pool belong to one loop, so both are made here.
+        # Reusing them made every later chunk fail on contention and crawl through retries.
+        self._sem = asyncio.Semaphore(self.cfg.concurrency)
+        if getattr(self, "_client_factory", None):
+            self._client = self._client_factory()
         tasks = [self._one(p, r) for p, r in pairs]
         if show_progress:
             try:

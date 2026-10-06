@@ -146,6 +146,10 @@ workbook hashes in each folder's `annotation_import.json`):
   gold unsafe/safe EN 25/215, CS 28/212, RU 17/223, UR 21/219 (all ≥ 10).
   Ready for the final harm gate once rubric iteration on `rubric-dev-01`
   finishes.
+  Disclosure: the first rubric's aggregate confusion was inspected
+  over all 1,200 items (including top-up 1) before this split was declared;
+  no item-level tuning used top-up 1. The alternative is a fully fresh
+  1,200-item validation sample at roughly 2.5× the annotation cost.
 - **Rubric iteration 1 (harm-v3, fingerprint `7030929c9323c3cc`, 2026-10-06,
   720/720 judged, 0 failures):** on the same items, false positives fell
   from 125 (v2) to 43; UR 48 → 7, RU 42 → 17, CS 25 → 13, EN 10 → 6.
@@ -245,6 +249,22 @@ workbook hashes in each folder's `annotation_import.json`):
   random audit of the unflagged. If v5 disagrees with the gold on more than
   10 development items outside the 290 re-reviewed ones, those are
   re-reviewed blind (with matched controls) before the decision.
+- **harm-v5 result (Kaggle, 2026-10-06; 718/720 judged, 2 lost to the
+  event-loop bug below):** against the corrected development gold, precision
+  / recall EN 0.67 / 0.91, CS 0.80 / 0.92, RU 0.54 / 0.79, UR 0.49 / 0.72;
+  overall 0.62 / 0.83. Only 1 disagreement lies outside the 290 re-reviewed
+  items, so no extra review was triggered. **Decision rule not met → v5 is
+  not frozen; measurement option 2 (gpt-4o harm-v2 as screener, humans verify
+  every flagged response plus a random audit of the unflagged) applies.**
+- **Judge throughput bug fixed (2026-10-06):** `score_sync` starts a new event
+  loop per chunk, but the concurrency semaphore and HTTP pool were created
+  once, in the first loop. Every later chunk failed on contention ("bound to a
+  different event loop") and crawled through backoff retries. This, not only
+  the Tier 1 TPM limit, caused the ~7 judgments/min seen on Kaggle; Tier 1
+  supports ~16–18/min. Both are now created per call; a regression test
+  reproduces the error. Affects calibrate_judge (chunks of 64) and Exp 2
+  judging (chunks of 256); no stored judgment was wrong, only slow or
+  `api_error` (which is re-tried on resume).
 - **Alternative judge under consideration (partner suggestion, 2026-10-06):
   DeepSeek V4.** Not runnable locally on Kaggle or the CPU box (V4-Flash
   ~90–175 GB VRAM; Ollama serves it only as a cloud model). Testable through
@@ -254,10 +274,6 @@ workbook hashes in each folder's `annotation_import.json`):
   DeepSeek replaced the model behind `deepseek-v4-flash` on 2026-09-10
   (V4.1 now `deepseek-flash`); a judge whose alias can change needs the exact
   model and dates recorded, and re-validation if it changes.
-  Disclosure: the first rubric's aggregate confusion was inspected
-  over all 1,200 items (including top-up 1) before this split was declared;
-  no item-level tuning used top-up 1. The alternative is a fully fresh
-  1,200-item validation sample at roughly 2.5× the annotation cost.
 
 Earlier development evidence (kept for provenance):
 
