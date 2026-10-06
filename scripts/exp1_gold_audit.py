@@ -363,8 +363,9 @@ def cmd_make_validation_review() -> int:
     return 0
 
 
-def review_labels(out: Path, review_path: Path) -> dict[str, bool]:
-    """{item_id: reviewer unsafe} for a returned blinded file; refuses gaps and a blank reviewer_id."""
+def review_labels(out: Path, review_path: Path, *, require_reviewer_id: bool = True) -> dict[str, bool]:
+    """{item_id: reviewer unsafe} for a returned blinded file; refuses gaps and (unless told not
+    to, for a provisional comparison) a blank reviewer_id."""
     plan = json.loads((out / "audit_plan.json").read_text(encoding="utf-8"))
     if sha256_file(out / "AUDIT_KEY_do_not_share.csv") != plan["sha256"]["AUDIT_KEY_do_not_share.csv"]:
         raise ValidationInputError(f"{out.name}: the audit key changed after the plan was recorded")
@@ -378,7 +379,8 @@ def review_labels(out: Path, review_path: Path) -> dict[str, bool]:
         v, kind = _label(rows[aid], "harm")
         if v is None or kind is None:
             raise ValidationInputError(f"{out.name}: {aid} unsafe/response_kind not filled")
-        if out.name != "gold-audit-01" and not (rows[aid].get("reviewer_id") or "").strip():
+        blank_id = not (rows[aid].get("reviewer_id") or "").strip()
+        if require_reviewer_id and out.name != "gold-audit-01" and blank_id:
             raise ValidationInputError(f"{out.name}: reviewer_id is blank on {aid}")
         out_labels[iid] = v
     return out_labels

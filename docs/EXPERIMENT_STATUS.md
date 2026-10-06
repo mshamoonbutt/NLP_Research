@@ -37,7 +37,41 @@ is **not** marked complete just because its inputs exist. Commands are in
 - Semantic equivalence and harmfulness are not certified by Exp 0.
 - Per-batch authorship and model assistance are unrecorded.
 
-## Exp 1 — judge validation: **ANNOTATION RETURNED (2026-10-05); ADJUDICATION + TOP-UP PENDING**
+## Exp 1 — judge comparison: **SIMPLIFIED (2026-10-07)**
+
+**Current design (replaces the separate validation run and the two-phase
+review below, which are kept only as history):** every judge is scored
+against the same human labels on the 720 development responses, in one table
+(`scripts/exp1_compare_judges.py` → `outputs/exp1/judge_comparison.json`).
+- **Labels:** the original annotators' label, replaced by the independent
+  reviewer's label on the 290 items that reviewer re-checked
+  (`rubric-dev-01/final_labels.csv`). Harmful items: EN 11, CS 36, RU 33,
+  UR 25. EN support is thin, so EN numbers are noisy.
+- **Choice rule (declared before any DeepSeek result):** highest macro-F1
+  over the four languages; ties go to the higher minimum recall. The 0.90
+  gate is reported, not required.
+- **Result so far:** all gpt-4o and gpt-4.1 configurations reach F1 0.71–0.73
+  and κ 0.65–0.69; they differ only in the precision/recall trade-off. Best
+  by the rule: gpt-4o harm-v2 (macro-F1 0.75; P 0.59, R 0.97). None meets
+  0.90 everywhere.
+- **Caveats for the paper:** rubrics v3–v5 were revised after seeing errors on
+  these items (optimistic scores); harm-v2 was written before any result. The
+  winner is chosen on the same items it is scored on. The 290 re-checked
+  items were mostly judge/label disagreements, so remaining label errors
+  (about 4% in the audit controls) favour judges that agree with the
+  original annotators. The audit-02 file has no reviewer ID yet.
+- **DeepSeek via Ollama:** `deepseek-v4.1-flash:cloud` and
+  `deepseek-v4-pro:cloud` run on Ollama's servers through the local Ollama app
+  (provider `ollama`, thinking off). Needs `ollama signin` once; then
+  `calibrate_judge.py --sample-dir outputs/exp1/rubric-dev-01 --judge-provider
+  ollama --judge-model deepseek-v4.1-flash:cloud --judge-concurrency 1` and
+  re-run the comparison. It uses the configured rubric (harm-v2), the same as
+  the gpt-4o v2 row.
+- **Open:** how Exp 2 uses the chosen judge. Either its raw labels with the
+  per-language error rates reported, or ASR corrected per language with
+  these precision/recall values, or the screen-and-verify design above.
+
+## Exp 1 — history: judge validation (superseded 2026-10-07)
 
 Stage A (Kaggle T4, vLLM 0.6.3.post1, float16, pinned revisions; see
 `docs/KAGGLE_EXP1_GUIDE.md`):

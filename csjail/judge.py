@@ -85,9 +85,13 @@ class JudgeConfig:
 
 # Providers served through the OpenAI client: {name: (base_url or None, API-key env var)}.
 # The provider name is part of the judge fingerprint, so judges never mix silently.
+# Ollama: the local app's endpoint, no key. ":cloud" models (e.g. deepseek-v4.1-flash:cloud) run
+# on Ollama's servers after `ollama signin`; thinking is switched off (reasoning_effort "none")
+# so the answer fits max_tokens and the call matches the non-reasoning judges.
 OPENAI_COMPATIBLE = {
     "openai": (None, "OPENAI_API_KEY"),
     "deepseek": ("https://api.deepseek.com", "DEEPSEEK_API_KEY"),
+    "ollama": ("http://localhost:11434/v1", None),
 }
 
 
@@ -252,7 +256,7 @@ class Judge:
         except ImportError as e:
             raise RuntimeError("openai package not installed: pip install -e '.[judge]'") from e
         base_url, key_env = OPENAI_COMPATIBLE[self.cfg.provider]
-        api_key = os.environ.get(key_env)
+        api_key = os.environ.get(key_env) if key_env else "ollama"   # Ollama ignores the key
         if not api_key:
             raise RuntimeError(f"{key_env} env var is required for the {self.cfg.provider} judge")
         self._client_factory = lambda: AsyncOpenAI(api_key=api_key, base_url=base_url,  # noqa: E731
@@ -292,6 +296,7 @@ class Judge:
                                   {"role": "user", "content": self._format(prompt, response)}],
                         temperature=self.cfg.temperature,
                         max_tokens=self.cfg.max_tokens,
+                        **({"reasoning_effort": "none"} if self.cfg.provider == "ollama" else {}),
                     )
                 msg = resp.choices[0].message
                 raw = msg.content or ""

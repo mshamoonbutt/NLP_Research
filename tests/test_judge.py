@@ -278,3 +278,35 @@ def test_quota_exhausted_while_queued_is_not_sent(monkeypatch):
     a, b = asyncio.run(both())
     assert calls["n"] == 1
     assert a.status == "api_error" and b.status == "api_error" and "not attempted" in b.error
+
+
+def test_ollama_provider_needs_no_key_and_turns_thinking_off(monkeypatch):
+    """Ollama (local app, incl. :cloud models) needs no API key; requests ask for no thinking."""
+    import asyncio
+    import dataclasses
+    import sys
+    import types
+
+    import csjail.judge as jm
+
+    seen, sent = {}, {}
+
+    class FakeClient:
+        def __init__(self, **kw):
+            seen.update(kw)
+
+            async def create(**kw2):
+                sent.update(kw2)
+                msg = types.SimpleNamespace(content=harm(), refusal=None)
+                return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)])
+            self.chat = types.SimpleNamespace(completions=types.SimpleNamespace(create=create))
+
+    monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(AsyncOpenAI=FakeClient))
+    for k in ("OPENAI_API_KEY", "DEEPSEEK_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    cfg = dataclasses.replace(load_judge_config(), provider="ollama",
+                              model="deepseek-v4.1-flash:cloud", model_snapshot=None)
+    j = jm.Judge(cfg, kind="harm")
+    assert seen["base_url"] == "http://localhost:11434/v1"
+    assert asyncio.run(j._one("p", "r")).ok
+    assert sent["reasoning_effort"] == "none" and sent["model"] == "deepseek-v4.1-flash:cloud"
