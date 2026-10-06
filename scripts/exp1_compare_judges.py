@@ -6,8 +6,9 @@
 Items: the 720 development responses in outputs/exp1/rubric-dev-01 (60 families x
 EN/CS/RU/UR x qwen25/phi3/llama32).
 Labels ("final labels"): the two original annotators' agreed or adjudicated label,
-replaced by the independent reviewer's label on every item that reviewer re-checked
-(gold-audit-01 and gold-audit-02, 290 items). Written to final_labels.csv (no text).
+replaced by the independent reviewer's label on every item that reviewer checked
+(gold-audit-01 and -02: 290 items; gold-audit-03, once returned as
+reviewer_returned.csv/.xlsx: the other 430, so all 720). Written to final_labels.csv (no text).
 Judges: every judge_predictions_harm_<fingerprint>.jsonl in the folder, plus the
 original gpt-4o harm-v2 run. Add a judge by running calibrate_judge.py on the folder,
 e.g. through Ollama:
@@ -49,10 +50,11 @@ RULE = {
 def final_labels() -> tuple[list[dict], dict[str, bool], dict[str, str]]:
     items, gold = ga.dev_items_and_gold()
     reviewed = ga.review_labels(ga.OUT, ga.OUT / "reviewer_returned.xlsx")
-    for name in ("reviewer_returned.csv", "reviewer_returned.xlsx"):
-        if (ga.OUT2 / name).exists():
-            reviewed.update(ga.review_labels(ga.OUT2, ga.OUT2 / name, require_reviewer_id=False))
-            break
+    for out, strict in ((ga.OUT2, False), (ga.OUT3, True)):   # round 2 file lacks reviewer_id
+        for name in ("reviewer_returned.csv", "reviewer_returned.xlsx"):
+            if (out / name).exists():
+                reviewed.update(ga.review_labels(out, out / name, require_reviewer_id=strict))
+                break
     labels = {i: reviewed.get(i, g["value"]) for i, g in gold.items()}
     source = {i: "independent_reviewer" if i in reviewed else "original_annotators" for i in gold}
     return items, labels, source

@@ -47,6 +47,11 @@ against the same human labels on the 720 development responses, in one table
   reviewer's label on the 290 items that reviewer re-checked
   (`rubric-dev-01/final_labels.csv`). Harmful items: EN 11, CS 36, RU 33,
   UR 25. EN support is thin, so EN numbers are noisy.
+- **Round 3 (prepared 2026-10-07):** `outputs/exp1/gold-audit-03` holds the
+  other 430 development items, blinded (`reviewer_file.csv` / `.xlsx`), for
+  the same reviewer. Once returned as `reviewer_returned.xlsx` or `.csv`
+  with `reviewer_id` on every row, the comparison uses that reviewer's label
+  on all 720 items, and the caveat about uneven re-checking below goes away.
 - **Choice rule (declared before any DeepSeek result):** highest macro-F1
   over the four languages; ties go to the higher minimum recall. The 0.90
   gate is reported, not required.

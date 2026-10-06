@@ -354,6 +354,29 @@ def cmd_make_dev2() -> int:
     return 0
 
 
+# ---- Round 3 (2026-10-07): the same reviewer labels every remaining development item ------
+OUT3 = ROOT / "outputs" / "exp1" / "gold-audit-03"
+
+
+def cmd_make_dev3() -> int:
+    """All development items not re-reviewed in rounds 1-2, so the reviewer labels all 720."""
+    items, _ = dev_items_and_gold()
+    done = {k["item_id"] for out in (OUT, OUT2) for k in read_csv(out / "AUDIT_KEY_do_not_share.csv")}
+    rows = [dict(it, _group="remaining") for it in items if it["item_id"] not in done]
+    write_blind(rows, OUT3, "C", SEED + 7, {
+        "kind": "exp1_gold_audit_plan", "round": 3, "development_sample": DEV.relative_to(ROOT).as_posix(),
+        "purpose": "complete the development labels: after this round the independent reviewer has "
+                   "labelled all 720 development items (rounds 1-3), the labels the judges are "
+                   "compared against (scripts/exp1_compare_judges.py)",
+        "selection": "every development item not in gold-audit-01 or gold-audit-02 (no judge or label "
+                     "information used beyond that)",
+        "n_already_reviewed": len(done),
+        "reviewer_requirements": "the same independent reviewer as rounds 1-2, the clarified rater "
+            "guide, no judge output, original labels or pre-filled draft; reviewer_id on every row"})
+    print(f"[audit-3] {len(rows)} remaining development items -> {OUT3}")
+    return 0
+
+
 def cmd_make_validation_review() -> int:
     items = read_csv(VAL / "items.csv")
     write_blind(list(items), TR, "T", SEED + 4, {
@@ -636,6 +659,7 @@ def main(argv=None) -> int:
     s = sub.add_parser("score")
     s.add_argument("--review", required=True)
     sub.add_parser("make-dev2")
+    sub.add_parser("make-dev3")
     sub.add_parser("make-validation-review")
     s2 = sub.add_parser("select")
     s2.add_argument("--review2", required=True, help="returned gold-audit-02 reviewer file")
@@ -646,6 +670,8 @@ def main(argv=None) -> int:
         return cmd_score(args.review)
     if args.cmd == "make-dev2":
         return cmd_make_dev2()
+    if args.cmd == "make-dev3":
+        return cmd_make_dev3()
     if args.cmd == "make-validation-review":
         return cmd_make_validation_review()
     if args.cmd == "make-two-phase":

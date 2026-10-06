@@ -323,7 +323,7 @@
   },
   "best": "gpt-4o harm-v2",
   "kind": "exp1_judge_comparison",
-  "created_utc": "2026-10-06T17:36:53.172392+00:00",
+  "created_utc": "2026-10-06T17:53:19.765969+00:00",
   "n_items": 720,
   "unsafe_per_language": {
     "EN": 11,
