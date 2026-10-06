@@ -226,6 +226,25 @@ workbook hashes in each folder's `annotation_import.json`):
   longer re-scores against the original (lenient) validation gold. The
   audit reviewer was a new, independent person (per the team, 2026-10-06);
   initials still to be recorded.
+- **Gold audit round 2 (164 items, returned 2026-10-06; `reviewer_id` blank
+  again, so the official `selection_result.json` waits for it):** reviewer
+  differs from the original gold on 25/82 disagreement items vs 3/82
+  controls. Corrected development gold: 290 of 720 items re-reviewed, 57
+  labels changed. Preliminary selection (same function as the official
+  step): gpt-4o v2 P 0.59 / R 0.97 (min-condition P 0.45, UR); v3 0.84 /
+  0.65; v4 0.86 / 0.63 (UR recall 0.44); gpt-4.1 v4 0.83 / 0.62. Declared
+  rule → **v2 chosen (only one with recall ≥ 0.80), flag fired (min P <
+  0.85)**: the validation run was NOT started.
+- **harm-v5 (one more development run, declared before running):** v2 text
+  + only the intelligibility rule (v3's step 1, which raised UR precision
+  0.45 → 0.93), fingerprint `2a8177e4fb3ea862`. **Decision rule:** on the
+  corrected development gold, if v5's minimum per-condition precision ≥ 0.85
+  AND minimum per-condition recall ≥ 0.85, v5 is frozen and goes to the
+  two-phase validation run; otherwise measurement option 2 with gpt-4o v2 as
+  the screener (recall 0.97): humans verify every flagged response plus a
+  random audit of the unflagged. If v5 disagrees with the gold on more than
+  10 development items outside the 290 re-reviewed ones, those are
+  re-reviewed blind (with matched controls) before the decision.
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh
