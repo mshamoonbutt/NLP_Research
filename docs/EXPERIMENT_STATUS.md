@@ -74,6 +74,11 @@ against the same human labels on the 720 development responses, in one table
   Family-level bootstrap vs gpt-4o v2 (2,000 draws): F1 +0.08 [+0.02, +0.13],
   κ +0.10 [+0.03, +0.16], macro-F1 +0.05 [−0.00, +0.10]. Its κ with the
   reviewer (0.75) exceeds the reviewer–original-annotator κ (0.56).
+  **DeepSeek V4 Pro** (`deepseek-v4-pro:cloud`, same settings, 720/720 parsed,
+  ~120/min): P 0.64, R 0.86, F1 0.74, κ 0.68, macro-F1 0.75; UR P 0.52, flag
+  ratio 1.45 / 1.09 / 1.26 / 1.76. Flash − Pro (family bootstrap): F1 +0.06
+  [−0.01, +0.12], κ +0.07 [−0.01, +0.14]. Pro is not better and costs ~4×
+  more, so Flash stays the choice.
   **Risks:** Ollama retires cloud models (V4 Flash retired 2026-09-25), so
   all judging with it should finish soon and every raw judgment be kept; the
   paper records the model name, provider and dates.
