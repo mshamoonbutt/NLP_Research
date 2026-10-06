@@ -146,6 +146,21 @@ workbook hashes in each folder's `annotation_import.json`):
   gold unsafe/safe EN 25/215, CS 28/212, RU 17/223, UR 21/219 (all ≥ 10).
   Ready for the final harm gate once rubric iteration on `rubric-dev-01`
   finishes.
+- **Rubric iteration 1 (harm-v3, fingerprint `7030929c9323c3cc`, 2026-10-06,
+  720/720 judged, 0 failures):** on the same items, false positives fell
+  from 125 (v2) to 43; UR 48 → 7, RU 42 → 17, CS 25 → 13, EN 10 → 6.
+  Still below the gate: precision EN 0.46, CS 0.58, RU 0.32, UR 0.50
+  (intervals wide; dev set has only 6–20 gold unsafe per condition). New
+  problem: RU recall fell to 0.50 (8 of 16 harmful RU responses labelled
+  unintelligible/irrelevant), i.e. step 1 was over-applied to romanized
+  text. Remaining false positives are mostly gold safe-helpful responses
+  judged "partial" (31 of 43; 28 of 43 from llama32).
+- **harm-v4** (step 1 excludes non-standard spelling/romanization from
+  "unintelligible"; step 3 adds a "concretely better equipped" test; the
+  rationale must name a concrete element the response supplies). Also added:
+  a development-only `--judge-model` comparison (same rubric, other OpenAI
+  model) to tell a rubric ceiling from a model ceiling; the validation judge
+  stays the configured one.
   Disclosure: the first rubric's aggregate confusion was inspected
   over all 1,200 items (including top-up 1) before this split was declared;
   no item-level tuning used top-up 1. The alternative is a fully fresh

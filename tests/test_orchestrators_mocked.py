@@ -373,6 +373,26 @@ def test_benign_sampler_wiring(env):
     man = json.loads(out_man.read_text(encoding="utf-8"))
     assert man["judge_fingerprint"]["rubric_kind"] == "benign"
     assert man["result"]["status"] in ("PASS", "FAIL", "INSUFFICIENT_EVIDENCE")
+    # a judge-model override is refused on a validation sample ...
+    assert calibrate.main(["--sample-dir", str(sd), "--kind", "benign",
+                           "--judge-model", "other-model"]) == 3
+    # ... and on a development sample only changes the fingerprint of the report
+    dev = tmp / "benign_dev"
+    assert sampler.main(["--role", "development", "--models", "qwen25", "phi3", "--n", "6",
+                         "--seed", "7", "--out-dir", str(dev), "--backend", "vllm"]) == 0
+    for name, rid in (("rater1.csv", "R1"), ("rater2.csv", "R2")):
+        rows = list(csv.DictReader((dev / name).open(encoding="utf-8")))
+        for r in rows:
+            r.update(rater_id=rid, refused="false", response_kind="safe_helpful")
+        with (dev / name).open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            w.writeheader()
+            w.writerows(rows)
+    assert calibrate.main(["--sample-dir", str(dev), "--kind", "benign",
+                           "--judge-model", "other-model"]) == 0
+    rep = next(dev.glob("development_report_benign_*.json"))
+    assert json.loads(rep.read_text(encoding="utf-8"))["judge_fingerprint"]["model"] == "other-model"
+    assert not list(dev.glob("judge_validation_manifest*"))
 
 
 def test_judge_only_needs_no_model(env, monkeypatch):

@@ -94,11 +94,16 @@ def run_step(cmd: list[str], timeout_s: int) -> int:
         return 124
 
 
-def plan(robustness: bool, dev_sample_dir: str | None = None) -> list[tuple[str, list[str], callable]]:
+def plan(robustness: bool, dev_sample_dir: str | None = None,
+         dev_judge_models: tuple[str, ...] = ()) -> list[tuple[str, list[str], callable]]:
     py = sys.executable
     if dev_sample_dir:
-        return [("rubric_dev", [py, "scripts/calibrate_judge.py", "--sample-dir", dev_sample_dir],
-                 lambda st: (ROOT / dev_sample_dir).is_dir())]
+        ready = lambda st: (ROOT / dev_sample_dir).is_dir()  # noqa: E731
+        steps = [("rubric_dev", [py, "scripts/calibrate_judge.py", "--sample-dir", dev_sample_dir], ready)]
+        for m in dev_judge_models:   # same rubric, other judge models, for comparison only
+            steps.append((f"rubric_dev[{m}]", [py, "scripts/calibrate_judge.py", "--sample-dir",
+                                                dev_sample_dir, "--judge-model", m], ready))
+        return steps
     return [
         ("harm_gate", [py, "scripts/calibrate_judge.py", "--sample-dir", HARM_DIR,
                        "--development-sample-dir", DEV_DIR],
@@ -127,9 +132,14 @@ def judgment_counts(path: Path, key: str = "judge_key") -> dict:
 def gate_progress(sample_dir: Path, kind: str) -> dict:
     """{'ok': n, 'api_error': m, ...} over the gate's saved predictions, plus the
     sample size, so a resumed run shows how much is left to judge (and pay for)."""
+    import csv
     preds = sorted(sample_dir.glob(f"judge_predictions_{kind}_*.jsonl"))
     items = sample_dir / "items.csv"
-    n_items = (sum(1 for _ in items.open(encoding="utf-8-sig")) - 1) if items.exists() else None
+    if items.exists():   # csv rows, not lines: cells contain line breaks
+        with items.open(encoding="utf-8-sig", newline="") as f:
+            n_items = sum(1 for _ in csv.DictReader(f))
+    else:
+        n_items = None
     counts = judgment_counts(preds[-1], "item_id") if preds else {}
     return {"n_items": n_items, "predictions": counts,
             "remaining": (n_items - counts.get("ok", 0)) if n_items is not None else None}
@@ -160,6 +170,9 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-sample-dir", default=None,
                     help="rubric iteration: judge only this development sample (feedback "
                          "report, no manifest, no Exp 2)")
+    ap.add_argument("--dev-judge-models", nargs="*", default=[],
+                    help="with --dev-sample-dir: also score the sample with these judge models "
+                         "(same rubric) for comparison")
     args = ap.parse_args(argv)
     t0 = time.monotonic()
     left = lambda: int(args.time_budget_h * 3600 - (time.monotonic() - t0))  # noqa: E731
@@ -177,7 +190,8 @@ def main(argv=None) -> int:
                            "harm_fingerprint": c.fingerprint("harm")["fingerprint_id"],
                            "benign_fingerprint": c.fingerprint("benign")["fingerprint_id"]}
         print(f"[stagec] judge {status['judge']}")
-        for name, cmd, ready in plan(not args.no_robustness, args.dev_sample_dir):
+        for name, cmd, ready in plan(not args.no_robustness, args.dev_sample_dir,
+                                     tuple(args.dev_judge_models)):
             if not ready(status):
                 status["steps"][name] = "skipped: prerequisite not met"
             elif left() < 300:

@@ -99,6 +99,14 @@ def test_dev_mode_runs_only_the_rubric_iteration(tmp_path, monkeypatch):
     assert sc.RESUME in names
 
 
+def test_dev_mode_can_compare_extra_judge_models():
+    sc = load()
+    steps = sc.plan(True, DEV_DIR, ("model-a", "model-b"))
+    assert [n for n, _, _ in steps] == ["rubric_dev", "rubric_dev[model-a]", "rubric_dev[model-b]"]
+    assert steps[1][1][-2:] == ["--judge-model", "model-a"] and "--judge-model" not in steps[0][1]
+    assert all("calibrate_judge.py" in c[1] for _, c, _ in steps)
+
+
 def test_failed_gate_blocks_exp2_judging(tmp_path, monkeypatch):
     sc = load()
     rc, calls, status, _ = run_driver(sc, tmp_path, monkeypatch, {"harm_gate": 1})
@@ -128,8 +136,8 @@ def test_gate_progress_counts_saved_predictions(tmp_path):
     sc = load()
     d = tmp_path / "sample"
     d.mkdir()
-    (d / "items.csv").write_text("item_id,prompt\n" + "".join(f"i{n},p\n" for n in range(5)),
-                                 encoding="utf-8")
+    (d / "items.csv").write_text("item_id,prompt\n" + "".join(f'i{n},"line one\nline two"\n' for n in range(5)),
+                                 encoding="utf-8")                    # multi-line cells: 5 rows, 11 lines
     assert sc.gate_progress(d, "harm") == {"n_items": 5, "predictions": {}, "remaining": 5}
     preds = d / "judge_predictions_harm_abc.jsonl"
     preds.write_text("".join(json.dumps({"item_id": f"i{n}", "judge_status": s}) + "\n"

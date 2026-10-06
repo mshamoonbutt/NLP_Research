@@ -83,6 +83,10 @@ def main(argv=None) -> int:
                     help="re-score saved judge predictions (JSONL) instead of calling the API")
     ap.add_argument("--no-gate-on-recall", action="store_true",
                     help="precision-only gate (must be declared before observing results)")
+    ap.add_argument("--judge-model", default=None,
+                    help="DEVELOPMENT ONLY: score with this OpenAI model instead of the configured "
+                         "one (same rubric), to compare judge models on the development sample; "
+                         "refused for validation samples")
     ap.add_argument("--manifest-out", default=None,
                     help="default outputs/exp1/judge_validation_manifest[_benign].json")
     ap.add_argument("--gold-csv", default=None,
@@ -123,6 +127,13 @@ def main(argv=None) -> int:
         return 3
 
     cfg = load_judge_config()
+    if args.judge_model:
+        if role != "development":
+            print("FAIL (input): --judge-model is for development samples only; the validation "
+                  "judge is the configured one", file=sys.stderr)
+            return 3
+        import dataclasses
+        cfg = dataclasses.replace(cfg, model=args.judge_model, model_snapshot=None)
     fp = cfg.fingerprint(args.kind)
     if args.predictions_from:
         saved = {r["item_id"]: r for r in read_jsonl(args.predictions_from)}
