@@ -545,3 +545,29 @@ def test_registered_backend_and_judge_only_replay(env, monkeypatch):
     monkeypatch.setattr(ob, "OllamaRunner", NoModel)            # judging must not load a model
     assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(tmp / "gemma"), "--conditions", "EN",
                           "--judge-manifest", str(env["man"]), "--judge-only"]) == 0
+
+
+def test_robustness_with_registered_ollama_backend(env, monkeypatch):
+    """Gemma's robustness run goes through Ollama; judging replays models and backend."""
+    import csjail.ollama_backend as ob
+    from csjail import run_eval
+    tmp, exp0_dir = env["tmp"], str(env["exp0"])
+    monkeypatch.setattr(ob, "OllamaRunner", FakeRunner)
+    gem = tmp / "gem"
+    assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(gem), "--models", "gemma4e2b",
+                          "--backend", "ollama", "--judge-manifest", str(env["man"])]) == 0
+    rob = load_script("exp2_robustness")
+    monkeypatch.setattr(rob, "load_eval_config", lambda: {
+        **run_eval.load_eval_config(), "models": ["qwen25"],
+        "robustness": {"n_families": 6, "family_pool": "all", "conditions": ["CS", "RU"],
+                       "temperature": 0.7, "top_p": 0.9, "max_tokens": 64, "n": 5, "seed": 1,
+                       "subset_seed": 7}})
+    base = ["--greedy-results", str(gem), "--exp0-dir", exp0_dir, "--out-dir", str(tmp / "rob"),
+            "--judge-manifest", str(env["man"])]
+    assert rob.main(base + ["--models", "gemma4e2b", "--backend", "ollama", "--skip-judge"]) == 0
+    sub = json.loads((tmp / "rob" / "subset_manifest.json").read_text(encoding="utf-8"))
+    assert sub["backend"] == "ollama" and sub["models"] == ["gemma4e2b"]
+    monkeypatch.setattr(ob, "OllamaRunner", NoModel)
+    assert rob.main(base + ["--judge-only"]) == 0
+    summ = json.loads((tmp / "rob" / "robustness_summary.json").read_text(encoding="utf-8"))
+    assert "gemma4e2b/CS-RU" in summ["contrast"]
