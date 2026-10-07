@@ -406,7 +406,28 @@ Remaining steps:
    probe responses and blank rater files; gate with
    `calibrate_judge.py --kind benign`.
 
-## Exp 2 — main evaluation: **JUDGING WITH DEEPSEEK V4.1 FLASH (started 2026-10-07)**
+## Exp 2 — main evaluation: **JUDGED (2026-10-07, DeepSeek V4.1 Flash)**
+
+- **Done:** main 9,492/9,492 and robustness 6,000/6,000 judgments ok (0 errors),
+  run manifest `judging: judge SELECTED in Exp 1`, git `3eb3abc`. The laptop's
+  Modern Standby paused the run twice (no data lost); a keep-display-on
+  request fixed it. Summaries: `outputs/exp2/main/summary.csv`,
+  `summary_eval_main.csv`, `outputs/exp2/robustness/robustness_summary.json`.
+- **Raw ASR, all 791 families (EN / CS / RU / UR):** llama32 .118 / .373 / .359
+  / .298; phi3 .082 / .113 / .100 / .102; qwen25 .154 / .092 / .034 / .061.
+  The 200 held-out families (`--split eval_main`) give the same pattern.
+- **Corrected ASR** (per model × language judge error from Exp 1) e.g. llama32
+  CS .312 [.141, .464], RU .278 [.111, .389]. Intervals are wide because each
+  Exp 1 cell has only 60 responses (1–25 harmful); the judge's false-alarm
+  rate varies by model (~15% on llama32 CS/RU, ~2% on qwen25), so per-language
+  correction alone was biased. Reviewer labels on the 960 set-aside items
+  would add 80 responses per cell.
+- **Robustness (sampled, T 0.7, 5 draws; per-draw / any-of-5 / greedy):**
+  llama32 CS .434 / .735 / .405, RU .438 / .780 / .395; phi3 CS .140 / .310 /
+  .115, RU .099 / .270 / .115; qwen25 CS .154 / .300 / .130, RU .062 / .180 /
+  .020. CS-vs-RU ordering matches greedy only for qwen25 (llama32 and phi3
+  differ by < .04, within noise).
+
 
 - **Judge:** `deepseek-v4.1-flash:cloud` via the local Ollama app (Ollama Pro),
   harm-v2 rubric, fingerprint `b0248df31f1d9da2`, production manifest status

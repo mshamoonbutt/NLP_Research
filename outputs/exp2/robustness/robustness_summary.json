@@ -1,0 +1,193 @@
+{
+  "k": 5,
+  "per_model_condition": {
+    "llama32/CS": {
+      "n_families": 200,
+      "per_draw_asr": 0.43400000000000005,
+      "per_draw_ci": [
+        0.38300000000000006,
+        0.484
+      ],
+      "asr_at_5": 0.735,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.735,
+        0.735
+      ],
+      "greedy_asr_same_families": 0.405,
+      "greedy_missing_same_families": 0
+    },
+    "llama32/RU": {
+      "n_families": 200,
+      "per_draw_asr": 0.43800000000000006,
+      "per_draw_ci": [
+        0.39,
+        0.48800000000000004
+      ],
+      "asr_at_5": 0.78,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.78,
+        0.78
+      ],
+      "greedy_asr_same_families": 0.395,
+      "greedy_missing_same_families": 0
+    },
+    "phi3/CS": {
+      "n_families": 200,
+      "per_draw_asr": 0.14,
+      "per_draw_ci": [
+        0.105,
+        0.179
+      ],
+      "asr_at_5": 0.31,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.31,
+        0.31
+      ],
+      "greedy_asr_same_families": 0.115,
+      "greedy_missing_same_families": 0
+    },
+    "phi3/RU": {
+      "n_families": 200,
+      "per_draw_asr": 0.099,
+      "per_draw_ci": [
+        0.071,
+        0.13
+      ],
+      "asr_at_5": 0.27,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.27,
+        0.27
+      ],
+      "greedy_asr_same_families": 0.115,
+      "greedy_missing_same_families": 0
+    },
+    "qwen25/CS": {
+      "n_families": 200,
+      "per_draw_asr": 0.154,
+      "per_draw_ci": [
+        0.11599999999999999,
+        0.19699999999999998
+      ],
+      "asr_at_5": 0.3,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.3,
+        0.3
+      ],
+      "greedy_asr_same_families": 0.13,
+      "greedy_missing_same_families": 0
+    },
+    "qwen25/RU": {
+      "n_families": 200,
+      "per_draw_asr": 0.06200000000000001,
+      "per_draw_ci": [
+        0.04100000000000001,
+        0.08502499999999966
+      ],
+      "asr_at_5": 0.18,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.18,
+        0.18
+      ],
+      "greedy_asr_same_families": 0.02,
+      "greedy_missing_same_families": 0
+    }
+  },
+  "contrast": {
+    "llama32/CS-RU": {
+      "greedy": {
+        "diff": 0.01,
+        "ci": [
+          -0.07,
+          0.09
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "per_draw": {
+        "diff": -0.003999999999999996,
+        "ci": [
+          -0.06699999999999999,
+          0.057999999999999996
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "asr_at_5": {
+        "diff": -0.045,
+        "ci": [
+          -0.125,
+          0.035
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "direction_consistent_with_greedy": false
+    },
+    "phi3/CS-RU": {
+      "greedy": {
+        "diff": 0.0,
+        "ci": [
+          -0.06,
+          0.06
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "per_draw": {
+        "diff": 0.040999999999999995,
+        "ci": [
+          0.0009999999999999992,
+          0.083
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "asr_at_5": {
+        "diff": 0.04,
+        "ci": [
+          -0.045,
+          0.125
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "direction_consistent_with_greedy": false
+    },
+    "qwen25/CS-RU": {
+      "greedy": {
+        "diff": 0.11,
+        "ci": [
+          0.06,
+          0.165
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "per_draw": {
+        "diff": 0.09200000000000001,
+        "ci": [
+          0.047,
+          0.13899999999999998
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "asr_at_5": {
+        "diff": 0.12,
+        "ci": [
+          0.04,
+          0.2
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "direction_consistent_with_greedy": true
+    }
+  }
+}
