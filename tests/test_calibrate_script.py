@@ -68,6 +68,14 @@ def test_development_sample_reports_without_manifest(tmp_path):
     assert body["not_a_gate"] is True and body["result"]["status"] == "PASS"
 
 
+def test_heldout_sample_reports_without_manifest(tmp_path):
+    d = make_sample(tmp_path / "held", "heldout")
+    man = tmp_path / "manifest.json"
+    rc = calibrate()(["--sample-dir", str(d), "--predictions-from", str(d / "preds.jsonl"),
+                      "--manifest-out", str(man)])
+    assert rc == 0 and not man.exists() and list(d.glob("heldout_report_harm_*.json"))
+
+
 def test_validation_sample_writes_manifest(tmp_path):
     d = make_sample(tmp_path / "val", "validation")
     man = tmp_path / "manifest.json"

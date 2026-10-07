@@ -446,6 +446,66 @@ def cmd_make_heldout() -> int:
     return 0
 
 
+HELDOUT = ROOT / "outputs" / "exp1" / "heldout-960"
+
+
+def cmd_build_heldout(review: str) -> int:
+    """outputs/exp1/heldout-960: the 960 held-out items with the reviewer's labels (round 4 +
+    carried-over labels), in the formats calibrate_judge.py (--gold-csv, role heldout) and the
+    comparison scripts read. The original annotators' labels are kept alongside."""
+    import shutil
+    try:
+        reviewed = review_labels(OUT4, Path(review), require_reviewer_id=False)
+    except ValidationInputError as e:
+        print(f"FAIL (input): {e}", file=sys.stderr)
+        return 3
+    key = {k["audit_id"]: k["item_id"] for k in read_csv(OUT4 / "AUDIT_KEY_do_not_share.csv")}
+    rows = {key[r["audit_id"]]: r for r in load_review(Path(review))}
+    carried = {c["item_id"]: c for c in read_csv(OUT4 / "carried_labels.csv")}
+    val = read_csv(VAL / "items.csv")
+    old, _ = build_gold(val, read_csv(VAL / "rater1.csv"), read_csv(VAL / "rater2.csv"),
+                        read_csv(VAL / "adjudication.csv"), kind="harm")
+    if set(reviewed) | set(carried) != {i["item_id"] for i in val} or set(reviewed) & set(carried):
+        print("FAIL (input): reviewed + carried items do not cover the 960 exactly once", file=sys.stderr)
+        return 3
+    HELDOUT.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(VAL / "items.csv", HELDOUT / "items.csv")
+    dst = OUT4 / ("reviewer_returned" + Path(review).suffix.lower())
+    if Path(review).resolve() != dst.resolve():
+        shutil.copyfile(review, dst)
+    final, gold = [], []
+    for it in val:
+        i = it["item_id"]
+        if i in reviewed:
+            r, v, src = rows[i], reviewed[i], "gold-audit-04 reviewer"
+            kind, deg = (r.get("response_kind") or "").strip(), (r.get("compliance_degree") or "").strip()
+        else:
+            c = carried[i]
+            v, kind, deg, src = parse_bool(c["unsafe"]), c["response_kind"], "none", "carried: identical dev response"
+        final.append({"item_id": i, "model": it["model"], "condition": it["condition"],
+                      "unsafe": str(v).lower(), "response_kind": kind, "compliance_degree": deg,
+                      "label_source": src, "original_unsafe": str(old[i]["value"]).lower(),
+                      "original_response_kind": old[i].get("response_kind")})
+        gold.append({"item_id": i, "gold_unsafe": str(v).lower(), "gold_response_kind": kind,
+                     "gold_status": "reviewer" if i in reviewed else "carried"})
+    for name, data in (("final_labels.csv", final), ("gold.csv", gold)):
+        with (HELDOUT / name).open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(data[0]))
+            w.writeheader()
+            w.writerows(data)
+    sman = json.loads((VAL / "sample_manifest.json").read_text(encoding="utf-8"))
+    sman.update({"role": "heldout", "built_from": VAL.relative_to(ROOT).as_posix(),
+                 "labels": "independent reviewer, gold-audit-04 (733) + carried-over labels (227); "
+                           "original annotators' labels kept in final_labels.csv",
+                 "review_sha256": sha256_file(Path(review)),
+                 "gold_sha256": sha256_file(HELDOUT / "gold.csv"),
+                 "created_utc": datetime.now(timezone.utc).isoformat()})
+    write_text_lf(HELDOUT / "sample_manifest.json", json.dumps(sman, ensure_ascii=False, indent=2))
+    n_h = sum(r["unsafe"] == "true" for r in final)
+    print(f"[heldout] 960 items, {n_h} harmful ({len(reviewed)} reviewed, {len(carried)} carried) -> {HELDOUT}")
+    return 0
+
+
 # ---- New Exp 2 models (2026-10-07): label their responses on the 60 development families -----
 def cmd_make_model_sample(run_dirs: list[str], models: list[str], out: Path) -> int:
     """Blinded review file of the given models' greedy responses on the development families
@@ -788,6 +848,8 @@ def main(argv=None) -> int:
     sub.add_parser("make-dev2")
     sub.add_parser("make-dev3")
     sub.add_parser("make-heldout")
+    s6 = sub.add_parser("build-heldout")
+    s6.add_argument("--review", required=True, help="returned gold-audit-04 reviewer file")
     s5 = sub.add_parser("make-model-sample")
     s5.add_argument("--run-dir", nargs="+", required=True)
     s5.add_argument("--models", nargs="+", required=True)
@@ -806,6 +868,8 @@ def main(argv=None) -> int:
         return cmd_make_dev3()
     if args.cmd == "make-heldout":
         return cmd_make_heldout()
+    if args.cmd == "build-heldout":
+        return cmd_build_heldout(args.review)
     if args.cmd == "make-model-sample":
         return cmd_make_model_sample(args.run_dir, args.models, Path(args.out))
     if args.cmd == "make-validation-review":
