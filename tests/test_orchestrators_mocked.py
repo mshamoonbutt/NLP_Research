@@ -523,3 +523,25 @@ def test_quota_exhaustion_stops_api_calls(monkeypatch):
     rest = [asyncio.run(j._one("p", "r")) for _ in range(5)]
     assert first.status == "api_error" and calls["n"] == 1    # no further API calls
     assert all(r.status == "api_error" and "not attempted" in r.error for r in rest)
+
+
+def test_registered_backend_and_judge_only_replay(env, monkeypatch):
+    """gemma4e2b's registered backend is ollama: its ollama run is production, while an
+    ollama run of a vLLM model is debug. Judging needs no settings retyped."""
+    import json as _json
+
+    import csjail.ollama_backend as ob
+    from csjail import run_eval
+    monkeypatch.setattr(ob, "OllamaRunner", FakeRunner)
+    tmp, exp0_dir = env["tmp"], str(env["exp0"])
+
+    def gen(model, out, *extra):
+        assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(out), "--models", model,
+                              "--backend", "ollama", "--skip-judge", "--conditions", "EN", *extra]) == 0
+        return _json.loads((out / "run_manifest.json").read_text(encoding="utf-8"))
+
+    assert gen("gemma4e2b", tmp / "gemma", "--max-tokens", "64")["debug"] is False
+    assert gen("qwen25", tmp / "qwen_ollama")["debug"] is True
+    monkeypatch.setattr(ob, "OllamaRunner", NoModel)            # judging must not load a model
+    assert run_eval.main(["--exp0-dir", exp0_dir, "--out-dir", str(tmp / "gemma"), "--conditions", "EN",
+                          "--judge-manifest", str(env["man"]), "--judge-only"]) == 0

@@ -446,6 +446,41 @@ def cmd_make_heldout() -> int:
     return 0
 
 
+# ---- New Exp 2 models (2026-10-07): label their responses on the 60 development families -----
+def cmd_make_model_sample(run_dirs: list[str], models: list[str], out: Path) -> int:
+    """Blinded review file of the given models' greedy responses on the development families
+    (the same 60 families x 4 languages as rubric-dev-01), so the judge's error can be measured
+    per model x language for models added after Exp 1."""
+    if (out / "audit_plan.json").exists():
+        print(f"FAIL: {out} already has a plan", file=sys.stderr)
+        return 3
+    from csjail.artifacts import resolve_exp0
+    from csjail.pipeline import JsonlCache
+    fams = {i["base_id"] for i in read_csv(DEV / "items.csv")}
+    prompts = {r.id: r.prompt for r in resolve_exp0().load_rows()}
+    rows = []
+    for d in run_dirs:
+        for g in JsonlCache(Path(d) / "generations.jsonl", "gen_key").records.values():
+            if g.get("model") in models and g.get("base_id") in fams and g.get("generation_status") == "ok" \
+                    and int(g.get("sample_index", 0)) == 0:
+                rows.append({"item_id": g["gen_key"], "prompt": prompts[g["row_id"]], "response": g["response"],
+                             "model": g["model"], "condition": g["condition"], "_group": "new_model"})
+    want = len(fams) * 4 * len(models)
+    if len(rows) != want:
+        print(f"FAIL: found {len(rows)} responses, expected {want} (60 families x 4 languages x "
+              f"{len(models)} models); generate the models first", file=sys.stderr)
+        return 3
+    write_blind(rows, out, "E", SEED + 9, {
+        "kind": "exp1_gold_audit_plan", "round": "new-models", "models": models,
+        "run_dirs": [Path(d).as_posix() for d in run_dirs], "families": "the 60 rubric-dev-01 families",
+        "purpose": "the judge's error per model x language for models added after Exp 1, for ASR correction",
+        "reviewer_requirements": "the same independent reviewer, the clarified rater guide, no judge "
+            "output or pre-filled draft; reviewer_id on every row"})
+    write_xlsx(out)
+    print(f"[new-models] {len(rows)} responses to review -> {out}")
+    return 0
+
+
 # ---- Round 3 (2026-10-07): the same reviewer labels every remaining development item ------
 OUT3 = ROOT / "outputs" / "exp1" / "gold-audit-03"
 
@@ -753,6 +788,10 @@ def main(argv=None) -> int:
     sub.add_parser("make-dev2")
     sub.add_parser("make-dev3")
     sub.add_parser("make-heldout")
+    s5 = sub.add_parser("make-model-sample")
+    s5.add_argument("--run-dir", nargs="+", required=True)
+    s5.add_argument("--models", nargs="+", required=True)
+    s5.add_argument("--out", default=str(ROOT / "outputs" / "exp1" / "gold-audit-05"))
     sub.add_parser("make-validation-review")
     s2 = sub.add_parser("select")
     s2.add_argument("--review2", required=True, help="returned gold-audit-02 reviewer file")
@@ -767,6 +806,8 @@ def main(argv=None) -> int:
         return cmd_make_dev3()
     if args.cmd == "make-heldout":
         return cmd_make_heldout()
+    if args.cmd == "make-model-sample":
+        return cmd_make_model_sample(args.run_dir, args.models, Path(args.out))
     if args.cmd == "make-validation-review":
         return cmd_make_validation_review()
     if args.cmd == "make-two-phase":

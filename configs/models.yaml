@@ -44,6 +44,28 @@ models:
     gpu_memory_utilization: 0.80
     notes: "~3.2B. Gated on HF (HF_TOKEN). Template inserts a knowledge-cutoff/date system header by default -- recorded via the template probe."
 
+  # --- Exp 2 extension (2026-10-07, docs/EXP2_NEW_MODELS.md). Run explicitly with
+  # --models; the default eval.yaml model list (and Phase 2) is unchanged.
+  r1qwen15:
+    hf_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+    revision: ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562   # HF main, 2026-10-07; MIT, not gated
+    params_b: 1.8
+    dtype: float16
+    max_model_len: 4096
+    gpu_memory_utilization: 0.80
+    reasoning: true                  # writes visible <think> reasoning before its answer
+    ollama_digest: 21c9dbd320fa47e66db0435465700b89a0cfaacef28af68b632347bf5dcacf63   # local smoke tag only
+    notes: "DeepSeek's only small model: R1 reasoning distilled into the Qwen2.5-Math-1.5B base. Same stack as qwen25 (vLLM fp16). Needs --max-tokens 2048 so the answer after the reasoning fits; the judged response is the full visible output."
+
+  gemma4e2b:
+    hf_id: google/gemma-4-E2B-it
+    revision: 3e22461f65e89153144f8adb70e3b8c2cc9845a7   # HF main, 2026-10-07; Apache-2.0, not gated
+    params_b: 5.1                    # "effective 2B": 5.1B stored incl. per-layer embeddings
+    backend: ollama                  # vLLM 0.6.3 cannot load Gemma 4; GGUF q8_0 via Ollama instead
+    ollama_digest: 95e5aad2e60a213acd510ab69f962e45f391df90f24e6aeac65c7f8e84d26b84
+    reasoning: false                 # thinking-capable; sent think=false (instruct mode)
+    notes: "Gemma 4 E2B (April 2026). Production backend = Ollama gemma4:e2b-it-q8_0, digest pinned; the same build runs on a Kaggle T4 or this laptop. A qwen25 Ollama-vs-vLLM check quantifies the stack difference."
+
 # CPU fallback (csjail/ollama_backend.py): 8-bit GGUF builds of the same models
 # served by a local Ollama. DEVELOPMENT/DEBUG ONLY -- not the pinned bf16 weights,
 # never used for Exp 2 production or (without an explicit override) for the
@@ -52,6 +74,8 @@ ollama_fallback:
   qwen25: qwen2.5:1.5b-instruct-q8_0
   phi3: phi3:3.8b-mini-4k-instruct-q8_0
   llama32: llama3.2:3b-instruct-q8_0
+  r1qwen15: deepseek-r1:1.5b-qwen-distill-q8_0
+  gemma4e2b: gemma4:e2b-it-q8_0        # PRODUCTION for gemma4e2b (models.gemma4e2b.backend)
 
 # Exp 5 (SLM vs LLM) is CUT; kept only for historical reproduction.
 reference_llms:

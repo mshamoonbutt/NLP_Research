@@ -481,6 +481,16 @@ gitignored under `outputs/smoke/`).
 | Production backend (vLLM, fp16, Kaggle T4) | **Working**: 3-model sequential loads without OOM; Exp 1 samples generated |
 | Full Exp 2 (9,492 greedy + 6,000 robustness responses) | **NOT RUN** (by design in this task) |
 
+- **Extension planned (2026-10-07): two more SLMs.** Gemma 4 E2B (Ollama
+  q8_0, pinned digest; vLLM 0.6.3 cannot load it) and DeepSeek-R1-Distill-Qwen-1.5B
+  (vLLM fp16, 2,048-token budget for its visible reasoning). Same prompts, decoding,
+  robustness subset and judge; a qwen25 Ollama-vs-vLLM backend check; 240 labelled
+  responses per new model for its judge error. Design and commands:
+  `docs/EXP2_NEW_MODELS.md`; Kaggle notebook `notebooks/kaggle_newmodels.ipynb`.
+- **Held-out labels (round 4, prepared 2026-10-07):** `outputs/exp1/gold-audit-04`,
+  733 of the 960 set-aside items to review; 227 identical to development responses
+  the reviewer already labelled keep that label (`carried_labels.csv`).
+
 ## Exp 3–4b: not run (need Exp 2 results)
 ## Exp 5: cut
 

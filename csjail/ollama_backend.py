@@ -3,7 +3,12 @@
 Same interface as csjail.models.SLMRunner (generate / generate_text /
 provenance / shutdown), so the Exp 1 sampler can use either backend.
 
-Scope: DEVELOPMENT / DEBUG ONLY. Ollama serves quantized GGUF weights (the
+Scope: DEVELOPMENT / DEBUG for models whose production backend is vLLM; the
+PRODUCTION backend for models registered with `backend: ollama` (gemma4e2b, which
+vLLM 0.6.3 cannot load), with the build pinned by `ollama_digest`. Thinking-capable
+models get think = the registry's `reasoning` flag; returned thinking is kept in the
+text as <think>...</think> before the answer, as a user would see it.
+Ollama serves quantized GGUF weights (the
 configured tags are 8-bit q8_0), not the pinned bf16 Hugging Face revisions,
 and uses its own Modelfile chat template. Outputs are therefore close to, but
 not the same as, the production vLLM outputs. Every record carries the
@@ -47,13 +52,15 @@ def _sha(text: str) -> str:
 
 class OllamaRunner:
     def __init__(self, spec: ModelSpec, *, tag: Optional[str] = None, host: str = DEFAULT_HOST,
-                 workers: int = 2, num_ctx: int = 4096, timeout_s: float = 900.0,
+                 workers: Optional[int] = None, num_ctx: int = 4096, timeout_s: float = 900.0,
                  adapter_path: Optional[str] = None, **_ignored: Any) -> None:
         if adapter_path:
             raise NotImplementedError("LoRA adapters are not supported by the Ollama fallback")
         self.spec = spec
         self.tag = tag or ollama_tag(spec.key)
         self.host = host.rstrip("/")
+        # Match OLLAMA_NUM_PARALLEL on the server (e.g. 4 on a Kaggle T4).
+        workers = workers or int(os.environ.get("OLLAMA_WORKERS", "2"))
         self.workers, self.num_ctx, self.timeout_s = workers, num_ctx, timeout_s
         self.adapter_path, self.adapter_sha256 = None, None
         try:
@@ -66,6 +73,7 @@ class OllamaRunner:
         self._template = show.get("template") or ""
         self._details = show.get("details") or {}
         self._params = show.get("parameters") or ""
+        self.thinking_capable = "thinking" in (show.get("capabilities") or [])
         # A Modelfile SYSTEM line is a default system prompt applied when none
         # is sent (Qwen's has one) -- recorded and folded into the template hash.
         self.default_system = show.get("system")
@@ -81,6 +89,9 @@ class OllamaRunner:
                             if m.get("name") == self.tag or m.get("model") == self.tag), None)
         if not self.digest:
             raise RuntimeError(f"ollama model {self.tag!r} is not pulled")
+        if spec.ollama_digest and self.digest != spec.ollama_digest:
+            raise RuntimeError(f"ollama {self.tag!r} is build {self.digest[:12]}, but "
+                               f"configs/models.yaml pins {spec.ollama_digest[:12]}; the tag changed")
 
     # -- http ---------------------------------------------------------------
     def _post(self, path: str, body: dict) -> dict:
@@ -98,12 +109,16 @@ class OllamaRunner:
              index: int) -> GenOutput:
         msgs = ([{"role": "system", "content": system}] if system else []) + \
                [{"role": "user", "content": prompt}]
-        out = self._post("/api/chat", {
-            "model": self.tag, "messages": msgs, "stream": False,
-            "options": {"temperature": sampling.temperature, "top_p": sampling.top_p,
-                        "seed": seed, "num_predict": sampling.max_tokens, "num_ctx": self.num_ctx},
-        })
-        return GenOutput(text=(out.get("message") or {}).get("content", ""), sample_index=index,
+        body = {"model": self.tag, "messages": msgs, "stream": False,
+                "options": {"temperature": sampling.temperature, "top_p": sampling.top_p,
+                            "seed": seed, "num_predict": sampling.max_tokens, "num_ctx": self.num_ctx}}
+        if self.thinking_capable:
+            body["think"] = bool(self.spec.reasoning)
+        out = self._post("/api/chat", body)
+        msg = out.get("message") or {}
+        thinking = (msg.get("thinking") or "").strip()
+        text = (f"<think>\n{thinking}\n</think>\n\n" if thinking else "") + msg.get("content", "")
+        return GenOutput(text=text, sample_index=index,
                          finish_reason=out.get("done_reason"),
                          n_prompt_tokens=out.get("prompt_eval_count"),
                          n_completion_tokens=out.get("eval_count"))
@@ -140,8 +155,12 @@ class OllamaRunner:
             "system_prompt_sha256": _sha(system) if system else None,
             "adapter_path": None, "adapter_sha256": None, "num_ctx": self.num_ctx,
             "runtime": {"ollama": self._get("/api/version").get("version")},
-            "scope_note": "development/debug only: quantized GGUF via Ollama, not the "
-                          "pinned bf16 HF weights used by the production vLLM backend",
+            "thinking": bool(self.spec.reasoning) if self.thinking_capable else None,
+            "pinned_digest": self.spec.ollama_digest,
+            "scope_note": ("production backend for this model (vLLM cannot load it): pinned GGUF "
+                           "build via Ollama" if self.spec.backend == BACKEND else
+                           "development/debug only: quantized GGUF via Ollama, not the "
+                           "pinned HF weights used by the production vLLM backend"),
         }
 
     def shutdown(self) -> None:

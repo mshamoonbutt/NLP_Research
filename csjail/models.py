@@ -31,6 +31,9 @@ class ModelSpec:
     gpu_memory_utilization: float = 0.85
     params_b: Optional[float] = None
     notes: str = ""
+    backend: str = "vllm"            # production backend; "ollama" = pinned GGUF via Ollama
+    reasoning: bool = False          # emits visible thinking before its answer
+    ollama_digest: Optional[str] = None   # pinned build of the model's Ollama tag
 
 
 def load_model_registry(path: str | Path = CONFIG_PATH) -> dict[str, ModelSpec]:
@@ -44,7 +47,9 @@ def load_model_registry(path: str | Path = CONFIG_PATH) -> dict[str, ModelSpec]:
                 dtype=m.get("dtype", "bfloat16"),
                 max_model_len=int(m.get("max_model_len", 4096)),
                 gpu_memory_utilization=float(m.get("gpu_memory_utilization", 0.85)),
-                params_b=m.get("params_b"), notes=m.get("notes", ""))
+                params_b=m.get("params_b"), notes=m.get("notes", ""),
+                backend=m.get("backend", "vllm"), reasoning=bool(m.get("reasoning", False)),
+                ollama_digest=m.get("ollama_digest"))
     return out
 
 
