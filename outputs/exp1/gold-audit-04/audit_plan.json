@@ -1,0 +1,22 @@
+{
+  "kind": "exp1_gold_audit_plan",
+  "round": 4,
+  "heldout_sample": "outputs/exp1/validation-v2-merged",
+  "n_items": 960,
+  "n_shown": 733,
+  "n_carried_over": 227,
+  "carried_labels_sha256": "52c91a517f0b2a99fd22073429218ac2b436392be7616d59cd37d91da53cccef",
+  "rule": {
+    "purpose": "human labels for the 960 items of validation-v2-merged (160 families, none shared with the 720 development items), so the chosen judge is tested on items that played no part in choosing it and its per-model x language error rests on more items",
+    "carried_over": "a response whose text is identical (after trimming) to development responses the same reviewer already labelled, where all of those reviewer labels agree and the original annotators gave the same label on every copy here, keeps that label without being shown again (stock refusals and one repeated garbled output); listed with their source in carried_labels.csv",
+    "shown": "every other item, blinded and shuffled, no judge output or original labels"
+  },
+  "reviewer_requirements": "the same independent reviewer as rounds 1-3, the clarified rater guide, no judge output, original labels or pre-filled draft; reviewer_id on every row",
+  "created_utc": "2026-10-07T12:58:44.900977+00:00",
+  "seed": 20261014,
+  "n_total": 733,
+  "sha256": {
+    "reviewer_file.csv": "ec954247019ac332999eac46cf300b1c5b85077ae57ec9dc2f140608f491d308",
+    "AUDIT_KEY_do_not_share.csv": "7a85095be279055847befd341c411421567343db843cbe758c58d88a8b0f05ab"
+  }
+}

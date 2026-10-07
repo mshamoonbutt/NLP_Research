@@ -354,6 +354,98 @@ def cmd_make_dev2() -> int:
     return 0
 
 
+# ---- Round 4 (2026-10-07): the same reviewer labels the 960 held-out items ------------------
+OUT4 = ROOT / "outputs" / "exp1" / "gold-audit-04"
+HELDOUT_RULE = {
+    "purpose": "human labels for the 960 items of validation-v2-merged (160 families, none shared with "
+               "the 720 development items), so the chosen judge is tested on items that played no "
+               "part in choosing it and its per-model x language error rests on more items",
+    "carried_over": "a response whose text is identical (after trimming) to development responses the "
+                    "same reviewer already labelled, where all of those reviewer labels agree and the "
+                    "original annotators gave the same label on every copy here, keeps that label "
+                    "without being shown again (stock refusals and one repeated garbled output); "
+                    "listed with their source in carried_labels.csv",
+    "shown": "every other item, blinded and shuffled, no judge output or original labels",
+}
+
+
+def write_xlsx(out: Path) -> None:
+    """reviewer_file.xlsx next to reviewer_file.csv: same rows, wrapped text, label dropdowns
+    (a plain CSV can garble Urdu text in Excel)."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font
+    from openpyxl.worksheet.datavalidation import DataValidation
+    from csjail.judge import COMPLIANCE_DEGREES, RESPONSE_KINDS
+    rows = read_csv(out / "reviewer_file.csv")
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "review"
+    ws.append(REVIEW_FIELDS)
+    for r in rows:
+        ws.append([r[c] for c in REVIEW_FIELDS])
+    widths = {"audit_id": 10, "reviewer_id": 12, "prompt": 60, "response": 90, "unsafe": 10,
+              "response_kind": 22, "compliance_degree": 18, "notes": 30}
+    for i, c in enumerate(REVIEW_FIELDS, 1):
+        col = ws.cell(1, i).column_letter
+        ws.column_dimensions[col].width = widths[c]
+        ws.cell(1, i).font = Font(bold=True)
+        if c in ("prompt", "response"):
+            for (cell,) in ws.iter_rows(min_row=2, min_col=i, max_col=i):
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+    ws.freeze_panes = "C2"
+    for c, vals in (("unsafe", ["true", "false"]), ("response_kind", sorted(RESPONSE_KINDS)),
+                    ("compliance_degree", sorted(COMPLIANCE_DEGREES))):
+        col = ws.cell(1, REVIEW_FIELDS.index(c) + 1).column_letter
+        dv = DataValidation(type="list", formula1='"' + ",".join(vals) + '"', allow_blank=True)
+        ws.add_data_validation(dv)
+        dv.add(f"{col}2:{col}{len(rows) + 1}")
+    wb.save(out / "reviewer_file.xlsx")
+
+
+def cmd_make_heldout() -> int:
+    if (OUT4 / "audit_plan.json").exists():
+        print(f"FAIL: {OUT4} already has a plan", file=sys.stderr)
+        return 3
+    val = read_csv(VAL / "items.csv")
+    old, _ = build_gold(val, read_csv(VAL / "rater1.csv"), read_csv(VAL / "rater2.csv"),
+                        read_csv(VAL / "adjudication.csv"), kind="harm")
+    dev = {i["item_id"]: (i["response"] or "").strip() for i in read_csv(DEV / "items.csv")}
+    seen: dict[str, set] = {}
+    for out in (OUT, OUT2, OUT3):
+        key = {k["audit_id"]: k["item_id"] for k in read_csv(out / "AUDIT_KEY_do_not_share.csv")}
+        path = next(out / n for n in ("reviewer_returned.csv", "reviewer_returned.xlsx") if (out / n).exists())
+        for r in load_review(path):
+            v, kind = _label(r, "harm")
+            seen.setdefault(dev[key[r["audit_id"]]], set()).add((v, kind))
+    groups: dict[str, list] = {}
+    for it in val:
+        groups.setdefault((it["response"] or "").strip(), []).append(it)
+    carried, shown = [], []
+    for text, its in groups.items():
+        labs = seen.get(text, set())
+        same_orig = {(old[i["item_id"]]["value"], old[i["item_id"]].get("response_kind")) for i in its}
+        if text and len(labs) == 1 and same_orig == labs:
+            v, kind = next(iter(labs))
+            carried += [{"item_id": i["item_id"], "unsafe": str(v).lower(), "response_kind": kind,
+                         "source": "reviewer label on identical development response"} for i in its]
+        else:
+            shown += [dict(i, _group="heldout") for i in its]
+    OUT4.mkdir(parents=True, exist_ok=True)
+    with (OUT4 / "carried_labels.csv").open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["item_id", "unsafe", "response_kind", "source"])
+        w.writeheader()
+        w.writerows(carried)
+    write_blind(shown, OUT4, "D", SEED + 8, {
+        "kind": "exp1_gold_audit_plan", "round": 4, "heldout_sample": VAL.relative_to(ROOT).as_posix(),
+        "n_items": len(val), "n_shown": len(shown), "n_carried_over": len(carried),
+        "carried_labels_sha256": sha256_file(OUT4 / "carried_labels.csv"), "rule": HELDOUT_RULE,
+        "reviewer_requirements": "the same independent reviewer as rounds 1-3, the clarified rater "
+            "guide, no judge output, original labels or pre-filled draft; reviewer_id on every row"})
+    write_xlsx(OUT4)
+    print(f"[audit-4] {len(shown)} held-out items to review, {len(carried)} carried over -> {OUT4}")
+    return 0
+
+
 # ---- Round 3 (2026-10-07): the same reviewer labels every remaining development item ------
 OUT3 = ROOT / "outputs" / "exp1" / "gold-audit-03"
 
@@ -660,6 +752,7 @@ def main(argv=None) -> int:
     s.add_argument("--review", required=True)
     sub.add_parser("make-dev2")
     sub.add_parser("make-dev3")
+    sub.add_parser("make-heldout")
     sub.add_parser("make-validation-review")
     s2 = sub.add_parser("select")
     s2.add_argument("--review2", required=True, help="returned gold-audit-02 reviewer file")
@@ -672,6 +765,8 @@ def main(argv=None) -> int:
         return cmd_make_dev2()
     if args.cmd == "make-dev3":
         return cmd_make_dev3()
+    if args.cmd == "make-heldout":
+        return cmd_make_heldout()
     if args.cmd == "make-validation-review":
         return cmd_make_validation_review()
     if args.cmd == "make-two-phase":
