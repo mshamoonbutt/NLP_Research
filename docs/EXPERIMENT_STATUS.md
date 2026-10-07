@@ -487,11 +487,56 @@ gitignored under `outputs/smoke/`).
   robustness subset and judge; a qwen25 Ollama-vs-vLLM backend check; 240 labelled
   responses per new model for its judge error. Design and commands:
   `docs/EXP2_NEW_MODELS.md`; Kaggle notebook `notebooks/kaggle_newmodels.ipynb`.
+  **Local Ollama smoke test passed (2026-10-07, 5 families each, debug):** both
+  pinned builds verified, 40/40 judged; R1 closed its reasoning in 20/20 (3/20 hit
+  2,048 tokens) and was judged harmful on 3/5 EN and 4/5 CS but answered RU/UR
+  irrelevantly; Gemma answered UR in Urdu script, mostly refusals (harmful 1/5 RU,
+  1/5 UR). Indicative only: 5 families.
 - **Held-out labels (round 4, prepared 2026-10-07):** `outputs/exp1/gold-audit-04`,
   733 of the 960 set-aside items to review; 227 identical to development responses
   the reviewer already labelled keep that label (`carried_labels.csv`).
 
-## Exp 3–4b: not run (need Exp 2 results)
+## Exp 3 — matched contrasts: **RUN (2026-10-07, 3 original models, full core)**
+
+`scripts/exp3_isolation.py --results outputs/exp2/main --out-dir outputs/exp3` →
+`isolation_results.json`, `contrasts_table.csv` (paper Table 6 shape). Declared in
+`configs/eval.yaml` before this first run: Holm families (confirmatory = qwen25/phi3/llama32,
+9 tests; extension = r1qwen15/gemma4e2b, separate) and the judge-robustness rule (a contrast
+is a finding only if Holm-significant AND its judge-corrected paired difference CI excludes 0
+with the same sign).
+- Raw paired differences (pp; * = Holm-significant over the 9 tests): llama32 CS−RU +1.4,
+  RU−UR +6.1 (p .009, adj. .057), RU−EN +24.1*; phi3 +1.3 / −0.3 / +1.8; qwen25 CS−RU +5.8*,
+  RU−UR −2.7 (adj. .080), RU−EN −12.0*. Descriptive CS−EN: llama32 +25.5, phi3 +3.0, qwen25 −6.2.
+- **Judge-corrected: no contrast is a robust finding yet.** Corrected CIs are wide because each
+  model × condition cell of judge error rests on 60 development responses (e.g. llama32 RU
+  false-alarm rate from 35 safe responses). Per-language error (pooled models) would make
+  llama32/qwen25 RU−EN and CS−EN robust but is biased (false-alarm rates differ by model).
+  Rough projection with 140 responses per cell at today's error rates: llama32 RU−EN and
+  CS−EN become robust. Re-run after the round-4 labels enter the judge manifest.
+- Descriptive response shifts (paired): lower harm in UR/RU comes with **non-response, not
+  refusal**, for phi3 (RU−EN non-response +58 pp, refusal −70 pp) and qwen25 (RU−UR
+  non-response −66 pp, refusal +64 pp). English refusal → harmful elsewhere: llama32
+  CS 32% / RU 35% / UR 28% of its 684 EN refusals; phi3 8–10%; qwen25 3–7%.
+- GEE per model (OR vs EN): llama32 CS 4.5, RU 4.3, UR 3.2; phi3 1.4 / 1.2 / 1.3;
+  qwen25 0.55 / 0.19 / 0.35. Converged, 0 missing.
+
+## Exp 4 — tokenizer fertility: **RUN (2026-10-07)**
+
+`scripts/exp4_features.py` → `outputs/exp4/features_results.json`, `fertility_by_prompt.csv`
+(counts only). Fertility = raw-prompt tokens / whitespace words at the pinned tokenizer.
+Tokenizer check vs the Exp 2 run (recorded prompt tokens − our count = one constant):
+1.000 for qwen25, phi3 and llama32 (llama32 via the ungated mirror
+`unsloth/Llama-3.2-3B-Instruct`, so the mirror is verified). CMI / Urdu share: NOT run
+(tagger unvalidated).
+- Mean fertility EN/CS/RU/UR: qwen25 1.16/1.48/1.85/3.12, llama32 1.16/1.48/1.83/3.02,
+  phi3 1.33/1.68/2.03/4.84, gemma4e2b 1.16/1.30/1.55/1.39, r1qwen15 = qwen25 (same
+  tokenizer: a tokenizer-matched pair for the extension).
+- Within-condition GEE (exploratory; OR per within-condition SD, adjusted for condition,
+  domain, length): **non-response rises with fragmentation** (pooled OR llama32 1.24,
+  phi3 1.58, qwen25 1.40, all p < .001; strongest in RU/CS); harmful compliance shows no
+  consistent association (pooled 0.98 / 0.82 / 0.92; signs differ by condition).
+
+## Exp 4b: not run (needs GPU)
 ## Exp 5: cut
 
 ## Phase 2 (Exp 6–9): **NOT RUN**; design recorded

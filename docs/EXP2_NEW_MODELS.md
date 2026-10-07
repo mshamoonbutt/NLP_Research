@@ -55,11 +55,15 @@ full precision, so E2B is the Gemma choice.
 Everything below assumes `git pull` on the branch, the Ollama app running and signed in
 (it serves the judge), and the laptop plugged in with the lid open while judging.
 
-### 1. Local test on Ollama (laptop, about 30 minutes)
+### 1. Local test on Ollama (laptop; done 2026-10-07, passed)
 
-Downloads about 10 GB (Gemma 8.1 GB, DeepSeek-R1 1.9 GB). This is a sanity check of 5
-families per model, marked as a debug run: does each model answer in the expected
-language, does the reasoning model close its reasoning, and does the judge parse.
+Downloads about 10 GB (Gemma 8.1 GB, DeepSeek-R1 1.9 GB; ~45 min at 4 MB/s). This is a
+sanity check of 5 families per model, marked as a debug run: does each model answer in
+the expected language, does the reasoning model close its reasoning, and does the judge
+parse. Measured on this laptop's CPU: DeepSeek-R1 30 min for 20 responses (~13
+tokens/s, ~1,160 tokens each), Gemma 7 min (~7 tokens/s, ~160 tokens each); judging
+under a minute. Both builds matched their pins, all 40 judgments parsed, every R1
+response closed its reasoning, and Gemma answered Urdu-script prompts in Urdu script.
 
 ```bash
 ollama pull gemma4:e2b-it-q8_0
@@ -86,7 +90,7 @@ python -m csjail.aggregate outputs/exp2/smoke-gemma4 outputs/exp2/smoke-r1 --all
 The local DeepSeek-R1 test uses Ollama's 8-bit build; its production run (step 2) uses
 the pinned fp16 weights through vLLM, like qwen25.
 
-### 2. Full generation on Kaggle (about 4–6 hours, no secrets needed)
+### 2. Full generation on Kaggle (about 3–4 hours, no secrets needed)
 
 Import `notebooks/kaggle_newmodels.ipynb`, set Accelerator **GPU T4 x2** and Internet
 **On**, then **Save Version → Save & Run All**. It runs DeepSeek-R1 through vLLM first,
@@ -99,7 +103,7 @@ then starts Ollama for Gemma and the backend check. When it finishes, download
 unzip -o newmodels_outputs.zip -d .
 ```
 
-### 4. Judge on the laptop (about 1.5 hours at ~190 judgments/min)
+### 4. Judge on the laptop (about 1–1.5 hours, ~11,100 judgments, ~$7 of Ollama Pro credit)
 
 Judging replays each run's own settings, so no flags need retyping.
 
@@ -141,7 +145,8 @@ are re-aggregated.
 
 Because Gemma's production backend is the pinned Ollama build, the step 2 Gemma runs
 can also be done locally (same commands as in the notebook, without `--max-families`).
-Expect roughly a day on this CPU.
+At the measured ~7 tokens/s that is about 30 hours (main ~19 h, robustness ~12 h).
+DeepSeek-R1 locally would take days; use Kaggle.
 
 ## Paper notes
 
