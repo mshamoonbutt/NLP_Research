@@ -77,54 +77,38 @@ wording and `LATEST` untouched:
 python scripts/exp0_finalize_data.py --training-extension-csv data/<ext>.csv --extension-name ext1   # [CPU/untested on real data; covered by tests]
 ```
 
-## 3. Exp 1 — judge validation (status: development only; see EXPERIMENT_STATUS)
+## 3. Exp 1 — judge choice and held-out test (status: DONE 2026-10-08; see EXPERIMENT_STATUS)
 
-Development (rubric iteration) [API]:
+Judge: DeepSeek V4.1 Flash (`deepseek-v4.1-flash:cloud`) through the local
+Ollama app (Ollama Pro; `ollama signin` once), rubric harm-v2, thinking off,
+fingerprint `b0248df31f1d9da2` (`configs/judge.yaml`; any edit changes the
+fingerprint). Keep the laptop plugged in with the display on: Modern Standby
+pauses runs.
+
+Judge the labelled samples (resumable: re-run the same command after exit 4;
+each writes a feedback report, never a manifest):
 ```bash
-# adjudicate the 15 flagged items in outputs/exp1/development-cpu-20260926/annotations/adjudication_questions.csv, then
-python scripts/exp1_dev_gold.py --sample-dir outputs/exp1/development-cpu-20260926      # [tested]
-python scripts/calibrate_judge.py --sample-dir outputs/exp1/development-cpu-20260926 \
-    --gold-csv outputs/exp1/development-cpu-20260926/development_gold.csv              # [API] report only
+python scripts/calibrate_judge.py --sample-dir outputs/exp1/rubric-dev-01     --judge-provider ollama --judge-model deepseek-v4.1-flash:cloud --judge-concurrency 3   # [API] development, 720
+python scripts/calibrate_judge.py --sample-dir outputs/exp1/heldout-960     --gold-csv outputs/exp1/heldout-960/gold.csv     --judge-provider ollama --judge-model deepseek-v4.1-flash:cloud --judge-concurrency 3   # [API] held-out, 960
+```
+The runner-up uses the same commands with `deepseek-v4-pro:cloud`.
+
+Compare, test and freeze:
+```bash
+python scripts/exp1_compare_judges.py                    # every judge on development; choice by macro-F1
+python scripts/exp1_heldout_compare.py                   # Flash vs Pro: held-out, development, combined
+python scripts/exp1_compare_judges.py --write-manifest   # manifest SELECTED; error per model x language
+                                                         # from development + held-out (feeds Exp 2)
 ```
 
-Freeze `configs/judge.yaml`: any later edit changes the fingerprint and
-invalidates validation.
+Labels are `final_labels.csv` in each sample folder (reviewer rounds via
+`scripts/exp1_gold_audit.py`; the held-out folder is built with
+`exp1_gold_audit.py build-heldout --review <returned file>`). The earlier
+PASS-gate route (two raters per validation sample, precision and recall
+≥ 0.90) is superseded; see EXPERIMENT_STATUS history.
 
-Final validation, on families never used for development or the pilot, from
-the production backend [GPU]:
-```bash
-python scripts/exp1_sample_for_annotation.py --role validation --models qwen25 phi3 llama32 \
-    --exclude-sample-dirs outputs/exp1/development-cpu-20260926 outputs/exp6/feasibility-cpu-20260927
-```
-
-- That is 60 families × 4 conditions × 3 models = 720 blank items. Two models
-  (480 items) is the minimum.
-- Two independent humans fill `rater1.csv` and `rater2.csv` (blank label
-  fields; guide: `docs/exp1_rater_guide.md`). Full walkthrough:
-  `docs/KAGGLE_EXP1_GUIDE.md`. Report the annotation process in the paper
-  exactly as it was actually performed (including any assistance used).
-- Returned Excel workbooks: `scripts/exp1_import_rater_xlsx.py --sample-dir <val> --rater1 X --rater2 Y`
-  validates and converts them to the rater CSVs. A support top-up can reuse Exp 2
-  responses (`exp1_sample_for_annotation.py ... --from-results outputs/exp2/main`)
-  and is combined with `scripts/exp1_merge_samples.py` before calibration.
-- List disagreements with `scripts/exp1_disagreements.py --sample-dir <val>`
-  (writes `adjudication_todo.csv`; no judge involved), adjudicate them into
-  `adjudication.csv`, then run:
-```bash
-python scripts/calibrate_judge.py --sample-dir outputs/exp1/validation-<ts> \
-    --development-sample-dir outputs/exp1/development-cpu-20260926             # [API] exit 0 = PASS
-```
-
-It writes `outputs/exp1/judge_validation_manifest.json`. PASS requires every
-condition to reach precision and recall ≥ 0.90 with the declared support.
-
-The benign (over-refusal) rubric needs its own validation before Exp 8
-(`--kind benign`). Sample benign-probe responses with:
-```bash
-python scripts/benign_sample_for_annotation.py --role validation --models phi3 llama32   # [GPU]
-# two raters label refused/response_kind, adjudicate, then:
-python scripts/calibrate_judge.py --kind benign --sample-dir outputs/exp1/benign-validation-<ts>   # [API]
-```
+Not done: the benign (over-refusal) rubric needs its own check before Exp 8
+(`--kind benign`, labelled sample `outputs/exp1/benign-validation-merged`).
 
 ## 4. Exp 2 — evaluation
 

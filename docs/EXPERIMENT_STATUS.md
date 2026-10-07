@@ -37,87 +37,88 @@ is **not** marked complete just because its inputs exist. Commands are in
 - Semantic equivalence and harmfulness are not certified by Exp 0.
 - Per-batch authorship and model assistance are unrecorded.
 
-## Exp 1 — judge comparison: **SIMPLIFIED (2026-10-07)**
+## Exp 1 — judge choice and held-out test: **DONE (2026-10-08, DeepSeek V4.1 Flash)**
 
-**Current design (replaces the separate validation run and the two-phase
-review below, which are kept only as history):** every judge is scored
-against the same human labels on the 720 development responses, in one table
-(`scripts/exp1_compare_judges.py` → `outputs/exp1/judge_comparison.json`).
-- **Labels:** the original annotators' label, replaced by the independent
-  reviewer's label on the 290 items that reviewer re-checked
-  (`rubric-dev-01/final_labels.csv`). Harmful items: EN 11, CS 36, RU 33,
-  UR 25. EN support is thin, so EN numbers are noisy.
-- **Round 3 (prepared 2026-10-07):** `outputs/exp1/gold-audit-03` holds the
-  other 430 development items, blinded (`reviewer_file.csv` / `.xlsx`), for
-  the same reviewer. Once returned as `reviewer_returned.xlsx` or `.csv`
-  with `reviewer_id` on every row, the comparison uses that reviewer's label
-  on all 720 items, and the caveat about uneven re-checking below goes away.
-- **Round 3 returned (2026-10-07):** all 720 items now carry the reviewer's
-  label (`final_labels.csv`, original labels alongside). Round 3 vs original:
-  426/430 agree on unsafe (κ 0.80; 3 CS harmful→safe, 1 RU safe→harmful).
-  Over all 720, reviewer vs original κ 0.56 (61 changes, 57 safe→harmful),
-  below every judge's κ with the reviewer (0.64–0.66). Final harmful: EN 11,
-  CS 33, RU 34, UR 25. **Provenance to record:** `reviewer_id` is blank in all
-  three rounds; round-3 notes are 15 fixed sentences, one per label category,
-  while rounds 1–2 had a distinct note per item. The paper must state who
-  labelled and whether any tool assisted.
-- **ASR bias (judge-flagged ÷ truly harmful):** v2 1.45 EN / 1.36 CS / 1.68 RU
-  / 2.24 UR; v4 1.00 / 0.91 / 0.71 / 0.48. Uncorrected judge ASR would
-  distort the language comparison, so Exp 2 reports ASR corrected per
-  language (× precision ÷ recall) alongside the raw rate.
-- **DeepSeek V4.1 Flash via Ollama (2026-10-07, Ollama Pro, model
-  `deepseek-v4.1-flash:cloud`, thinking off, same harm-v2 rubric and 300-token
-  budget as gpt-4o; 720/720 parsed, ~200 judgments/min):** P 0.73, R 0.86,
-  F1 0.79, κ 0.75, macro-F1 0.78 → **best by the declared rule**. Per
-  language P/R: EN 0.67/0.91, CS 0.81/0.88, RU 0.79/0.88, UR 0.61/0.80. Flag
-  ratio 1.36 / 1.09 / 1.12 / 1.32 (gpt-4o v2: 1.45 / 1.36 / 1.68 / 2.24).
-  Family-level bootstrap vs gpt-4o v2 (2,000 draws): F1 +0.08 [+0.02, +0.13],
-  κ +0.10 [+0.03, +0.16], macro-F1 +0.05 [−0.00, +0.10]. Its κ with the
-  reviewer (0.75) exceeds the reviewer–original-annotator κ (0.56).
-  **DeepSeek V4 Pro** (`deepseek-v4-pro:cloud`, same settings, 720/720 parsed,
-  ~120/min): P 0.64, R 0.86, F1 0.74, κ 0.68, macro-F1 0.75; UR P 0.52, flag
-  ratio 1.45 / 1.09 / 1.26 / 1.76. Flash − Pro (family bootstrap): F1 +0.06
-  [−0.01, +0.12], κ +0.07 [−0.01, +0.14]. Pro is not better and costs ~4×
-  more, so Flash stays the choice.
-  **Risks:** Ollama retires cloud models (V4 Flash retired 2026-09-25), so
-  all judging with it should finish soon and every raw judgment be kept; the
-  paper records the model name, provider and dates.
-- **Choice rule (declared before any DeepSeek result):** highest macro-F1
-  over the four languages; ties go to the higher minimum recall. The 0.90
-  gate is reported, not required.
-- **Result (all 720 reviewer-labelled):** all gpt-4o and gpt-4.1
-  configurations reach F1 0.69–0.71 and κ 0.64–0.66; they differ only in the
-  precision/recall trade-off. Best by the rule: gpt-4o harm-v2 (macro-F1
-  0.73; P 0.57, R 0.96). None meets 0.90 everywhere.
-- **Caveats for the paper:** rubrics v3–v5 were revised after seeing errors on
-  these items (optimistic scores); harm-v2 was written before any result. The
-  winner is chosen on the same items it is scored on. The 290 re-checked
-  items were mostly judge/label disagreements, so remaining label errors
-  (about 4% in the audit controls) favour judges that agree with the
-  original annotators. The audit-02 file has no reviewer ID yet.
-- **DeepSeek via Ollama:** `deepseek-v4.1-flash:cloud` and
-  `deepseek-v4-pro:cloud` run on Ollama's servers through the local Ollama app
-  (provider `ollama`, thinking off). Needs `ollama signin` once; then
-  `calibrate_judge.py --sample-dir outputs/exp1/rubric-dev-01 --judge-provider
-  ollama --judge-model deepseek-v4.1-flash:cloud --judge-concurrency 1` and
-  re-run the comparison. It uses the configured rubric (harm-v2), the same as
-  the gpt-4o v2 row.
-- **Held-out test (2026-10-08, round 4):** `outputs/exp1/heldout-960`, 960
-  responses from 160 families never used to choose the judge, labelled by the
-  same reviewer (733 shown + 227 carried over from identical development
-  responses; harmful EN 27, CS 34, RU 31, UR 29; reviewer vs original κ 0.82).
-  Both DeepSeek judges re-run 2026-10-07 UTC, 960/960 parsed
-  (`scripts/exp1_heldout_compare.py` → `outputs/exp1/heldout_comparison.json`).
-  Flash: P 0.71, R 0.85, F1 0.77, κ 0.74, macro-F1 0.784 (development 0.783).
-  Pro: F1 0.71, κ 0.66. Flash − Pro: F1 +0.063 [+0.012, +0.118], κ +0.078
-  [+0.017, +0.142], so the choice holds on unseen data. Per language Flash
-  P/R/F1: EN 0.96/0.93/0.94, CS 0.82/0.94/0.88, RU 0.59/0.74/0.66, UR
-  0.56/0.79/0.66; RU F1 fell from 0.83 on development. No gpt-4o run covers
-  the held-out set (an old run judged 465 of the 960).
-- **Exp 2 uses** Flash's raw labels, with ASR corrected for its error per
-  model × language (Rogan–Gladen). Since 2026-10-08 that error pools
-  development + held-out (1,680 responses, 140 per cell, 7–49 harmful per
-  cell); the two sets did not differ measurably.
+**Final judge:** DeepSeek V4.1 Flash, `deepseek-v4.1-flash:cloud`, through the
+local Ollama app (provider `ollama`, Ollama Pro), rubric harm-v2 (written
+before any result), thinking off, 300-token budget, temperature 0,
+fingerprint `b0248df31f1d9da2`. Production manifest
+`outputs/exp1/judge_validation_manifest.json`, status SELECTED. Judged
+2026-10-06 UTC (development) and 2026-10-07 UTC (held-out); every response
+parsed. Commands: `RUNBOOK.md` §3; design: `docs/PROTOCOL.md` §3.
+
+**Design (replaces the 0.90 PASS gate; see history below):**
+1. Choose on development: every judge scored on 720 responses
+   (`rubric-dev-01`: 60 families × EN/CS/RU/UR × qwen25/phi3/llama32). Rule
+   declared before any DeepSeek result: highest macro-F1 over the four
+   languages, ties → higher minimum recall; the 0.90 gate reported, not
+   required.
+2. Test on held-out: the chosen judge and the runner-up on 960 responses
+   from 160 other families (`heldout-960`).
+3. Exp 2 corrects ASR with the judge's error per model × language, pooled
+   over both sets (1,680 responses, 140 per cell, 7–49 harmful per cell).
+
+**Labels:** one independent reviewer labelled all 720 development responses
+(rounds 1–3) and 733 of the 960 held-out (round 4), blind to judge output and
+original labels. The other 227 held-out responses are identical to development
+responses the reviewer labelled and carry that label (222 refusals, 5
+unintelligible; all safe). Harmful: development EN 11, CS 33, RU 34, UR 25;
+held-out EN 27, CS 34, RU 31, UR 29. Reviewer vs original annotators: κ 0.56
+on development (57 safe→harmful, 4 reverse), 0.82 on held-out (32 and 2).
+
+**Development, selection** (`outputs/exp1/judge_comparison.json`):
+
+| Judge, rubric | P | R | F1 | κ | macro-F1 |
+|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash, harm-v2 | 0.73 | 0.86 | 0.79 | 0.75 | 0.783 |
+| DeepSeek V4 Pro, harm-v2 | 0.64 | 0.86 | 0.74 | 0.68 | 0.749 |
+| gpt-4o, harm-v2 | 0.57 | 0.96 | 0.71 | 0.65 | 0.733 |
+| gpt-4o, harm-v3* | 0.80 | 0.63 | 0.71 | 0.66 | 0.720 |
+| gpt-4o, harm-v4* | 0.82 | 0.61 | 0.70 | 0.66 | 0.707 |
+| gpt-4o, harm-v5* | 0.60 | 0.83 | 0.70 | 0.64 | 0.705 |
+| gpt-4.1, harm-v4* | 0.79 | 0.60 | 0.69 | 0.64 | 0.704 |
+
+\* rubric revised after seeing errors on these items, so optimistic. Family
+bootstrap (2,000 draws): Flash − gpt-4o v2 F1 +0.08 [+0.02, +0.13]; Flash − Pro
+F1 +0.056 [−0.004, +0.117].
+
+**Held-out test** (`outputs/exp1/heldout_comparison.json`, from
+`scripts/exp1_heldout_compare.py`), P/R/F1 per language:
+
+| Judge | EN | CS | RU | UR | F1 | κ | macro-F1 |
+|---|---|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | .96/.93/.94 | .82/.94/.88 | .59/.74/.66 | .56/.79/.66 | 0.77 | 0.74 | 0.784 |
+| DeepSeek V4 Pro | .96/.85/.90 | .72/.97/.82 | .49/.84/.62 | .44/.83/.58 | 0.71 | 0.66 | 0.731 |
+
+- Flash − Pro: F1 +0.063 [+0.012, +0.118], κ +0.078 [+0.017, +0.142]; the
+  same without the 227 carried labels (neither judge flags any of them).
+- Flash held-out vs development: macro-F1 0.784 vs 0.783, F1 −0.017
+  [−0.117, +0.092], so the choice was not flattered overall. Per language,
+  RU F1 fell 0.83 → 0.66 (−0.18 [−0.35, −0.005]) and EN rose 0.77 → 0.94
+  (development had 11 harmful EN). Flash over-flags 1.20× (judge-flagged ÷
+  truly harmful), Pro 1.46×.
+- No gpt-4o run covers the held-out set (an old run judged 465 of the 960).
+
+**Judge error used by Exp 2** (development + held-out, per model × language):
+false-alarm rate 12–16% for llama32 CS/RU/UR, 10% phi3 UR, ≤ 5% elsewhere;
+recall 0.84–1.00 except qwen25 RU 0.43 (7 harmful), phi3 UR 0.73 and qwen25 UR
+0.75. The two sets did not differ measurably (overall recall gap −0.01,
+false-alarm gap −0.003; 1 of 24 per-cell Fisher tests p < 0.05).
+
+**Caveats for the paper:**
+- `reviewer_id` is blank in all four review files (1,453 rows). The paper must
+  say who the reviewer was and whether any tool assisted; do not claim
+  independent review without that record. Round-3 notes are 15 fixed
+  sentences (one per label category); rounds 1, 2 and 4 have per-item notes.
+- Rubrics v3–v5 were tuned on the development items; harm-v2 (the chosen
+  rubric) was not.
+- The judge is a named cloud model, not a pinned snapshot, and Ollama retires
+  cloud models (V4 Flash retired 2026-09-25). All raw judgments are kept; the
+  paper records model name, provider and run dates.
+
+**Not done (needed only for Exp 8):** the benign (over-refusal) rubric has not
+been checked with Flash. Labelled sample: `outputs/exp1/benign-validation-merged`
+(450 responses, 32 refused, two raters + adjudication).
 
 ## Exp 1 — history: judge validation (superseded 2026-10-07)
 
