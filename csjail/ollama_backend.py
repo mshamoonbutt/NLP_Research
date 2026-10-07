@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sys
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -129,7 +130,12 @@ class OllamaRunner:
 
         def run(job):
             p, i = job
-            return self._one(p, sampling, sampling.seed + i, system, i)
+            try:
+                return self._one(p, sampling, sampling.seed + i, system, i)
+            except urllib.error.HTTPError as e:   # one bad request must not fail its whole chunk:
+                body = e.read().decode("utf-8", "replace")[:300]   # it is recorded as failed alone
+                print(f"[ollama] {self.tag}: request failed (HTTP {e.code}): {body}", file=sys.stderr)
+                return None
 
         with ThreadPoolExecutor(max_workers=self.workers) as ex:
             results = list(ex.map(run, jobs))

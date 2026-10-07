@@ -133,3 +133,19 @@ def test_registered_ollama_model_pins_build_and_controls_thinking(monkeypatch):
     monkeypatch.setattr(ob.urllib.request, "urlopen", fake)
     with pytest.raises(RuntimeError, match="pins"):
         ob.OllamaRunner(gemma)
+
+
+def test_one_failing_request_fails_only_its_item(monkeypatch):
+    """A server error on one prompt (seen on Kaggle and locally for one RU prompt) returns
+    None for that item only, so the pipeline records just that generation as failed."""
+    fake = FakeHTTP()
+
+    def urlopen(req, timeout=None):
+        if not isinstance(req, str) and req.full_url.endswith("/api/chat") and b'"bad"' in req.data:
+            raise ob.urllib.error.HTTPError(req.full_url, 500, "Internal Server Error", {},
+                                            io.BytesIO(b'{"error":"boom"}'))
+        return fake(req, timeout)
+
+    monkeypatch.setattr(ob.urllib.request, "urlopen", urlopen)
+    outs = ob.OllamaRunner(resolve("phi3"), workers=2).generate(["a", "bad", "c"], SamplingConfig())
+    assert outs[1][0] is None and outs[0][0].text and outs[2][0].text
