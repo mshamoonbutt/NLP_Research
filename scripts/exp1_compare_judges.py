@@ -33,6 +33,7 @@ from csjail.utils.io import write_text_lf  # noqa: E402
 
 CONDS = ("EN", "CS", "RU", "UR")
 V2_RUN = ROOT / "outputs/exp1/validation-kaggle-01-merged/judge_predictions_harm_b0d6676cf5d89d08.jsonl"
+HELDOUT = ROOT / "outputs/exp1/heldout-960"   # reviewer-labelled test set; feeds the manifest's error
 KNOWN = {"b0d6676cf5d89d08": "gpt-4o harm-v2", "7030929c9323c3cc": "gpt-4o harm-v3",
          "3e8b9c302deb4023": "gpt-4o harm-v4", "203df99c54b0479b": "gpt-4.1 harm-v4",
          "2a8177e4fb3ea862": "gpt-4o harm-v5"}
@@ -145,9 +146,32 @@ def fmt(x) -> str:
     return " -- " if x is None else f"{x:.2f}"
 
 
-def write_selected_manifest(res: dict, fps: dict[str, str], per_model_language: dict) -> int:
+def judge_error(rows: list[tuple[str, str, bool, bool]]) -> dict:
+    """The judge's error from (model, condition, judge_unsafe, label) rows: overall, per
+    language and per model x language -- the counts Exp 2 corrects ASR with."""
+    models = sorted({r[0] for r in rows})
+    pick = lambda keep: metrics([(p, g) for m, c, p, g in rows if keep(m, c)])  # noqa: E731
+    return {"overall": pick(lambda m, c: True),
+            "per_language": {c: pick(lambda m, cc, c=c: cc == c) for c in CONDS},
+            "per_model_language": {f"{mo}|{c}": pick(lambda m, cc, mo=mo, c=c: (m, cc) == (mo, c))
+                                   for mo in models for c in CONDS}}
+
+
+def heldout_rows(fp: str) -> list[tuple[str, str, bool, bool]]:
+    """(model, condition, judge_unsafe, reviewer label) for the 960 held-out responses."""
+    lab = ga.read_csv(HELDOUT / "final_labels.csv")
+    pred = load_predictions(HELDOUT / f"judge_predictions_harm_{fp}.jsonl", {r["item_id"] for r in lab})
+    if len(pred) != len(lab):
+        raise SystemExit(f"FAIL: {len(lab) - len(pred)} held-out items have no valid judgment by {fp}; "
+                         "run calibrate_judge.py on outputs/exp1/heldout-960 first")
+    return [(r["model"], r["condition"], pred[r["item_id"]], r["unsafe"] == "true") for r in lab]
+
+
+def write_selected_manifest(res: dict, fps: dict[str, str], err: dict) -> int:
     """Production manifest (status SELECTED) for the comparison winner; the configured
-    judge must BE the winner, so config and manifest cannot drift apart."""
+    judge must BE the winner, so config and manifest cannot drift apart. The judge's error
+    (`err`) pools the development and held-out responses; the selection numbers stay on
+    development, where the rule was applied."""
     from csjail.judge import load_judge_config
     from csjail.judge_validation import SELECTED, write_manifest
     from csjail.utils.io import sha256_file
@@ -160,13 +184,22 @@ def write_selected_manifest(res: dict, fps: dict[str, str], per_model_language: 
     out = ROOT / "outputs/exp1/judge_validation_manifest.json"
     write_manifest(out, fingerprint=fp,
                    result={"status": SELECTED, "design": "exp1_judge_comparison", "judge": res["best"],
-                           "rule": res["rule"], "overall": t["overall"], "per_language": t["per_language"],
-                           "per_model_language": per_model_language,
-                           "macro_f1": t["macro_f1"], "meets_090_everywhere": t["meets_090_everywhere"],
-                           "n_items": res["n_items"], "unsafe_per_language": res["unsafe_per_language"]},
+                           "rule": res["rule"],
+                           "error_basis": "development (720) + held-out (960) responses with the "
+                                          "independent reviewer's labels; Exp 2 corrects ASR with "
+                                          "per_model_language (per_language as fallback)",
+                           **err, "n_items": err["overall"]["n"],
+                           "unsafe_per_language": {c: m["tp"] + m["fn"] for c, m in err["per_language"].items()},
+                           "selection_on_development": {
+                               "overall": t["overall"], "per_language": t["per_language"],
+                               "macro_f1": t["macro_f1"], "meets_090_everywhere": t["meets_090_everywhere"],
+                               "n_items": res["n_items"], "unsafe_per_language": res["unsafe_per_language"]}},
                    sample_manifest={"development_sample": "outputs/exp1/rubric-dev-01",
-                                    "items_sha256": sha256_file(ga.DEV / "items.csv")},
-                   gold_sha256={"final_labels.csv": sha256_file(ga.DEV / "final_labels.csv")},
+                                    "items_sha256": sha256_file(ga.DEV / "items.csv"),
+                                    "heldout_sample": "outputs/exp1/heldout-960",
+                                    "heldout_items_sha256": sha256_file(HELDOUT / "items.csv")},
+                   gold_sha256={"final_labels.csv": sha256_file(ga.DEV / "final_labels.csv"),
+                                "heldout-960/final_labels.csv": sha256_file(HELDOUT / "final_labels.csv")},
                    gold_report=res["label_provenance"])
     print(f"[compare] production manifest (SELECTED, {res['best']}) -> {out}")
     return 0
@@ -209,12 +242,11 @@ def main() -> int:
     if "--write-manifest" not in sys.argv:
         return 0
     # The judge's false-alarm rate differs by model (e.g. llama32 vs qwen25), so the
-    # production manifest also carries its error per model x language for ASR correction.
-    best, model = preds[res["best"]], {it["item_id"]: it["model"] for it in items}
-    cond = {it["item_id"]: it["condition"] for it in items}
-    per_ml = {f"{m}|{c}": metrics([(best[i], labels[i]) for i in best if (model[i], cond[i]) == (m, c)])
-              for m in sorted(set(model.values())) for c in CONDS}
-    return write_selected_manifest(res, fps, per_ml)
+    # production manifest carries its error per model x language for ASR correction,
+    # measured on development + held-out (140 responses per cell instead of 60).
+    best, meta = preds[res["best"]], {it["item_id"]: it for it in items}
+    rows = [(meta[i]["model"], meta[i]["condition"], best[i], labels[i]) for i in best]
+    return write_selected_manifest(res, fps, judge_error(rows + heldout_rows(fps[res["best"]])))
 
 
 if __name__ == "__main__":

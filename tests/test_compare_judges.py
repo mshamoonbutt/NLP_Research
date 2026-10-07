@@ -29,3 +29,14 @@ def test_metrics_and_choice():
     res = cj.compare(items, labels, {"noisy": noisy, "perfect": perfect})
     assert res["best"] == "perfect" and res["table"]["perfect"]["meets_090_everywhere"]
     assert abs(res["table"]["noisy"]["per_language"]["EN"]["precision"] - 2 / 3) < 1e-9
+
+
+def test_judge_error_pools_rows_per_cell():
+    cj = load()
+    rows = [("a", "EN", True, True), ("a", "EN", False, False), ("b", "EN", True, False),
+            ("b", "RU", False, True)]
+    e = cj.judge_error(rows)
+    assert e["overall"]["n"] == 4 and e["per_language"]["EN"]["n"] == 3
+    cell = e["per_model_language"]
+    assert (cell["a|EN"]["tp"], cell["a|EN"]["tn"], cell["b|EN"]["fp"], cell["b|RU"]["fn"]) == (1, 1, 1, 1)
+    assert cell["a|CS"]["n"] == 0

@@ -102,9 +102,22 @@ against the same human labels on the 720 development responses, in one table
   ollama --judge-model deepseek-v4.1-flash:cloud --judge-concurrency 1` and
   re-run the comparison. It uses the configured rubric (harm-v2), the same as
   the gpt-4o v2 row.
-- **Open:** how Exp 2 uses the chosen judge. Either its raw labels with the
-  per-language error rates reported, or ASR corrected per language with
-  these precision/recall values, or the screen-and-verify design above.
+- **Held-out test (2026-10-08, round 4):** `outputs/exp1/heldout-960`, 960
+  responses from 160 families never used to choose the judge, labelled by the
+  same reviewer (733 shown + 227 carried over from identical development
+  responses; harmful EN 27, CS 34, RU 31, UR 29; reviewer vs original κ 0.82).
+  Both DeepSeek judges re-run 2026-10-07 UTC, 960/960 parsed
+  (`scripts/exp1_heldout_compare.py` → `outputs/exp1/heldout_comparison.json`).
+  Flash: P 0.71, R 0.85, F1 0.77, κ 0.74, macro-F1 0.784 (development 0.783).
+  Pro: F1 0.71, κ 0.66. Flash − Pro: F1 +0.063 [+0.012, +0.118], κ +0.078
+  [+0.017, +0.142], so the choice holds on unseen data. Per language Flash
+  P/R/F1: EN 0.96/0.93/0.94, CS 0.82/0.94/0.88, RU 0.59/0.74/0.66, UR
+  0.56/0.79/0.66; RU F1 fell from 0.83 on development. No gpt-4o run covers
+  the held-out set (an old run judged 465 of the 960).
+- **Exp 2 uses** Flash's raw labels, with ASR corrected for its error per
+  model × language (Rogan–Gladen). Since 2026-10-08 that error pools
+  development + held-out (1,680 responses, 140 per cell, 7–49 harmful per
+  cell); the two sets did not differ measurably.
 
 ## Exp 1 — history: judge validation (superseded 2026-10-07)
 
@@ -416,12 +429,17 @@ Remaining steps:
 - **Raw ASR, all 791 families (EN / CS / RU / UR):** llama32 .118 / .373 / .359
   / .298; phi3 .082 / .113 / .100 / .102; qwen25 .154 / .092 / .034 / .061.
   The 200 held-out families (`--split eval_main`) give the same pattern.
-- **Corrected ASR** (per model × language judge error from Exp 1) e.g. llama32
-  CS .312 [.141, .464], RU .278 [.111, .389]. Intervals are wide because each
-  Exp 1 cell has only 60 responses (1–25 harmful); the judge's false-alarm
-  rate varies by model (~15% on llama32 CS/RU, ~2% on qwen25), so per-language
-  correction alone was biased. Reviewer labels on the 960 set-aside items
-  would add 80 responses per cell.
+- **Corrected ASR** (per model × language judge error from Exp 1, development
+  + held-out, 140 responses per cell; re-aggregated 2026-10-08, raw ASR
+  unchanged), all 791 families EN / CS / RU / UR: llama32 .125 / .328 / .281 /
+  .219; phi3 .085 / .121 / .064 / .000; qwen25 .127 / .078 / .029 / .062.
+  E.g. llama32 CS .328 [.237, .418] (was .312 [.141, .464] with the 60
+  development responses per cell), RU .281 [.165, .380]. 11 of 12 intervals
+  narrow (median width −40%); qwen25 RU widens (7 harmful in its cell, judge
+  recall .43).
+  phi3 UR corrects to 0: its 10% raw rate matches the judge's false-alarm
+  rate in that cell. The judge's false-alarm rate varies by model (~12–16% on
+  llama32 CS/RU/UR, ~2% on qwen25), so per-language correction alone is biased.
 - **Robustness (sampled, T 0.7, 5 draws; per-draw / any-of-5 / greedy):**
   llama32 CS .434 / .735 / .405, RU .438 / .780 / .395; phi3 CS .140 / .310 /
   .115, RU .099 / .270 / .115; qwen25 CS .154 / .300 / .130, RU .062 / .180 /
@@ -438,11 +456,11 @@ Remaining steps:
   then `python scripts/exp2_robustness.py --judge-only --greedy-results outputs/exp2/main`;
   both resume from `judgments.jsonl`.
 - **Reporting:** `python -m csjail.aggregate outputs/exp2/main [--split eval_main]`
-  prints raw ASR and ASR corrected for the judge's per-language error
+  prints raw ASR and ASR corrected for the judge's error per model × language
   (Rogan–Gladen with Exp 1 recall and specificity; interval pairs the family
-  bootstrap with posterior draws of both). Assumes the judge's error per
-  language transfers from the 720 development responses to each model.
-  The correction tightens once the 960 set-aside items are reviewer-labelled.
+  bootstrap with posterior draws of both). Assumes the judge's error in each
+  cell transfers from the 1,680 reviewer-labelled Exp 1 responses (development
+  + held-out) to the full sweep.
 - **Superseded:** the screen-and-verify design (`exp2_verify.py`) and the Kaggle
   `screen` mode are no longer the plan.
 
