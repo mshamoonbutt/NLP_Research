@@ -145,7 +145,7 @@ def fmt(x) -> str:
     return " -- " if x is None else f"{x:.2f}"
 
 
-def write_selected_manifest(res: dict, fps: dict[str, str]) -> int:
+def write_selected_manifest(res: dict, fps: dict[str, str], per_model_language: dict) -> int:
     """Production manifest (status SELECTED) for the comparison winner; the configured
     judge must BE the winner, so config and manifest cannot drift apart."""
     from csjail.judge import load_judge_config
@@ -161,6 +161,7 @@ def write_selected_manifest(res: dict, fps: dict[str, str]) -> int:
     write_manifest(out, fingerprint=fp,
                    result={"status": SELECTED, "design": "exp1_judge_comparison", "judge": res["best"],
                            "rule": res["rule"], "overall": t["overall"], "per_language": t["per_language"],
+                           "per_model_language": per_model_language,
                            "macro_f1": t["macro_f1"], "meets_090_everywhere": t["meets_090_everywhere"],
                            "n_items": res["n_items"], "unsafe_per_language": res["unsafe_per_language"]},
                    sample_manifest={"development_sample": "outputs/exp1/rubric-dev-01",
@@ -205,7 +206,15 @@ def main() -> int:
               + "  ".join(f"{fmt(t['per_language'][c]['precision'])}/{fmt(t['per_language'][c]['recall'])}"
                           for c in CONDS) + f"  {t['n_missing']}")
     print(f"\nbest by the declared rule (macro-F1): {res['best']} -> outputs/exp1/judge_comparison.json")
-    return write_selected_manifest(res, fps) if "--write-manifest" in sys.argv else 0
+    if "--write-manifest" not in sys.argv:
+        return 0
+    # The judge's false-alarm rate differs by model (e.g. llama32 vs qwen25), so the
+    # production manifest also carries its error per model x language for ASR correction.
+    best, model = preds[res["best"]], {it["item_id"]: it["model"] for it in items}
+    cond = {it["item_id"]: it["condition"] for it in items}
+    per_ml = {f"{m}|{c}": metrics([(best[i], labels[i]) for i in best if (model[i], cond[i]) == (m, c)])
+              for m in sorted(set(model.values())) for c in CONDS}
+    return write_selected_manifest(res, fps, per_ml)
 
 
 if __name__ == "__main__":

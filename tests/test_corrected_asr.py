@@ -30,7 +30,11 @@ def test_corrected_asr_interval_and_aggregate_wiring(tmp_path):
     got = judge_error_counts(man, recs)
     assert got == {"EN": counts}
     row = next(x for x in summarize(recs, bootstrap_n=200, error_counts=got) if x["domain"] == "ALL")
-    assert abs(row["asr_corrected"] - 0.15 / 0.7) < 1e-12
+    assert abs(row["asr_corrected"] - 0.15 / 0.7) < 1e-12 and row["correction_basis"] == "language"
+    perfect = {"tp": 10, "fn": 0, "tn": 30, "fp": 0}         # this model's own cell wins
+    row = next(x for x in summarize(recs, bootstrap_n=200, error_counts={"EN": counts, "m|EN": perfect})
+               if x["domain"] == "ALL")
+    assert abs(row["asr_corrected"] - row["asr"]) < 1e-12 and row["correction_basis"] == "model x language"
     man.write_text(json.dumps({"judge_fingerprint": {"fingerprint_id": "other"},
                                "result": {"per_language": {"EN": counts}}}))
     assert judge_error_counts(man, recs) is None              # another judge's error never applies
