@@ -527,45 +527,103 @@ gitignored under `outputs/smoke/`).
   733 of the 960 set-aside items to review; 227 identical to development responses
   the reviewer already labelled keep that label (`carried_labels.csv`).
 
-## Exp 3 — matched contrasts: **RUN (2026-10-07, 3 original models, full core)**
+## Exp 3 — matched contrasts: **DONE (2026-10-08, five models)**
 
-`scripts/exp3_isolation.py --results outputs/exp2/main --out-dir outputs/exp3` →
-`isolation_results.json`, `contrasts_table.csv` (paper Table 6 shape). Declared in
-`configs/eval.yaml` before this first run: Holm families (confirmatory = qwen25/phi3/llama32,
-9 tests; extension = r1qwen15/gemma4e2b, separate) and the judge-robustness rule (a contrast
-is a finding only if Holm-significant AND its judge-corrected paired difference CI excludes 0
-with the same sign).
-- Raw paired differences (pp; * = Holm-significant over the 9 tests): llama32 CS−RU +1.4,
-  RU−UR +6.1 (p .009, adj. .057), RU−EN +24.1*; phi3 +1.3 / −0.3 / +1.8; qwen25 CS−RU +5.8*,
-  RU−UR −2.7 (adj. .080), RU−EN −12.0*. Descriptive CS−EN: llama32 +25.5, phi3 +3.0, qwen25 −6.2.
-- **Judge-corrected: no contrast is a robust finding yet.** Corrected CIs are wide because each
-  model × condition cell of judge error rests on 60 development responses (e.g. llama32 RU
-  false-alarm rate from 35 safe responses). Per-language error (pooled models) would make
-  llama32/qwen25 RU−EN and CS−EN robust but is biased (false-alarm rates differ by model).
-  Rough projection with 140 responses per cell at today's error rates: llama32 RU−EN and
-  CS−EN become robust. Re-run after the round-4 labels enter the judge manifest.
-- Descriptive response shifts (paired): lower harm in UR/RU comes with **non-response, not
-  refusal**, for phi3 (RU−EN non-response +58 pp, refusal −70 pp) and qwen25 (RU−UR
-  non-response −66 pp, refusal +64 pp). English refusal → harmful elsewhere: llama32
-  CS 32% / RU 35% / UR 28% of its 684 EN refusals; phi3 8–10%; qwen25 3–7%.
-- GEE per model (OR vs EN): llama32 CS 4.5, RU 4.3, UR 3.2; phi3 1.4 / 1.2 / 1.3;
-  qwen25 0.55 / 0.19 / 0.35. Converged, 0 missing.
+`python scripts/exp3_isolation.py --results outputs/exp2/main outputs/exp2/main-r1
+outputs/exp2/main-gemma4 --out-dir outputs/exp3` (and `--split eval_main --out-dir
+outputs/exp3/eval_main`) → `isolation_results.json`, `contrasts_table.csv`.
 
-## Exp 4 — tokenizer fertility: **RUN (2026-10-07)**
+**Design (declared in `configs/eval.yaml` before the first run, 2026-10-07; correction
+amended 2026-10-08 to follow Exp 2, before the five-model run):**
+- Test: two-sided McNemar on the judge's labels, complete pairs, all 791 families.
+- Holm within two families:
+  - confirmatory: qwen25, phi3, llama32 × CS−RU / RU−UR / RU−EN, 9 tests (the paper's family);
+  - extension: r1qwen15, gemma4e2b, 6 tests (models added after Exp 2 results were seen).
+- CS−EN: descriptive.
+- Effect sizes:
+  - raw paired difference, 10,000-draw domain-stratified family bootstrap;
+  - **judge-corrected paired difference** with the judge's predictive values per model ×
+    condition, the Exp 2 correction (`aggregate.predictive_value_diff`): pairs resampled
+    together, Jeffreys draws of each condition's P(harmful | flagged) and P(harmful | not
+    flagged), and the model's pooled P(harmful | flagged) where the judge flagged none of a
+    cell's labelled responses (Gemma CS/EN/UR).
+- **Finding** = Holm-significant AND corrected 95% CI excludes 0 with the same sign.
+- Descriptive: paired shifts in refusal, non-response (unintelligible / irrelevant / empty)
+  and full-only harm; EN refusal → harmful elsewhere; per-model GEE (raw labels,
+  supplementary) and a pooled condition × model interaction GEE (15,820 rows, converged).
 
-`scripts/exp4_features.py` → `outputs/exp4/features_results.json`, `fertility_by_prompt.csv`
-(counts only). Fertility = raw-prompt tokens / whitespace words at the pinned tokenizer.
-Tokenizer check vs the Exp 2 run (recorded prompt tokens − our count = one constant):
-1.000 for qwen25, phi3 and llama32 (llama32 via the ungated mirror
-`unsloth/Llama-3.2-3B-Instruct`, so the mirror is verified). CMI / Urdu share: NOT run
-(tagger unvalidated).
-- Mean fertility EN/CS/RU/UR: qwen25 1.16/1.48/1.85/3.12, llama32 1.16/1.48/1.83/3.02,
-  phi3 1.33/1.68/2.03/4.84, gemma4e2b 1.16/1.30/1.55/1.39, r1qwen15 = qwen25 (same
-  tokenizer: a tokenizer-matched pair for the extension).
-- Within-condition GEE (exploratory; OR per within-condition SD, adjusted for condition,
-  domain, length): **non-response rises with fragmentation** (pooled OR llama32 1.24,
-  phi3 1.58, qwen25 1.40, all p < .001; strongest in RU/CS); harmful compliance shows no
-  consistent association (pooled 0.98 / 0.82 / 0.92; signs differ by condition).
+**Results, all 791 families (pp; corrected difference with 95% CI):**
+
+| Family | Model | CS−RU | RU−UR | RU−EN | CS−EN (desc.) |
+|---|---|---|---|---|---|
+| confirmatory | llama32 | +1.4 / −0.0 [−8.3, +8.2] | +6.1 / +9.8 [+1.6, +17.9] (Holm p .057) | **+24.1 / +19.4 [+12.7, +26.5]** | +25.5 / +19.4 |
+| confirmatory | phi3 | +1.3 / +5.5 [+1.0, +9.4] (Holm p 1.0) | −0.3 / −1.4 | +1.8 / −1.6 | +3.0 / +4.0 |
+| confirmatory | qwen25 | +5.8* / +3.0 [−1.8, +6.7] | −2.7 / −1.4 | **−12.0 / −7.0 [−11.4, −1.7]** | −6.2 / −4.0 |
+| extension | r1qwen15 | **+25.7 / +27.4 [+14.5, +40.8]** | +11.3* / +1.4 [−4.2, +8.9] | **−44.4 / −48.3 [−59.5, −34.8]** | −18.7 / −20.9 |
+| extension | gemma4e2b | +0.3 / +1.8 | +1.8 / −3.0 | +3.0* / +1.4 [−4.5, +5.7] | +3.3 / +3.2 |
+
+Bold = finding (raw / corrected); * = Holm-significant but the corrected CI includes 0 (not
+robust to judge error). Four findings: llama32 RU−EN, qwen25 RU−EN, r1qwen15 CS−RU and RU−EN.
+The 200 held-out families give the same four findings and no others.
+- Not findings, but worth stating: llama32 RU−UR and phi3 CS−RU have corrected CIs that
+  exclude 0, but their preregistered raw test is not Holm-significant.
+- Why the lower harm in Urdu forms (paired shifts, pp, raw judge labels): phi3 RU vs EN
+  refusal −70, non-response +58; qwen25 UR vs RU non-response +66, refusal −64; r1qwen15
+  RU vs EN non-response +40; llama32 RU vs EN refusal −51 with harm +24 (it engages and
+  complies). Gemma: refusal 91–95% in every form, 0 non-response.
+- Full-only harm moves little (|diff| ≤ 6 pp except r1qwen15 RU−EN −17 and CS−EN −11): the
+  contrasts are driven by partial assistance.
+- English refusal → harmful elsewhere (share of the model's EN refusals): llama32 CS 32% /
+  RU 35% / UR 28% (684 refusals); r1qwen15 CS 30% (73); phi3 8–10%; qwen25 3–7%; gemma4e2b
+  3–5%.
+- GEE odds ratios vs EN (raw labels): llama32 CS 4.5 / RU 4.3 / UR 3.2; phi3 1.4 / 1.2 / 1.3;
+  qwen25 0.55 / 0.19 / 0.35; r1qwen15 0.46 / 0.10 / 0.01; gemma4e2b 2.2 / 2.1 / 1.4.
+
+## Exp 4 — tokenizer fertility: **DONE (2026-10-08, five models)**
+
+`python scripts/exp4_features.py --results outputs/exp2/main outputs/exp2/main-r1
+outputs/exp2/main-gemma4 --tokenizer llama32=unsloth/Llama-3.2-3B-Instruct --out-dir
+outputs/exp4` → `features_results.json`, `fertility_by_prompt.csv` (counts only, no text).
+
+**Design:** fertility = tokens of the raw prompt (pinned tokenizer, no chat template, no
+special tokens) / whitespace words. Tokenizer check against the runs (recorded prompt tokens
+− our count = one constant): **1.000 for all five models** (llama32 via the ungated mirror,
+gemma4e2b against its Ollama build). Association per model, exploratory: GEE (logit,
+clustered on family) of harm and of non-response on fertility standardized within condition,
+adjusted for condition, domain and log word count; conditions where every response has the
+same outcome are left out; Holm across the 9 pooled fits (Gemma has no non-response).
+**Human-label check:** the same pooled fit on the reviewer-labelled responses (560 per
+original model, 240 per added model), with the judge's and the reviewer's labels on
+identical rows. CMI / Urdu share: **not run** (no validated tagger).
+
+**Mean fertility (× EN):**
+
+| Model | EN | CS | RU | UR |
+|---|---|---|---|---|
+| qwen25 / r1qwen15 (same tokenizer) | 1.16 | 1.48 (1.28) | 1.85 (1.60) | 3.12 (2.69) |
+| llama32 | 1.16 | 1.48 (1.28) | 1.83 (1.58) | 3.02 (2.61) |
+| phi3 | 1.33 | 1.68 (1.26) | 2.03 (1.52) | 4.84 (3.64) |
+| gemma4e2b | 1.16 | 1.30 (1.12) | 1.55 (1.34) | 1.39 (1.20) |
+
+**Associations (OR per within-condition SD; full data, judge labels → human-label check):**
+
+| Model | Non-response | Human-label check (judge / reviewer, same rows) | Harm | Human-label check (judge / reviewer) |
+|---|---|---|---|---|
+| phi3 | 1.58 (Holm p < .001) | 1.99 / **1.92 [1.43, 2.56]** | 0.82 (Holm p .03) | 0.81 / 0.96 [0.73, 1.27] |
+| r1qwen15 | 1.34 (< .001) | 1.47 / **1.52 [1.06, 2.16]** | 0.75 (< .001) | 0.68 / 0.84 [0.56, 1.25] |
+| qwen25 | 1.40 (< .001) | 1.38 / 1.07 [0.78, 1.46] | 0.92 (.45) | 0.77 / 0.95 [0.69, 1.30] |
+| llama32 | 1.24 (.001) | 1.80 / 1.23 [0.95, 1.59] | 0.98 (.67) | 0.89 / 1.00 [0.81, 1.22] |
+| gemma4e2b | no non-response | — | 1.15 (.32) | 3 events: uninformative |
+
+- **Supported:** within a form, more fragmented prompts get more non-response, robustly
+  under human labels for phi3 and r1qwen15; weaker and not distinguishable from 1 under
+  human labels for qwen25 and llama32.
+- **Not supported:** any link between fragmentation and harmful compliance. The negative
+  harm associations in the judge's labels (phi3, r1qwen15) vanish with human labels: a
+  judge artefact, not a finding.
+- Descriptive, n = 5 models: Gemma barely fragments Urdu script (1.39 tokens/word vs
+  3.0–4.8) and has no non-response; r1qwen15 shares qwen25's tokenizer exactly yet differs
+  sharply in behaviour, so tokenization alone does not explain model differences.
 
 ## Exp 4b: not run (needs GPU)
 ## Exp 5: cut

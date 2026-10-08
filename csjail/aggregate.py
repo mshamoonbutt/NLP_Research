@@ -155,6 +155,52 @@ def predictive_value_asr(outcomes: list[Optional[bool]], families: list[str], st
             "ppv_from": "model x language" if src is counts else "model, pooled over languages"}
 
 
+def pooled_cells(error_counts: dict, model: str) -> Optional[dict]:
+    """The model's judge-error cells summed over languages (predictive_value_asr's fallback)."""
+    cells = [v for k, v in error_counts.items() if k.startswith(f"{model}|")]
+    return {k: sum(c[k] for c in cells) for k in ("tp", "fn", "tn", "fp")} if cells else None
+
+
+def predictive_value_diff(a: list[bool], b: list[bool], strata: list[str], counts_a: dict, counts_b: dict,
+                          fallback: Optional[dict] = None, *, bootstrap_n: int = 10_000,
+                          ci_alpha: float = 0.05, seed: int = 0) -> dict:
+    """Paired difference of predictive-value corrected ASRs (Exp 3): `a`, `b` are the judge's
+    labels on complete pairs, one per family in the same order; `counts_*` each condition's
+    judge error (fallback as in predictive_value_asr). Interval: domain-stratified family
+    bootstrap of both flagged shares together (the pair moves as one), paired with Jeffreys
+    draws of each condition's two probabilities; a P(harmful | flagged) both conditions take
+    from the same fallback pool is one draw, not two."""
+    import numpy as np
+    none = {"diff_corrected": None, "diff_corrected_ci_lo": None, "diff_corrected_ci_hi": None}
+    srcs = [c if c["tp"] + c["fp"] else (fallback or c) for c in (counts_a, counts_b)]
+    if not len(a) or any(not (s["tp"] + s["fp"]) or not (c["fn"] + c["tn"])
+                         for s, c in zip(srcs, (counts_a, counts_b))):
+        return none
+    a, b, strata = np.asarray(a, dtype=float), np.asarray(b, dtype=float), np.asarray(strata)
+    rng = np.random.default_rng(seed + 2)
+    xa, xb = np.zeros(bootstrap_n), np.zeros(bootstrap_n)
+    for s in np.unique(strata):
+        ix = np.flatnonzero(strata == s)
+        pick = ix[rng.integers(0, len(ix), size=(bootstrap_n, len(ix)))]
+        xa += a[pick].sum(axis=1)
+        xb += b[pick].sum(axis=1)
+    xa, xb = xa / len(a), xb / len(b)
+    ppv = [rng.beta(s["tp"] + .5, s["fp"] + .5, bootstrap_n) for s in srcs]
+    if srcs[0] is srcs[1]:
+        ppv[1] = ppv[0]
+    fo = [rng.beta(c["fn"] + .5, c["tn"] + .5, bootstrap_n) for c in (counts_a, counts_b)]
+    reps = (xa * ppv[0] + (1 - xa) * fo[0]) - (xb * ppv[1] + (1 - xb) * fo[1])
+
+    def point(x, s, c):
+        return x * s["tp"] / (s["tp"] + s["fp"]) + (1 - x) * c["fn"] / (c["fn"] + c["tn"])
+
+    return {"diff_corrected": point(a.mean(), srcs[0], counts_a) - point(b.mean(), srcs[1], counts_b),
+            "diff_corrected_ci_lo": float(np.quantile(reps, ci_alpha / 2)),
+            "diff_corrected_ci_hi": float(np.quantile(reps, 1 - ci_alpha / 2)),
+            "ppv_from": ["model x language" if s is c else "model, pooled over languages"
+                         for s, c in zip(srcs, (counts_a, counts_b))]}
+
+
 def summarize(recs: list[dict], *, bootstrap_n: int = 10_000, seed: int = 0,
               ci_alpha: float = 0.05, error_counts: Optional[dict] = None,
               correction: str = "rogan_gladen") -> list[dict]:
@@ -193,9 +239,8 @@ def summarize(recs: list[dict], *, bootstrap_n: int = 10_000, seed: int = 0,
                             "macro_ci_hi": m["ci_hi"]})
                 basis = next((k for k in (f"{model}|{cond}", cond) if k in (error_counts or {})), None)
                 if basis and correction == "predictive_value":
-                    cells = [v for k, v in error_counts.items() if k.startswith(f"{model}|")]
-                    pooled = {k: sum(c[k] for c in cells) for k in ("tp", "fn", "tn", "fp")} if cells else None
-                    row.update(predictive_value_asr(prim, fams, doms, error_counts[basis], pooled,
+                    row.update(predictive_value_asr(prim, fams, doms, error_counts[basis],
+                                                    pooled_cells(error_counts, model),
                                                     bootstrap_n=bootstrap_n, ci_alpha=ci_alpha, seed=seed))
                 elif basis:
                     row.update(corrected_asr(prim, fams, error_counts[basis], strata=doms,
