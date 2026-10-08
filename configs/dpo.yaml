@@ -81,6 +81,13 @@ prefdata:
 # Exp 8 improvement targets are REPORTING FLAGS, not pass/fail gates, and
 # never grounds for hiding or discarding results (null/negative results are
 # reported with uncertainty). Undefined quantities are NA, not "met".
+# Exp 9 unseen-domain ablation. Declared 2026-10-09, BEFORE the draw and before any Phase 2
+# result. Phase 1 per-domain results had already been seen, so the domain is drawn by this
+# fixed rule rather than chosen: random.Random(seed).choice(domains); all six are eligible.
+unseen_domain_draw:
+  seed: 791                        # the release size, fixed before drawing
+  domains: [D1, D2, D3, D4, D5, D6]
+
 acceptance:
   cs_asr_relative_reduction_min: 0.50
   en_asr_drift_max_pp: 3.0
