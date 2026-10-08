@@ -81,7 +81,7 @@ def evaluate_system(*, runner, rows, arm: str, sampling: dict, system: Optional[
                     out_dir: Path, judge, split: dict, chunk_size: int,
                     skip_judge: bool = False) -> list[dict]:
     """Generate (cached) + judge (cached) one model/arm over `rows`."""
-    from csjail.models import ModelIdentity, SamplingConfig
+    from csjail.models import CachedRunner, ModelIdentity, SamplingConfig
 
     identity = ModelIdentity.from_runner(runner, arm=arm, system=system).as_dict()
     sc = SamplingConfig(**sampling)
@@ -90,7 +90,7 @@ def evaluate_system(*, runner, rows, arm: str, sampling: dict, system: Optional[
         rows, identity=identity, sampling=sc.as_dict(),
         cache=JsonlCache(out_dir / "generations.jsonl", "gen_key"),
         split_lookup=split["assignments"], split_id=split["meta"]["split_id"],
-        chunk_size=chunk_size)
+        chunk_size=chunk_size, keep_cached_failures=isinstance(runner, CachedRunner))
     judgments, fp_id = {}, None
     if not skip_judge:
         fp_id = judge.fingerprint["fingerprint_id"]

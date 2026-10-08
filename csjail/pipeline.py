@@ -80,16 +80,20 @@ def generation_key(row: Prompt, identity: dict, sampling: dict) -> str:
 def run_generation(generate_fn: Callable[[list[str]], list[list[Any]]], rows: list[Prompt], *,
                    identity: dict, sampling: dict, cache: JsonlCache,
                    split_lookup: Optional[dict[str, dict]] = None, split_id: Optional[str] = None,
-                   chunk_size: int = 64, log: Callable[[str], None] = print) -> list[dict]:
+                   chunk_size: int = 64, log: Callable[[str], None] = print,
+                   keep_cached_failures: bool = False) -> list[dict]:
     """`generate_fn(prompts) -> [[GenOutput x n] per prompt]`. Returns one
-    record per (row, sample_index), from cache when possible."""
+    record per (row, sample_index), from cache when possible.
+    keep_cached_failures (judge-only runs): a generation already recorded as failed
+    is returned as failed (scored missing) instead of being generated again."""
+    done = ("ok", "failed") if keep_cached_failures else ("ok",)
     n = int(sampling.get("n", 1))
     todo, keys = [], {}
     for r in rows:
         k = generation_key(r, identity, sampling)
         keys[r.id] = k
         cached = [cache.records.get(f"{k}#{i}") for i in range(n)]
-        if not all(c is not None and c.get("generation_status") == "ok" for c in cached):
+        if not all(c is not None and c.get("generation_status") in done for c in cached):
             todo.append(r)
     if todo:
         log(f"[gen] {identity.get('model_key')}/{identity.get('arm')}: "
