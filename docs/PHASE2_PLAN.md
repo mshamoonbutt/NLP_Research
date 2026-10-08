@@ -36,10 +36,10 @@ pinned stack), Qwen (49 failures).
 | P1 | `train_dpo` uses bf16; Kaggle T4s have no bf16 | fp16 compute on T4 (= inference precision); GPU smoke (PROTOCOL §9, never run) | code done (`compute_dtype: float16`); GPU smoke pending |
 | P2 | Exp 8 judges inside the GPU run; Kaggle cannot reach the Ollama judge | Split: generate on Kaggle, judge on the laptop (as Exp 2) | done (`--skip-judge` / `--judge-only`, tested) |
 | P3 | Over-refusal (benign) judge not checked with Flash; Exp 8 needs its manifest | Run Flash on the 450 labelled benign responses | **PASS**: P 1.000, R 0.938, F1 0.968 |
-| P4 | Over-refusal probe: 150 Latin-script prompts, 0 Urdu script, language mix unaudited, old C01–C10 taxonomy | Decision D4 | pending |
+| P4 | Over-refusal probe: 150 Latin-script prompts, 0 Urdu script, language mix unaudited, old C01–C10 taxonomy | Decision D4 | team writing the four-form set |
 | P5 | Capability sets (MMLU-500, UrduMMLU-300) not built; UrduMMLU source to obtain | `prepare_capability_sets.py` | done: both frozen (UrduMMLU from MBZUAI/UrduMMLU, CC BY 4.0) |
-| P6 | Chosen-response generator (Claude Sonnet 4.5, distinct from the judge) needs `ANTHROPIC_API_KEY` | Decision D5 | pending |
-| P7 | Exp 9 unseen domain never declared before outcomes | Seeded draw by a rule recorded before drawing; disclose it came after Phase 1 | pending (D6) |
+| P6 | Chosen-response generator (Claude Sonnet 4.5, distinct from the judge) needs `ANTHROPIC_API_KEY` | Decision D5 | waiting for the key |
+| P7 | Exp 9 unseen domain never declared before outcomes | Seeded draw by a rule recorded before drawing; disclose it came after Phase 1 | done: D6 drawn |
 
 ## Experiments
 
@@ -96,11 +96,11 @@ pinned stack), Qwen (49 failures).
 | # | Decision | Recommendation | Status |
 |---|---|---|---|
 | D1 | Phase 2 models | Llama + Phi-3 | recommended |
-| D2 | Reviewer checks rejected responses | Yes | pending |
+| D2 | Reviewer checks rejected responses | Yes | **decided 2026-10-09:** yes, capped at ~160 → equal budget N = 60 pairs for both models (all 66 Phi-3 + the first 90 Llama in the seeded order; ~156 checks) |
 | D3 | Training seeds | 3 for primary C vs B_ext; 1 elsewhere | recommended |
-| D4 | Over-refusal set | Team writes ~50 benign prompts × 4 forms (3–4 h); else report over-refusal as limited | pending |
-| D5 | Chosen generator | `ANTHROPIC_API_KEY` for Claude Sonnet 4.5, or another model distinct from the judge | pending |
-| D6 | Unseen-domain rule | Seeded draw recorded before drawing | pending |
+| D4 | Over-refusal set | Team writes ~50 benign prompts × 4 forms (3–4 h); else report over-refusal as limited | **decided:** yes; 60 (10 per domain) recommended, 50 minimum; spec below |
+| D5 | Chosen generator | `ANTHROPIC_API_KEY` for Claude Sonnet 4.5, or another model distinct from the judge | **decided:** Claude Sonnet 4.5 (`claude-sonnet-4-5`, still active; the 2026-09-26 choice); key with ~$20 |
+| D6 | Unseen-domain rule | Seeded draw recorded before drawing | **done:** rule committed in 5b4d2e7 (`random.Random(791)` over D1–D6), drawn **D6** in 141cfe4; split `1af335defc251d52` |
 | D7 | Optional arms | Run E; skip D and matched arms | recommended |
 
 ## Schedule (~3–4 days; critical path: reviewer, API key, Kaggle quota)
@@ -113,3 +113,21 @@ pinned stack), Qwen (49 failures).
 
 GPU total ≈ 12–14 h of Kaggle's 30 h/week; running Phi-3 and Llama on the two T4s at once
 roughly halves it.
+
+## Harmless prompt set v2 (D4) — spec for the team
+
+- **60 prompts, 10 per domain (D1–D6)**; 50 (8–9 per domain) is the minimum. Each written in all
+  four forms (EN, CS, RU, UR) the same way as the harmful set → 240 (or 200) items.
+- Each prompt sounds close to its domain's topic but is clearly legitimate, e.g. for D6 enabling
+  two-factor authentication, for D2 finding a helpline for a friend, for D5 checking which apps
+  can see one's location. Mix: safety or prevention information, help-seeking, education or
+  history, fiction or analysis, everyday tasks that contain trigger words.
+- No real names, no personal data, nothing a reasonable reader would consider harmful.
+- Template: `docs/benign_probe_v2_template.csv` (`prompt_id` like `BN-D3-07`, `boundary_type`
+  free text). Fill `written_by` / `translated_by` (initials) — the paper's provenance section
+  needs them; say in `notes` if any tool assisted.
+- Used in Exp 8 for over-refusal per form. The benign judge passed on Latin-script responses
+  only, so the post-training audit adds ~60 reviewer labels on RU/UR benign responses.
+- **Why 50–60 is enough:** every arm answers the same items, so arms are compared pair by pair;
+  with 200–240 items per arm a 10-point over-refusal increase (the reporting flag) is
+  detectable; per-form rates (50–60 each) are descriptive.

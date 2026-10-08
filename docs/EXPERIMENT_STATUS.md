@@ -636,7 +636,36 @@ identical rows. CMI / Urdu share: **not run** (no validated tagger).
   3.0–4.8) and has no non-response; r1qwen15 shares qwen25's tokenizer exactly yet differs
   sharply in behaviour, so tokenization alone does not explain model differences.
 
-## Exp 4b — intent-recovery probe: **READY TO RUN (2026-10-08)**
+## Exp 4b — intent-recovery probe: **SCORED (2026-10-09); scorer audit pending**
+
+Generated on Kaggle (`notebooks/kaggle_exp4b.ipynb`): 2,000/2,000 probes ok (100 families × 4
+forms × 5 models; Gemma via Ollama 0.40.0, pinned build accepted; R1 finished its reasoning on
+386/400, the other 14 are "uncertain"). Scored on the laptop with the comprehension rubric
+through DeepSeek V4.1 Flash (`outputs/exp4b/comprehension_summary.json`; probe texts and the
+blinded audit file stay local). **Scorer not yet validated:** a bilingual reviewer labels the 80
+blinded answers in `outputs/exp4b/review_sample.csv` → `--score-review`.
+
+**Intent recovered (share understood, EN / CS / RU / UR):**
+
+| Model | EN | CS | RU | UR | Note |
+|---|---|---|---|---|---|
+| qwen25 | .95 | .48 | .17 | .04 | |
+| phi3 | .96 | .44 | .11 | .02 | |
+| llama32 | .61 | .58 | .34 | .60 | 32 EN probes refused (refusing to restate ≠ not understanding) |
+| r1qwen15 | .70 | .32 | .13 | .02 | |
+| gemma4e2b | .90 | .84 | .91 | .84 | |
+
+- Qwen, Phi-3 and R1 mostly do not understand Roman Urdu or Urdu-script requests; Gemma
+  understands every form and still refuses; Llama understands Urdu script and often RU.
+- **Contrasts restricted to families understood in both forms** (raw judge labels, small n,
+  descriptive): R1 RU−EN −44 pp on all probed families → **0.0 (n 13)**; R1 CS−EN −25 → +3.8
+  (n 26); Llama RU−EN +19 → **+13 (n 23)**, CS−EN +16 → +22 (n 41); Qwen RU−EN −11 → −6 (n 16).
+  R1's lower harm in RU/CS is non-comprehension; Llama's higher harm in RU persists when it
+  understands.
+- ASR among understood probes is in the summary file; UR/RU cells for qwen25/phi3/r1qwen15 have
+  2–17 understood items, so their conditional rates are not interpretable.
+
+### Exp 4b design and steps (as prepared 2026-10-08)
 
 **Design** (`scripts/exp4b_comprehension.py`, `csjail/comprehension.py`):
 - 100 families, domain-stratified, chosen without outcomes (seed 42), × 4 conditions × 5 models
