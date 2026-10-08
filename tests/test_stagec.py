@@ -53,22 +53,22 @@ def test_inputs_newest_judgments_and_newest_human_labels_win(tmp_path):
     assert (dest / ADJ).read_text(encoding="utf-8") == "corrected"
 
 
-def run_driver(sc, tmp_path, monkeypatch, codes, *extra):
+def run_driver(sc, tmp_path, monkeypatch, codes, *extra, passed=False):
     repo, inp = tmp_path / "repo", tmp_path / "input"
     repo.mkdir()
     bundle(inp / "upload", sc.UPLOAD, "", {"outputs/exp2/main/generations.jsonl": "gens"})
     monkeypatch.setattr(sc, "ROOT", repo)
-    calls, passed = [], {"v": False}
+    calls = []
+    every = (sc.plan(True) + sc.plan(True, DEV_DIR) + sc.plan(True, None, (), True)
+             + sc.plan(True, None, (), False, True))
 
     def fake_step(cmd, timeout_s):
-        name = next(n for n, c, _ in sc.plan(True) + sc.plan(True, DEV_DIR) if c == cmd)
+        name = next(n for n, c, _ in every if c == cmd)
         calls.append(name)
-        if name == "harm_gate" and codes.get(name) == 0:
-            passed["v"] = True
         return codes.get(name, 0)
 
     monkeypatch.setattr(sc, "run_step", fake_step)
-    monkeypatch.setattr(sc, "harm_passed", lambda: passed["v"])
+    monkeypatch.setattr(sc, "harm_passed", lambda: passed)
     out = tmp_path / "out" / "stageC_outputs.zip"
     out.parent.mkdir()
     rc = sc.main(["--input-root", str(inp), "--scratch", str(tmp_path / "scratch"),
@@ -81,9 +81,9 @@ def run_driver(sc, tmp_path, monkeypatch, codes, *extra):
 
 def test_exp2_judged_only_after_pass_and_robustness_only_after_main(tmp_path, monkeypatch):
     sc = load()
-    rc, calls, status, names = run_driver(sc, tmp_path, monkeypatch,
-                                          {"harm_gate": 0, "exp2_main": 4})
-    assert rc == 0 and calls == ["harm_gate", "exp2_main"]          # benign absent, robustness waits
+    rc, calls, status, names = run_driver(sc, tmp_path, monkeypatch, {"exp2_main": 4}, passed=True)
+    assert rc == 0 and calls == ["exp2_main"]                       # benign absent, robustness waits
+    assert status["mode"] == "final"
     assert status["steps"]["exp2_main"] == 4
     assert status["steps"]["exp2_robustness"].startswith("skipped")
     assert sc.RESUME in names and "outputs/exp2/main/generations.jsonl" in names
@@ -107,17 +107,39 @@ def test_dev_mode_can_compare_extra_judge_models():
     assert all("calibrate_judge.py" in c[1] for _, c, _ in steps)
 
 
-def test_failed_gate_blocks_exp2_judging(tmp_path, monkeypatch):
+def test_no_pass_manifest_blocks_exp2_judging(tmp_path, monkeypatch):
     sc = load()
-    rc, calls, status, _ = run_driver(sc, tmp_path, monkeypatch, {"harm_gate": 1})
-    assert calls == ["harm_gate"] and status["steps"]["exp2_main"].startswith("skipped")
+    rc, calls, status, _ = run_driver(sc, tmp_path, monkeypatch, {}, passed=False)
+    assert calls == [] and status["steps"]["exp2_main"].startswith("skipped")
+    assert "harm_gate" not in status["steps"]          # the old-gold gate is no longer run
+
+
+def test_validation_predict_mode_only_caches_predictions(tmp_path, monkeypatch):
+    sc = load()
+    rc, calls, status, _ = run_driver(sc, tmp_path, monkeypatch, {"validation_predict": 0},
+                                      "--validation-predict")
+    assert rc == 0 and calls == ["validation_predict"] and status["mode"] == "validation_predict"
+    cmd = sc.plan(True, None, (), True)[0][1]
+    assert "--predict-only" in cmd and sc.HARM_DIR in cmd
+
+
+def test_screen_mode_screens_main_then_robustness_without_a_pass(tmp_path, monkeypatch):
+    sc = load()
+    rc, calls, status, _ = run_driver(sc, tmp_path, monkeypatch, {}, "--screen", passed=False)
+    assert rc == 0 and status["mode"] == "screen"
+    assert calls == ["screen_main", "screen_robustness"]           # no benign sample uploaded here
+    assert "exp2_main" not in status["steps"]                        # never validated judging
+    (tmp_path / "again").mkdir()
+    rc, calls, status, _ = run_driver(sc, tmp_path / "again", monkeypatch, {"screen_main": 4},
+                                      "--screen")
+    assert calls == ["screen_main"] and status["steps"]["screen_robustness"].startswith("skipped")
 
 
 def test_time_budget_skips_work_but_still_packages(tmp_path, monkeypatch):
     sc = load()
-    rc, calls, status, names = run_driver(sc, tmp_path, monkeypatch, {"harm_gate": 0},
-                                          "--time-budget-h", "0.01")
-    assert calls == [] and status["steps"]["harm_gate"] == "skipped: time budget used up"
+    rc, calls, status, names = run_driver(sc, tmp_path, monkeypatch, {}, "--time-budget-h", "0.01",
+                                          passed=True)
+    assert calls == [] and status["steps"]["exp2_main"] == "skipped: time budget used up"
     assert sc.RESUME in names
 
 
@@ -149,7 +171,7 @@ def test_gate_progress_counts_saved_predictions(tmp_path):
 
 def test_bundle_round_trips_as_next_input(tmp_path, monkeypatch):
     sc = load()
-    _, _, _, _ = run_driver(sc, tmp_path, monkeypatch, {"harm_gate": 0, "exp2_main": 0})
+    _, _, _, _ = run_driver(sc, tmp_path, monkeypatch, {"exp2_main": 0}, passed=True)
     nxt = tmp_path / "next_input"
     nxt.mkdir()
     (tmp_path / "out" / "stageC_outputs.zip").rename(nxt / "stageC_outputs.zip")

@@ -83,10 +83,21 @@ def main(argv=None) -> int:
                     help="re-score saved judge predictions (JSONL) instead of calling the API")
     ap.add_argument("--no-gate-on-recall", action="store_true",
                     help="precision-only gate (must be declared before observing results)")
+    ap.add_argument("--predict-only", action="store_true",
+                    help="judge and cache predictions, then stop: no metrics, no verdict, no "
+                         "manifest (two-phase validation: labels are collected afterwards)")
     ap.add_argument("--judge-model", default=None,
-                    help="DEVELOPMENT ONLY: score with this OpenAI model instead of the configured "
-                         "one (same rubric), to compare judge models on the development sample; "
+                    help="DEVELOPMENT ONLY: score with this model instead of the configured one "
+                         "(same rubric), to compare judge models on the development sample; "
                          "refused for validation samples")
+    ap.add_argument("--judge-provider", default=None,
+                    help="DEVELOPMENT ONLY, with --judge-model: an OpenAI-compatible provider "
+                         "from csjail.judge.OPENAI_COMPATIBLE (e.g. deepseek)")
+    ap.add_argument("--judge-concurrency", type=int, default=None,
+                    help="DEVELOPMENT ONLY: parallel requests for the comparison judge")
+    ap.add_argument("--judge-max-tokens", type=int, default=None,
+                    help="DEVELOPMENT ONLY: output budget for the comparison judge; reasoning models "
+                         "(e.g. gpt-oss) spend it on thinking first, so 300 leaves no answer")
     ap.add_argument("--manifest-out", default=None,
                     help="default outputs/exp1/judge_validation_manifest[_benign].json")
     ap.add_argument("--gold-csv", default=None,
@@ -103,7 +114,9 @@ def main(argv=None) -> int:
     try:
         sman = json.loads((sd / "sample_manifest.json").read_text(encoding="utf-8"))
         role = sman.get("role")
-        if role not in ("validation", "development"):
+        # heldout: a labelled test set for judges already chosen -- scored like a
+        # development sample (feedback report, never a manifest), reported separately.
+        if role not in ("validation", "development", "heldout"):
             raise ValidationInputError(f"unknown sample role {role!r}")
         if role == "validation" and args.development_sample_dir:
             dman = json.loads((Path(args.development_sample_dir) / "sample_manifest.json")
@@ -114,7 +127,7 @@ def main(argv=None) -> int:
                                            f"development sample, e.g. {overlap[:3]}")
         items = read_csv(sd / "items.csv")
         if args.gold_csv:
-            if role != "development":
+            if role == "validation":
                 raise ValidationInputError("--gold-csv is for development feedback only; final "
                                            "validation needs two independent rater files")
             gold, gold_report = gold_from_csv(args.gold_csv)
@@ -127,13 +140,17 @@ def main(argv=None) -> int:
         return 3
 
     cfg = load_judge_config()
-    if args.judge_model:
-        if role != "development":
-            print("FAIL (input): --judge-model is for development samples only; the validation "
-                  "judge is the configured one", file=sys.stderr)
+    if args.judge_model or args.judge_provider or args.judge_concurrency or args.judge_max_tokens:
+        if role == "validation" or not args.judge_model:
+            print("FAIL (input): --judge-model/--judge-provider/--judge-concurrency are for "
+                  "development samples only (and need --judge-model); the validation judge is "
+                  "the configured one", file=sys.stderr)
             return 3
         import dataclasses
-        cfg = dataclasses.replace(cfg, model=args.judge_model, model_snapshot=None)
+        cfg = dataclasses.replace(cfg, model=args.judge_model, model_snapshot=None,
+                                  provider=args.judge_provider or cfg.provider,
+                                  concurrency=args.judge_concurrency or cfg.concurrency,
+                                  max_tokens=args.judge_max_tokens or cfg.max_tokens)
     fp = cfg.fingerprint(args.kind)
     if args.predictions_from:
         saved = {r["item_id"]: r for r in read_jsonl(args.predictions_from)}
@@ -180,22 +197,28 @@ def main(argv=None) -> int:
                   "same command to judge only the rest. No verdict or manifest written.",
                   file=sys.stderr)
             return 4
+        if args.predict_only:
+            flagged = sum(1 for r in saved.values() if r.get("judge_unsafe" if args.kind == "harm"
+                                                            else "judge_refused"))
+            print(f"[calibrate] PREDICT-ONLY: {len(saved)} predictions cached, {flagged} flagged; "
+                  "no metrics, verdict or manifest written")
+            return 0
     key = "judge_refused" if args.kind == "benign" else "judge_unsafe"
     preds = {i: {"status": r.get("judge_status"), "value": r.get(key),
                  "response_kind": r.get("judge_response_kind")} for i, r in saved.items()}
 
     result = evaluate(items, gold, preds, cfg.validation, kind=args.kind,
                       gold_report=gold_report, gate_on_recall=not args.no_gate_on_recall)
-    if role == "development":
-        # Rubric-development feedback only: same metrics, never a validation manifest.
-        dev = sd / f"development_report_{args.kind}_{fp['fingerprint_id']}.json"
+    if role in ("development", "heldout"):
+        # Feedback only: same metrics, never a validation manifest.
+        dev = sd / f"{role}_report_{args.kind}_{fp['fingerprint_id']}.json"
         dev.write_text(json.dumps({"kind": "judge_development_report", "not_a_gate": True,
                                    "judge_fingerprint": fp, "gold_report": gold_report,
                                    "result": result}, ensure_ascii=False, indent=2),
                        encoding="utf-8")
         _print_result(fp, gold_report, result)
-        print(f"[calibrate] DEVELOPMENT sample: metrics are rubric-iteration feedback, not a "
-              f"gate; no validation manifest written -> {dev}")
+        print(f"[calibrate] {role.upper()} sample: metrics are feedback, not a gate; no "
+              f"validation manifest written -> {dev}")
         return 0
     out = Path(args.manifest_out or ROOT / "outputs" / "exp1" /
                f"judge_validation_manifest{'' if args.kind == 'harm' else '_benign'}.json")

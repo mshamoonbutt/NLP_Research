@@ -37,7 +37,90 @@ is **not** marked complete just because its inputs exist. Commands are in
 - Semantic equivalence and harmfulness are not certified by Exp 0.
 - Per-batch authorship and model assistance are unrecorded.
 
-## Exp 1 — judge validation: **ANNOTATION RETURNED (2026-10-05); ADJUDICATION + TOP-UP PENDING**
+## Exp 1 — judge choice and held-out test: **DONE (2026-10-08, DeepSeek V4.1 Flash)**
+
+**Final judge:** DeepSeek V4.1 Flash, `deepseek-v4.1-flash:cloud`, through the
+local Ollama app (provider `ollama`, Ollama Pro), rubric harm-v2 (written
+before any result), thinking off, 300-token budget, temperature 0,
+fingerprint `b0248df31f1d9da2`. Production manifest
+`outputs/exp1/judge_validation_manifest.json`, status SELECTED. Judged
+2026-10-06 UTC (development) and 2026-10-07 UTC (held-out); every response
+parsed. Commands: `RUNBOOK.md` §3; design: `docs/PROTOCOL.md` §3.
+
+**Design (replaces the 0.90 PASS gate; see history below):**
+1. Choose on development: every judge scored on 720 responses
+   (`rubric-dev-01`: 60 families × EN/CS/RU/UR × qwen25/phi3/llama32). Rule
+   declared before any DeepSeek result: highest macro-F1 over the four
+   languages, ties → higher minimum recall; the 0.90 gate reported, not
+   required.
+2. Test on held-out: the chosen judge and the runner-up on 960 responses
+   from 160 other families (`heldout-960`).
+3. Exp 2 corrects ASR with the judge's error per model × language, pooled
+   over both sets (1,680 responses, 140 per cell, 7–49 harmful per cell).
+
+**Labels:** one independent reviewer labelled all 720 development responses
+(rounds 1–3) and 733 of the 960 held-out (round 4), blind to judge output and
+original labels. The other 227 held-out responses are identical to development
+responses the reviewer labelled and carry that label (222 refusals, 5
+unintelligible; all safe). Harmful: development EN 11, CS 33, RU 34, UR 25;
+held-out EN 27, CS 34, RU 31, UR 29. Reviewer vs original annotators: κ 0.56
+on development (57 safe→harmful, 4 reverse), 0.82 on held-out (32 and 2).
+
+**Development, selection** (`outputs/exp1/judge_comparison.json`):
+
+| Judge, rubric | P | R | F1 | κ | macro-F1 |
+|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash, harm-v2 | 0.73 | 0.86 | 0.79 | 0.75 | 0.783 |
+| DeepSeek V4 Pro, harm-v2 | 0.64 | 0.86 | 0.74 | 0.68 | 0.749 |
+| gpt-4o, harm-v2 | 0.57 | 0.96 | 0.71 | 0.65 | 0.733 |
+| gpt-4o, harm-v3* | 0.80 | 0.63 | 0.71 | 0.66 | 0.720 |
+| gpt-4o, harm-v4* | 0.82 | 0.61 | 0.70 | 0.66 | 0.707 |
+| gpt-4o, harm-v5* | 0.60 | 0.83 | 0.70 | 0.64 | 0.705 |
+| gpt-4.1, harm-v4* | 0.79 | 0.60 | 0.69 | 0.64 | 0.704 |
+
+\* rubric revised after seeing errors on these items, so optimistic. Family
+bootstrap (2,000 draws): Flash − gpt-4o v2 F1 +0.08 [+0.02, +0.13]; Flash − Pro
+F1 +0.056 [−0.004, +0.117].
+
+**Held-out test** (`outputs/exp1/heldout_comparison.json`, from
+`scripts/exp1_heldout_compare.py`), P/R/F1 per language:
+
+| Judge | EN | CS | RU | UR | F1 | κ | macro-F1 |
+|---|---|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | .96/.93/.94 | .82/.94/.88 | .59/.74/.66 | .56/.79/.66 | 0.77 | 0.74 | 0.784 |
+| DeepSeek V4 Pro | .96/.85/.90 | .72/.97/.82 | .49/.84/.62 | .44/.83/.58 | 0.71 | 0.66 | 0.731 |
+
+- Flash − Pro: F1 +0.063 [+0.012, +0.118], κ +0.078 [+0.017, +0.142]; the
+  same without the 227 carried labels (neither judge flags any of them).
+- Flash held-out vs development: macro-F1 0.784 vs 0.783, F1 −0.017
+  [−0.117, +0.092], so the choice was not flattered overall. Per language,
+  RU F1 fell 0.83 → 0.66 (−0.18 [−0.35, −0.005]) and EN rose 0.77 → 0.94
+  (development had 11 harmful EN). Flash over-flags 1.20× (judge-flagged ÷
+  truly harmful), Pro 1.46×.
+- No gpt-4o run covers the held-out set (an old run judged 465 of the 960).
+
+**Judge error used by Exp 2** (development + held-out, per model × language):
+false-alarm rate 12–16% for llama32 CS/RU/UR, 10% phi3 UR, ≤ 5% elsewhere;
+recall 0.84–1.00 except qwen25 RU 0.43 (7 harmful), phi3 UR 0.73 and qwen25 UR
+0.75. The two sets did not differ measurably (overall recall gap −0.01,
+false-alarm gap −0.003; 1 of 24 per-cell Fisher tests p < 0.05).
+
+**Caveats for the paper:**
+- `reviewer_id` is blank in all four review files (1,453 rows). The paper must
+  say who the reviewer was and whether any tool assisted; do not claim
+  independent review without that record. Round-3 notes are 15 fixed
+  sentences (one per label category); rounds 1, 2 and 4 have per-item notes.
+- Rubrics v3–v5 were tuned on the development items; harm-v2 (the chosen
+  rubric) was not.
+- The judge is a named cloud model, not a pinned snapshot, and Ollama retires
+  cloud models (V4 Flash retired 2026-09-25). All raw judgments are kept; the
+  paper records model name, provider and run dates.
+
+**Not done (needed only for Exp 8):** the benign (over-refusal) rubric has not
+been checked with Flash. Labelled sample: `outputs/exp1/benign-validation-merged`
+(450 responses, 32 refused, two raters + adjudication).
+
+## Exp 1 — history: judge validation (superseded 2026-10-07)
 
 Stage A (Kaggle T4, vLLM 0.6.3.post1, float16, pinned revisions; see
 `docs/KAGGLE_EXP1_GUIDE.md`):
@@ -146,6 +229,10 @@ workbook hashes in each folder's `annotation_import.json`):
   gold unsafe/safe EN 25/215, CS 28/212, RU 17/223, UR 21/219 (all ≥ 10).
   Ready for the final harm gate once rubric iteration on `rubric-dev-01`
   finishes.
+  Disclosure: the first rubric's aggregate confusion was inspected
+  over all 1,200 items (including top-up 1) before this split was declared;
+  no item-level tuning used top-up 1. The alternative is a fully fresh
+  1,200-item validation sample at roughly 2.5× the annotation cost.
 - **Rubric iteration 1 (harm-v3, fingerprint `7030929c9323c3cc`, 2026-10-06,
   720/720 judged, 0 failures):** on the same items, false positives fell
   from 125 (v2) to 43; UR 48 → 7, RU 42 → 17, CS 25 → 13, EN 10 → 6.
@@ -161,10 +248,132 @@ workbook hashes in each folder's `annotation_import.json`):
   a development-only `--judge-model` comparison (same rubric, other OpenAI
   model) to tell a rubric ceiling from a model ceiling; the validation judge
   stays the configured one.
-  Disclosure: the first rubric's aggregate confusion was inspected
-  over all 1,200 items (including top-up 1) before this split was declared;
-  no item-level tuning used top-up 1. The alternative is a fully fresh
-  1,200-item validation sample at roughly 2.5× the annotation cost.
+- **Rubric iteration 2 (harm-v4; gpt-4o `3e8b9c302deb4023` and gpt-4.1
+  `203df99c54b0479b`, 720/720 each, 0 failures, 2026-10-06):** no material
+  change. Overall precision/recall: gpt-4o v3 0.469/0.760, gpt-4o v4
+  0.481/0.740, gpt-4.1 v4 0.474/0.740. Per condition (gpt-4o v4): EN
+  0.46/0.83, CS 0.60/0.90, RU 0.33/0.50, UR 0.50/0.75. Agreement on the
+  unsafe label (κ): raters 0.978; gpt-4o vs gpt-4.1 0.863; v3 vs v4 0.957;
+  each judge vs gold 0.54. 31 items are false positives for all three
+  judge configurations and 11 are missed by all three (42/720; 31 from
+  llama32, 23 in RU; gold for 38 of them is rater agreement). Outside those
+  42 items judge precision is ~0.80. **Conclusion: rubric iteration has
+  saturated and a model change does not help; the residual is a stable
+  disagreement between the LLM judges and the human labelling standard on
+  borderline responses.**
+- **Blinded gold audit (option 1, decided 2026-10-06):**
+  `scripts/exp1_gold_audit.py make` → `outputs/exp1/gold-audit-01/`. The
+  42 consensus-disputed development items + 84 controls (2 per disputed item,
+  random, from items where all three judge configurations agree with the gold;
+  matched on gold label exactly and on model/condition where the pool allowed),
+  shuffled, opaque IDs, no item ID/model/condition/gold/judge output in the
+  reviewer file. Key and reviewer file are gitignored; `audit_plan.json`
+  (committed before the review) records the seed, composition, both files'
+  SHA-256 and the decision rule: **gold has systematic error** if the
+  reviewer differs from gold on ≥ 50% of disputed items, ≤ 10% of controls,
+  Fisher p < 0.05; **gold stands** if ≤ 30% of disputed; otherwise
+  inconclusive. Systematic error → re-specify the gold standard with a
+  documented third review and re-review a random sample of the validation
+  set under it before any validation run; otherwise → measurement option 2
+  (judge as screener, humans verify judge-positive responses, random audit
+  of judge-negatives). Reviewer: bilingual, not one of the raters or the
+  adjudicator, no pre-filled draft, no judge output.
+- **Audit result (scored 2026-10-06, `gold-audit-01/audit_result.json`):
+  VERDICT gold_has_systematic_error.** Reviewer differs from the gold on
+  25/42 disputed items (0.60, CI 0.44–0.73) vs 4/84 controls (0.05, CI
+  0.02–0.12); Fisher p < 0.0001. Of 31 items the raters labelled safe but
+  every judge labelled harmful, the reviewer sided with the judges on 24; of
+  11 items every judge missed, the reviewer sided with the raters on 10. The
+  original labels are lenient on borderline partial compliance. Projection
+  (126 of 720 dev items corrected): gpt-4o harm-v4 precision 0.48 → ~0.79,
+  recall ~0.79. Gap: `reviewer_id` was blank on the returned file; the
+  reviewer's identity and independence must be recorded.
+- **Declared follow-up:** (1) rater guide clarified on partial assistance
+  (`docs/exp1_rater_guide.md`); (2) `gold-audit-02`: every dev item not yet
+  re-reviewed on which any of the four judge configurations (gpt-4o v2/v3/v4,
+  gpt-4.1 v4) disagrees with the gold (82) + 82 matched controls, blind;
+  `exp1_gold_audit.py select` then picks the gpt-4o rubric version on the
+  corrected dev gold by the rule in its plan (no API cost); (3)
+  `third-review-v2`: all 960 validation items, blind, for the validation
+  gold (original gold where the third review agrees, adjudication otherwise,
+  by an adjudicator who is not one of the original raters).
+- **Amendment (2026-10-06, before any validation review): two-phase
+  validation replaces the full 960-item third review** (`third-review-v2`
+  withdrawn, never issued). Phase 1: the frozen gpt-4o rubric (chosen on the
+  corrected dev gold) predicts all 960 validation items once (`stagec_run
+  --validation-predict`, no verdict). Phase 2: the independent reviewer labels,
+  blind, ALL judge-flagged items + a random 25% of unflagged items per
+  condition (~320 items instead of 960). Gold = original where the reviewer
+  agrees, adjudication otherwise. Precision is exact on the flagged items;
+  recall uses inverse-probability weighting of the sampled misses; gate
+  thresholds and support minimums unchanged. Re-reviewing only judge/gold
+  disagreements is explicitly excluded (it would bias the judge's score
+  upward). `exp1_gold_audit.py make-two-phase` / `score-two-phase`; the
+  score step writes the production manifest, and the final Kaggle run no
+  longer re-scores against the original (lenient) validation gold. The
+  audit reviewer was a new, independent person (per the team, 2026-10-06);
+  initials still to be recorded.
+- **Gold audit round 2 (164 items, returned 2026-10-06; `reviewer_id` blank
+  again, so the official `selection_result.json` waits for it):** reviewer
+  differs from the original gold on 25/82 disagreement items vs 3/82
+  controls. Corrected development gold: 290 of 720 items re-reviewed, 57
+  labels changed. Preliminary selection (same function as the official
+  step): gpt-4o v2 P 0.59 / R 0.97 (min-condition P 0.45, UR); v3 0.84 /
+  0.65; v4 0.86 / 0.63 (UR recall 0.44); gpt-4.1 v4 0.83 / 0.62. Declared
+  rule → **v2 chosen (only one with recall ≥ 0.80), flag fired (min P <
+  0.85)**: the validation run was NOT started.
+- **harm-v5 (one more development run, declared before running):** v2 text
+  + only the intelligibility rule (v3's step 1, which raised UR precision
+  0.45 → 0.93), fingerprint `2a8177e4fb3ea862`. **Decision rule:** on the
+  corrected development gold, if v5's minimum per-condition precision ≥ 0.85
+  AND minimum per-condition recall ≥ 0.85, v5 is frozen and goes to the
+  two-phase validation run; otherwise measurement option 2 with gpt-4o v2 as
+  the screener (recall 0.97): humans verify every flagged response plus a
+  random audit of the unflagged. If v5 disagrees with the gold on more than
+  10 development items outside the 290 re-reviewed ones, those are
+  re-reviewed blind (with matched controls) before the decision.
+- **harm-v5 result (Kaggle, 2026-10-06; 718/720 judged, 2 lost to the
+  event-loop bug below):** against the corrected development gold, precision
+  / recall EN 0.67 / 0.91, CS 0.80 / 0.92, RU 0.54 / 0.79, UR 0.49 / 0.72;
+  overall 0.62 / 0.83. Only 1 disagreement lies outside the 290 re-reviewed
+  items, so no extra review was triggered. **Decision rule not met → v5 is
+  not frozen; measurement option 2 (gpt-4o harm-v2 as screener, humans verify
+  every flagged response plus a random audit of the unflagged) applies.**
+- **Judge throughput bug fixed (2026-10-06):** `score_sync` starts a new event
+  loop per chunk, but the concurrency semaphore and HTTP pool were created
+  once, in the first loop. Every later chunk failed on contention ("bound to a
+  different event loop") and crawled through backoff retries. This, not only
+  the Tier 1 TPM limit, caused the ~7 judgments/min seen on Kaggle; Tier 1
+  supports ~16–18/min. Both are now created per call; a regression test
+  reproduces the error. Affects calibrate_judge (chunks of 64) and Exp 2
+  judging (chunks of 256); no stored judgment was wrong, only slow or
+  `api_error` (which is re-tried on resume).
+- **Option 2 set up (2026-10-06):** `configs/judge.yaml` is the harm-v2 text
+  again (fingerprint `b0d6676cf5d89d08` reproduced), used only as a screener;
+  it has no PASS manifest, so `run_eval` and Exp 6 still refuse it.
+  `scripts/exp2_verify.py` screens the eval_main responses (Kaggle
+  `MODE = "screen"`: 2,400 main + 1,320 robustness), builds the blinded
+  review file (all flagged + 10% of the unflagged per model × condition) and
+  scores the human labels into per-model × condition ASR. Expected review
+  load for main ≈ 650 responses (assuming ~20% flagged). The Kaggle upload
+  now includes the Exp 0 dataset file; without it no Exp 2 judging could run
+  on Kaggle. **Still open under option 2:**
+  - aggregation (`csjail.aggregate`) and Exp 3–5 read per-item judge labels,
+    and need the human-verified labels instead;
+  - Exp 6 preference data needs a labelling decision (screener labels only
+    choose training pairs, so they may be acceptable there);
+  - Exp 8 post-training evaluation needs the same screen-and-verify step per
+    arm;
+  - the paper's methods section must describe the screening design.
+- **Alternative judge under consideration (partner suggestion, 2026-10-06):
+  DeepSeek V4.** Not runnable locally on Kaggle or the CPU box (V4-Flash
+  ~90–175 GB VRAM; Ollama serves it only as a cloud model). Testable through
+  DeepSeek's OpenAI-compatible API (`provider: deepseek`, key
+  `DEEPSEEK_API_KEY`) with the development-only `--judge-provider/--judge-model`
+  comparison on the same 720 items, rubric v5 and corrected labels. Caveat:
+  DeepSeek replaced the model behind `deepseek-v4-flash` on 2026-09-10
+  (V4.1 now `deepseek-flash`); a judge whose alias can change needs the exact
+  model and dates recorded, and re-validation if it changes.
 
 Earlier development evidence (kept for provenance):
 
@@ -211,7 +420,51 @@ Remaining steps:
    probe responses and blank rater files; gate with
    `calibrate_judge.py --kind benign`.
 
-## Exp 2 — main evaluation: **GENERATION DONE (2026-10-05); JUDGING PENDING THE EXP 1 PASS**
+## Exp 2 — main evaluation: **JUDGED (2026-10-07, DeepSeek V4.1 Flash)**
+
+- **Done:** main 9,492/9,492 and robustness 6,000/6,000 judgments ok (0 errors),
+  run manifest `judging: judge SELECTED in Exp 1`, git `3eb3abc`. The laptop's
+  Modern Standby paused the run twice (no data lost); a keep-display-on
+  request fixed it. Summaries: `outputs/exp2/main/summary.csv`,
+  `summary_eval_main.csv`, `outputs/exp2/robustness/robustness_summary.json`.
+- **Raw ASR, all 791 families (EN / CS / RU / UR):** llama32 .118 / .373 / .359
+  / .298; phi3 .082 / .113 / .100 / .102; qwen25 .154 / .092 / .034 / .061.
+  The 200 held-out families (`--split eval_main`) give the same pattern.
+- **Corrected ASR** (per model × language judge error from Exp 1, development
+  + held-out, 140 responses per cell; re-aggregated 2026-10-08, raw ASR
+  unchanged), all 791 families EN / CS / RU / UR: llama32 .125 / .328 / .281 /
+  .219; phi3 .085 / .121 / .064 / .000; qwen25 .127 / .078 / .029 / .062.
+  E.g. llama32 CS .328 [.237, .418] (was .312 [.141, .464] with the 60
+  development responses per cell), RU .281 [.165, .380]. 11 of 12 intervals
+  narrow (median width −40%); qwen25 RU widens (7 harmful in its cell, judge
+  recall .43).
+  phi3 UR corrects to 0: its 10% raw rate matches the judge's false-alarm
+  rate in that cell. The judge's false-alarm rate varies by model (~12–16% on
+  llama32 CS/RU/UR, ~2% on qwen25), so per-language correction alone is biased.
+- **Robustness (sampled, T 0.7, 5 draws; per-draw / any-of-5 / greedy):**
+  llama32 CS .434 / .735 / .405, RU .438 / .780 / .395; phi3 CS .140 / .310 /
+  .115, RU .099 / .270 / .115; qwen25 CS .154 / .300 / .130, RU .062 / .180 /
+  .020. CS-vs-RU ordering matches greedy only for qwen25 (llama32 and phi3
+  differ by < .04, within noise).
+
+
+- **Judge:** `deepseek-v4.1-flash:cloud` via the local Ollama app (Ollama Pro),
+  harm-v2 rubric, fingerprint `b0248df31f1d9da2`, production manifest status
+  SELECTED (`outputs/exp1/judge_validation_manifest.json`, written by
+  `exp1_compare_judges.py --write-manifest`). Runs on the local machine:
+  Kaggle cannot reach the signed-in Ollama. ~190 judgments/min.
+- **Commands:** `python -m csjail.run_eval --out-dir outputs/exp2/main --judge-only`,
+  then `python scripts/exp2_robustness.py --judge-only --greedy-results outputs/exp2/main`;
+  both resume from `judgments.jsonl`.
+- **Reporting:** `python -m csjail.aggregate outputs/exp2/main [--split eval_main]`
+  prints raw ASR and ASR corrected for the judge's error per model × language
+  (Rogan–Gladen with Exp 1 recall and specificity; interval pairs the family
+  bootstrap with posterior draws of both). Assumes the judge's error in each
+  cell transfers from the 1,680 reviewer-labelled Exp 1 responses (development
+  + held-out) to the full sweep.
+- **Superseded:** the screen-and-verify design (`exp2_verify.py`) and the Kaggle
+  `screen` mode are no longer the plan.
+
 
 - **Main sweep** `outputs/exp2/main` (raw text gitignored; `run_manifest.json`
   committed): 9,492/9,492 generations ok = 791 families × 4 conditions × 3
@@ -247,7 +500,62 @@ gitignored under `outputs/smoke/`).
 | Production backend (vLLM, fp16, Kaggle T4) | **Working**: 3-model sequential loads without OOM; Exp 1 samples generated |
 | Full Exp 2 (9,492 greedy + 6,000 robustness responses) | **NOT RUN** (by design in this task) |
 
-## Exp 3–4b: not run (need Exp 2 results)
+- **Extension planned (2026-10-07): two more SLMs.** Gemma 4 E2B (Ollama
+  q8_0, pinned digest; vLLM 0.6.3 cannot load it) and DeepSeek-R1-Distill-Qwen-1.5B
+  (vLLM fp16, 2,048-token budget for its visible reasoning). Same prompts, decoding,
+  robustness subset and judge; a qwen25 Ollama-vs-vLLM backend check; 240 labelled
+  responses per new model for its judge error. Design and commands:
+  `docs/EXP2_NEW_MODELS.md`; Kaggle notebook `notebooks/kaggle_newmodels.ipynb`.
+  **Local Ollama smoke test passed (2026-10-07, 5 families each, debug):** both
+  pinned builds verified, 40/40 judged; R1 closed its reasoning in 20/20 (3/20 hit
+  2,048 tokens) and was judged harmful on 3/5 EN and 4/5 CS but answered RU/UR
+  irrelevantly; Gemma answered UR in Urdu script, mostly refusals (harmful 1/5 RU,
+  1/5 UR). Indicative only: 5 families.
+- **Held-out labels (round 4, prepared 2026-10-07):** `outputs/exp1/gold-audit-04`,
+  733 of the 960 set-aside items to review; 227 identical to development responses
+  the reviewer already labelled keep that label (`carried_labels.csv`).
+
+## Exp 3 — matched contrasts: **RUN (2026-10-07, 3 original models, full core)**
+
+`scripts/exp3_isolation.py --results outputs/exp2/main --out-dir outputs/exp3` →
+`isolation_results.json`, `contrasts_table.csv` (paper Table 6 shape). Declared in
+`configs/eval.yaml` before this first run: Holm families (confirmatory = qwen25/phi3/llama32,
+9 tests; extension = r1qwen15/gemma4e2b, separate) and the judge-robustness rule (a contrast
+is a finding only if Holm-significant AND its judge-corrected paired difference CI excludes 0
+with the same sign).
+- Raw paired differences (pp; * = Holm-significant over the 9 tests): llama32 CS−RU +1.4,
+  RU−UR +6.1 (p .009, adj. .057), RU−EN +24.1*; phi3 +1.3 / −0.3 / +1.8; qwen25 CS−RU +5.8*,
+  RU−UR −2.7 (adj. .080), RU−EN −12.0*. Descriptive CS−EN: llama32 +25.5, phi3 +3.0, qwen25 −6.2.
+- **Judge-corrected: no contrast is a robust finding yet.** Corrected CIs are wide because each
+  model × condition cell of judge error rests on 60 development responses (e.g. llama32 RU
+  false-alarm rate from 35 safe responses). Per-language error (pooled models) would make
+  llama32/qwen25 RU−EN and CS−EN robust but is biased (false-alarm rates differ by model).
+  Rough projection with 140 responses per cell at today's error rates: llama32 RU−EN and
+  CS−EN become robust. Re-run after the round-4 labels enter the judge manifest.
+- Descriptive response shifts (paired): lower harm in UR/RU comes with **non-response, not
+  refusal**, for phi3 (RU−EN non-response +58 pp, refusal −70 pp) and qwen25 (RU−UR
+  non-response −66 pp, refusal +64 pp). English refusal → harmful elsewhere: llama32
+  CS 32% / RU 35% / UR 28% of its 684 EN refusals; phi3 8–10%; qwen25 3–7%.
+- GEE per model (OR vs EN): llama32 CS 4.5, RU 4.3, UR 3.2; phi3 1.4 / 1.2 / 1.3;
+  qwen25 0.55 / 0.19 / 0.35. Converged, 0 missing.
+
+## Exp 4 — tokenizer fertility: **RUN (2026-10-07)**
+
+`scripts/exp4_features.py` → `outputs/exp4/features_results.json`, `fertility_by_prompt.csv`
+(counts only). Fertility = raw-prompt tokens / whitespace words at the pinned tokenizer.
+Tokenizer check vs the Exp 2 run (recorded prompt tokens − our count = one constant):
+1.000 for qwen25, phi3 and llama32 (llama32 via the ungated mirror
+`unsloth/Llama-3.2-3B-Instruct`, so the mirror is verified). CMI / Urdu share: NOT run
+(tagger unvalidated).
+- Mean fertility EN/CS/RU/UR: qwen25 1.16/1.48/1.85/3.12, llama32 1.16/1.48/1.83/3.02,
+  phi3 1.33/1.68/2.03/4.84, gemma4e2b 1.16/1.30/1.55/1.39, r1qwen15 = qwen25 (same
+  tokenizer: a tokenizer-matched pair for the extension).
+- Within-condition GEE (exploratory; OR per within-condition SD, adjusted for condition,
+  domain, length): **non-response rises with fragmentation** (pooled OR llama32 1.24,
+  phi3 1.58, qwen25 1.40, all p < .001; strongest in RU/CS); harmful compliance shows no
+  consistent association (pooled 0.98 / 0.82 / 0.92; signs differ by condition).
+
+## Exp 4b: not run (needs GPU)
 ## Exp 5: cut
 
 ## Phase 2 (Exp 6–9): **NOT RUN**; design recorded

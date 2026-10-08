@@ -188,3 +188,19 @@ def test_vllm_multi_sample_split_into_single_sample_requests(monkeypatch):
 
     out = r.generate(["a"], models.SamplingConfig(), show_progress=False)   # greedy: unchanged
     assert [s.seed for s in seen["params"]] == [0] and len(out) == 1 and len(out[0]) == 1
+
+
+def test_judge_only_keeps_recorded_failures_but_not_gaps(tmp_path):
+    """A generation recorded as failed (e.g. Ollama aborting a token loop) stays failed in a
+    judge-only pass; a row with no record at all still needs generating."""
+    rows = family("f1")
+    cache = JsonlCache(tmp_path / "g.jsonl", "gen_key")
+    run_generation(CountingGen(fail=True), rows[:1], identity=IDENT, sampling=SAMP, cache=cache)
+    run_generation(CountingGen(), rows[1:2], identity=IDENT, sampling=SAMP, cache=cache)
+    replay = CountingGen()
+    out = run_generation(replay, rows[:2], identity=IDENT, sampling=SAMP, cache=cache,
+                         keep_cached_failures=True)
+    assert replay.calls == 0 and [g["generation_status"] for g in out] == ["failed", "ok"]
+    gap = CountingGen()
+    run_generation(gap, rows[:3], identity=IDENT, sampling=SAMP, cache=cache, keep_cached_failures=True)
+    assert gap.calls == 1                                   # only the row with no record at all

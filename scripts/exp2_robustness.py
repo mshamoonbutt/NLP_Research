@@ -26,7 +26,7 @@ from csjail.artifacts import resolve_exp0  # noqa: E402
 from csjail.data import filter_prompts  # noqa: E402
 from csjail.robustness import select_families, summarize  # noqa: E402
 from csjail.run_eval import (  # noqa: E402
-    DEFAULT_JUDGE_MANIFEST, evaluate_system, git_sha, load_eval_config, prepare_judge,
+    DEFAULT_JUDGE_MANIFEST, evaluate_system, git_sha, load_eval_config, make_runner, prepare_judge,
 )
 from csjail.utils.io import read_jsonl, write_jsonl  # noqa: E402
 
@@ -49,6 +49,10 @@ def main(argv=None) -> int:
                     help="generation only; judge the cached generations in a later run")
     ap.add_argument("--allow-unvalidated-judge", action="store_true", help="DEBUG ONLY")
     ap.add_argument("--allow-debug", action="store_true")
+    ap.add_argument("--backend", choices=["vllm", "ollama"], default="vllm",
+                    help="the models' registered production backend (configs/models.yaml)")
+    ap.add_argument("--max-tokens", type=int, default=None,
+                    help="output budget override (reasoning models, e.g. r1qwen15: 2048)")
     args = ap.parse_args(argv)
 
     art = resolve_exp0(args.exp0_dir)
@@ -58,6 +62,14 @@ def main(argv=None) -> int:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     sampling = {k: rc[k] for k in ("temperature", "top_p", "max_tokens", "n", "seed")}
+    if args.max_tokens:
+        sampling["max_tokens"] = args.max_tokens
+    prev_sub = out_dir / "subset_manifest.json"
+    if args.judge_only and prev_sub.exists():   # judging replays the generation run's settings
+        sub_man = json.loads(prev_sub.read_text(encoding="utf-8"))
+        sampling, args.backend = sub_man["sampling"], sub_man.get("backend", args.backend)
+        if args.models == cfg["models"]:
+            args.models = sub_man["models"]
     k = int(rc["n"])
 
     if not args.summarize_only:
@@ -69,7 +81,8 @@ def main(argv=None) -> int:
             except RuntimeError as e:         # missing API key or client package
                 print(f"[robust] FAIL (input): {e}", file=sys.stderr)
                 return 3
-        from csjail.models import CachedRunner, NotCached, SLMRunner, resolve
+        from csjail.models import CachedRunner, NotCached, resolve
+        debug = debug or any(resolve(m).backend != args.backend for m in args.models)
 
         if args.judge_only:
             greedy_models = json.loads((Path(args.greedy_results) / "run_manifest.json")
@@ -77,7 +90,7 @@ def main(argv=None) -> int:
         results = []
         for model in args.models:
             runner = (CachedRunner(greedy_models[model]) if args.judge_only
-                      else SLMRunner(resolve(model), require_pinned=True))
+                      else make_runner(args.backend, resolve(model)))
             try:
                 for cond in args.conditions:
                     sub = filter_prompts(rows, condition=cond, base_ids=set(fams))
@@ -97,7 +110,7 @@ def main(argv=None) -> int:
         (out_dir / "subset_manifest.json").write_text(json.dumps({
             "families": fams, "n_families": len(fams), "conditions": args.conditions,
             "models": args.models, "sampling": sampling, "pool": rc["family_pool"],
-            "subset_seed": rc["subset_seed"], "split_id": art.split_id,
+            "subset_seed": rc["subset_seed"], "split_id": art.split_id, "backend": args.backend,
             "dataset_version": art.dataset_version, "git_sha": git_sha(),
             "planned_responses": len(fams) * len(args.conditions) * k * len(args.models),
         }, indent=2), encoding="utf-8")

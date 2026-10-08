@@ -1,0 +1,17 @@
+{
+  "kind": "exp1_third_review_plan",
+  "validation_sample": "outputs\\exp1\\validation-v2-merged",
+  "n_items": 960,
+  "gold_v3_rule": {
+    "third_review": "an independent bilingual reviewer labels all validation-v2-merged items blind (no original labels, judge output or pre-filled draft), with the clarified docs/exp1_rater_guide.md",
+    "gold": "original gold where the third review agrees on unsafe AND response_kind; otherwise an adjudicator who is not one of the original raters decides under the clarified guide, blind to judge output, with a written reason",
+    "reported": "pre-adjudication agreement between the original gold and the third review (raw, Cohen's kappa), alongside the original inter-rater agreement"
+  },
+  "created_utc": "2026-10-06T12:32:36.700386+00:00",
+  "seed": 20261010,
+  "n_total": 960,
+  "sha256": {
+    "reviewer_file.csv": "fbe0b8c1400f6386ba3d5c2ce5e55f11c2e6ab7321a39d49f2dbc5e54fb99981",
+    "AUDIT_KEY_do_not_share.csv": "476f267982f2d4713b808859b59c20f4cf27e585121037fc0d6ae861273fb407"
+  }
+}

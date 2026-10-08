@@ -92,3 +92,60 @@ def test_validation_sample_refuses_ollama():
     sys.modules["exp1_s"] = mod
     spec.loader.exec_module(mod)
     assert mod.main(["--role", "validation", "--backend", "ollama"]) == 1
+
+
+class ThinkingHTTP:
+    """A thinking-capable model: answers with separate thinking only when asked to think."""
+    def __init__(self, tag, digest):
+        self.tag, self.digest, self.chat_bodies = tag, digest, []
+
+    def __call__(self, req, timeout=None):
+        url = req if isinstance(req, str) else req.full_url
+        if url.endswith("/api/show"):
+            body = {"template": "t", "details": {"quantization_level": "Q8_0"}, "capabilities":
+                    ["completion", "thinking"]}
+        elif url.endswith("/api/tags"):
+            body = {"models": [{"name": self.tag, "digest": self.digest}]}
+        elif url.endswith("/api/version"):
+            body = {"version": "0.35.1"}
+        else:
+            sent = json.loads(req.data.decode("utf-8"))
+            self.chat_bodies.append(sent)
+            body = {"message": {"content": "answer", **({"thinking": "steps"} if sent.get("think") else {})},
+                    "done_reason": "stop"}
+        return io.BytesIO(json.dumps(body).encode("utf-8"))
+
+
+def test_registered_ollama_model_pins_build_and_controls_thinking(monkeypatch):
+    gemma = resolve("gemma4e2b")
+    assert gemma.backend == "ollama" and not gemma.reasoning
+    fake = ThinkingHTTP(ob.ollama_tag("gemma4e2b"), gemma.ollama_digest)
+    monkeypatch.setattr(ob.urllib.request, "urlopen", fake)
+    r = ob.OllamaRunner(gemma, workers=1)
+    assert r.generate_text(["p"]) == ["answer"] and fake.chat_bodies[0]["think"] is False
+    assert "production backend" in r.provenance()["scope_note"]
+    r1 = resolve("r1qwen15")                                   # reasoning: visible thinking kept
+    fake = ThinkingHTTP(ob.ollama_tag("r1qwen15"), r1.ollama_digest)
+    monkeypatch.setattr(ob.urllib.request, "urlopen", fake)
+    out = ob.OllamaRunner(r1, workers=1).generate_text(["p"])[0]
+    assert out == "<think>\nsteps\n</think>\n\nanswer" and fake.chat_bodies[0]["think"] is True
+    fake = ThinkingHTTP(ob.ollama_tag("gemma4e2b"), "other-build")  # a re-published tag is refused
+    monkeypatch.setattr(ob.urllib.request, "urlopen", fake)
+    with pytest.raises(RuntimeError, match="pins"):
+        ob.OllamaRunner(gemma)
+
+
+def test_one_failing_request_fails_only_its_item(monkeypatch):
+    """A server error on one prompt (seen on Kaggle and locally for one RU prompt) returns
+    None for that item only, so the pipeline records just that generation as failed."""
+    fake = FakeHTTP()
+
+    def urlopen(req, timeout=None):
+        if not isinstance(req, str) and req.full_url.endswith("/api/chat") and b'"bad"' in req.data:
+            raise ob.urllib.error.HTTPError(req.full_url, 500, "Internal Server Error", {},
+                                            io.BytesIO(b'{"error":"boom"}'))
+        return fake(req, timeout)
+
+    monkeypatch.setattr(ob.urllib.request, "urlopen", urlopen)
+    outs = ob.OllamaRunner(resolve("phi3"), workers=2).generate(["a", "bad", "c"], SamplingConfig())
+    assert outs[1][0] is None and outs[0][0].text and outs[2][0].text

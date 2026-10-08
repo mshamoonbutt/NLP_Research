@@ -83,6 +83,18 @@ class JudgeConfig:
         return fp
 
 
+# Providers served through the OpenAI client: {name: (base_url or None, API-key env var)}.
+# The provider name is part of the judge fingerprint, so judges never mix silently.
+# Ollama: the local app's endpoint, no key. ":cloud" models (e.g. deepseek-v4.1-flash:cloud) run
+# on Ollama's servers after `ollama signin`; thinking is switched off (reasoning_effort "none")
+# so the answer fits max_tokens and the call matches the non-reasoning judges.
+OPENAI_COMPATIBLE = {
+    "openai": (None, "OPENAI_API_KEY"),
+    "deepseek": ("https://api.deepseek.com", "DEEPSEEK_API_KEY"),
+    "ollama": ("http://localhost:11434/v1", None),
+}
+
+
 def load_judge_config(path: str | Path = CONFIG_PATH) -> JudgeConfig:
     cfg = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     j = cfg["judge"]
@@ -237,16 +249,19 @@ class Judge:
             raise ValueError(f"unknown rubric kind {kind!r}")
         self.cfg = cfg or load_judge_config()
         self.kind = kind
-        if self.cfg.provider != "openai":
+        if self.cfg.provider not in OPENAI_COMPATIBLE:
             raise NotImplementedError(f"provider={self.cfg.provider} not implemented")
         try:
             from openai import AsyncOpenAI  # noqa: WPS433
         except ImportError as e:
             raise RuntimeError("openai package not installed: pip install -e '.[judge]'") from e
-        api_key = os.environ.get("OPENAI_API_KEY")
+        base_url, key_env = OPENAI_COMPATIBLE[self.cfg.provider]
+        api_key = os.environ.get(key_env) if key_env else "ollama"   # Ollama ignores the key
         if not api_key:
-            raise RuntimeError("OPENAI_API_KEY env var is required for the judge")
-        self._client = AsyncOpenAI(api_key=api_key, timeout=self.cfg.timeout_s)
+            raise RuntimeError(f"{key_env} env var is required for the {self.cfg.provider} judge")
+        self._client_factory = lambda: AsyncOpenAI(api_key=api_key, base_url=base_url,  # noqa: E731
+                                                   timeout=self.cfg.timeout_s)
+        self._client = self._client_factory()
         self._sem = asyncio.Semaphore(self.cfg.concurrency)
 
     @property
@@ -281,6 +296,7 @@ class Judge:
                                   {"role": "user", "content": self._format(prompt, response)}],
                         temperature=self.cfg.temperature,
                         max_tokens=self.cfg.max_tokens,
+                        **({"reasoning_effort": "none"} if self.cfg.provider == "ollama" else {}),
                     )
                 msg = resp.choices[0].message
                 raw = msg.content or ""
@@ -316,15 +332,26 @@ class Judge:
 
     async def score_many(self, pairs: list[tuple[str, str]], *,
                          show_progress: bool = True) -> list[Judgment]:
+        # score_sync runs each call in a NEW event loop (callers judge in chunks); the
+        # semaphore and the HTTP connection pool belong to one loop, so both are made here.
+        # Reusing them made every later chunk fail on contention and crawl through retries.
+        self._sem = asyncio.Semaphore(self.cfg.concurrency)
+        fresh = bool(getattr(self, "_client_factory", None))
+        if fresh:
+            self._client = self._client_factory()
         tasks = [self._one(p, r) for p, r in pairs]
-        if show_progress:
-            try:
-                from tqdm.asyncio import tqdm as atqdm
+        try:
+            if show_progress:
+                try:
+                    from tqdm.asyncio import tqdm as atqdm
 
-                return await atqdm.gather(*tasks, desc=f"judge[{self.kind}]", total=len(pairs))
-            except ImportError:
-                pass
-        return await asyncio.gather(*tasks)
+                    return await atqdm.gather(*tasks, desc=f"judge[{self.kind}]", total=len(pairs))
+                except ImportError:
+                    pass
+            return await asyncio.gather(*tasks)
+        finally:
+            if fresh and hasattr(self._client, "close"):   # close in THIS loop, before it ends
+                await self._client.close()
 
     def score_sync(self, pairs: list[tuple[str, str]], *,
                    show_progress: bool = True) -> list[Judgment]:

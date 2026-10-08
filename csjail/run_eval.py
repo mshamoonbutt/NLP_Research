@@ -81,7 +81,7 @@ def evaluate_system(*, runner, rows, arm: str, sampling: dict, system: Optional[
                     out_dir: Path, judge, split: dict, chunk_size: int,
                     skip_judge: bool = False) -> list[dict]:
     """Generate (cached) + judge (cached) one model/arm over `rows`."""
-    from csjail.models import ModelIdentity, SamplingConfig
+    from csjail.models import CachedRunner, ModelIdentity, SamplingConfig
 
     identity = ModelIdentity.from_runner(runner, arm=arm, system=system).as_dict()
     sc = SamplingConfig(**sampling)
@@ -90,7 +90,7 @@ def evaluate_system(*, runner, rows, arm: str, sampling: dict, system: Optional[
         rows, identity=identity, sampling=sc.as_dict(),
         cache=JsonlCache(out_dir / "generations.jsonl", "gen_key"),
         split_lookup=split["assignments"], split_id=split["meta"]["split_id"],
-        chunk_size=chunk_size)
+        chunk_size=chunk_size, keep_cached_failures=isinstance(runner, CachedRunner))
     judgments, fp_id = {}, None
     if not skip_judge:
         fp_id = judge.fingerprint["fingerprint_id"]
@@ -102,7 +102,8 @@ def evaluate_system(*, runner, rows, arm: str, sampling: dict, system: Optional[
 def main(argv: list[str] | None = None) -> int:
     cfg = load_eval_config()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--models", nargs="+", default=cfg["models"])
+    ap.add_argument("--models", nargs="+", default=None,
+                    help=f"default {cfg['models']}; with --judge-only, the models of the existing run")
     ap.add_argument("--conditions", nargs="+", default=cfg["conditions"], choices=list(CONDITIONS))
     ap.add_argument("--families", default="all", choices=["all", "eval_main", "train_pool"],
                     help="Phase 1 descriptive sweep uses all families")
@@ -115,7 +116,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--max-families", type=int, default=None, help="debug cap")
     ap.add_argument("--backend", choices=["vllm", "ollama"], default="vllm",
-                    help="ollama = CPU/quantized smoke backend; such runs are always DEBUG")
+                    help="must be each model's registered production backend (configs/models.yaml); "
+                         "any other backend makes the run DEBUG (e.g. an ollama smoke test of qwen25)")
     ap.add_argument("--judge-only", action="store_true",
                     help="judge an existing generation-only run without loading any model "
                          "(no GPU); every generation must already be cached in --out-dir")
@@ -126,8 +128,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--allow-unpinned-models", action="store_true", help="DEBUG ONLY")
     ap.add_argument("--allow-fallback-template", action="store_true", help="DEBUG ONLY")
     args = ap.parse_args(argv)
+    prev_path = Path(args.out_dir) / "run_manifest.json"
+    prev = json.loads(prev_path.read_text(encoding="utf-8")) if prev_path.exists() else None
+    if args.judge_only and prev:   # judging replays the generation run's settings
+        args.models = args.models or list(prev.get("models") or {})
+        args.backend = prev.get("backend", args.backend)
+        args.families = prev.get("families_selector", args.families)
+        args.max_families = prev.get("max_families", args.max_families)
+    args.models = args.models or cfg["models"]
 
-    sampling = dict(cfg["sampling"])
+    sampling = dict(prev["sampling"]) if args.judge_only and prev else dict(cfg["sampling"])
     overrides = {k: v for k, v in (("temperature", args.temperature),
                                    ("max_tokens", args.max_tokens), ("seed", args.seed))
                  if v is not None}
@@ -152,8 +162,9 @@ def main(argv: list[str] | None = None) -> int:
         except RuntimeError as e:             # missing API key or client package
             print(f"[eval] FAIL (input): {e}", file=sys.stderr)
             return 3
+    from csjail.models import resolve as resolve_model
     debug = debug or args.allow_unpinned_models or args.allow_fallback_template \
-        or bool(args.max_families) or args.backend != "vllm"
+        or bool(args.max_families) or any(resolve_model(m).backend != args.backend for m in args.models)
 
     prev_path = out_dir / "run_manifest.json"
     prev = json.loads(prev_path.read_text(encoding="utf-8")) if prev_path.exists() else None
@@ -211,7 +222,8 @@ def main(argv: list[str] | None = None) -> int:
         "families_selector": args.families, "max_families": args.max_families,
         "n_rows_per_model": len(rows), "backend": args.backend,
         "judging": "not_run (generation-only; metrics unavailable)" if args.skip_judge
-                   else ("UNVALIDATED judge (debug)" if judge_man is None else "validated judge"),
+                   else ("UNVALIDATED judge (debug)" if judge_man is None
+                         else f"judge {judge_man['status']} in Exp 1"),
         "judge_fingerprint": judge.fingerprint if judge else None,
         "judge_fingerprint_id": judge.fingerprint["fingerprint_id"] if judge else None,
         "judge_validation_manifest_sha256": (sha256_file(args.judge_manifest)

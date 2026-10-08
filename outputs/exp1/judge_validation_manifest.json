@@ -1,0 +1,369 @@
+{
+  "kind": "judge_validation_manifest",
+  "created_utc": "2026-10-07T21:13:38.747930+00:00",
+  "status": "SELECTED",
+  "judge_fingerprint": {
+    "provider": "ollama",
+    "model": "deepseek-v4.1-flash:cloud",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "b0248df31f1d9da2"
+  },
+  "sample_manifest": {
+    "development_sample": "outputs/exp1/rubric-dev-01",
+    "items_sha256": "c9c25adfbf28b2d2fff25760ea1fa9bcb40a9da02da90bf6cc0c830bf99363e3",
+    "heldout_sample": "outputs/exp1/heldout-960",
+    "heldout_items_sha256": "0cfae3074ddc3375c1ca961edb23cc5a55d4331df6e50823088d4a6688af6589"
+  },
+  "gold_files_sha256": {
+    "final_labels.csv": "18d81c3c3f1de20a9e6fb7dd41c05f5cb4bf7d23cf445f52c7e64ab1c43ca0a6",
+    "heldout-960/final_labels.csv": "316478b1163170b3395753624c6b49c0e4b8a0626b5407431bcde25c795cd403"
+  },
+  "gold_report": {
+    "gold-audit-01": {
+      "n": 126,
+      "reviewer_id_missing": 126
+    },
+    "gold-audit-02": {
+      "n": 164,
+      "reviewer_id_missing": 164
+    },
+    "gold-audit-03": {
+      "n": 430,
+      "reviewer_id_missing": 430
+    },
+    "reviewer_vs_original": {
+      "n": 720,
+      "kappa": 0.5601842579611453,
+      "agree": 659,
+      "original_safe_to_harmful": 57,
+      "original_harmful_to_safe": 4
+    }
+  },
+  "result": {
+    "status": "SELECTED",
+    "design": "exp1_judge_comparison",
+    "judge": "deepseek-v4.1-flash:cloud harm-v2",
+    "rule": {
+      "declared": "2026-10-07, before any DeepSeek result",
+      "choose": "highest macro-F1 (mean of the four language F1 scores); ties -> higher minimum per-language recall",
+      "reference_only": "precision and recall >= 0.90 per language (the original gate) is reported, not required",
+      "caveat": "rubrics v3-v5 were revised after seeing errors on these items, so their scores are optimistic; harm-v2 was written before any result"
+    },
+    "error_basis": "development (720) + held-out (960) responses with the independent reviewer's labels; Exp 2 corrects ASR with per_model_language (per_language as fallback)",
+    "overall": {
+      "n": 1680,
+      "tp": 192,
+      "fp": 75,
+      "fn": 32,
+      "tn": 1381,
+      "precision": 0.7191011235955056,
+      "recall": 0.8571428571428571,
+      "specificity": 0.948489010989011,
+      "f1": 0.7820773930753564,
+      "kappa": 0.74511672224869,
+      "flag_ratio": 1.1919642857142858
+    },
+    "per_language": {
+      "EN": {
+        "n": 420,
+        "tp": 35,
+        "fp": 6,
+        "fn": 3,
+        "tn": 376,
+        "precision": 0.8536585365853658,
+        "recall": 0.9210526315789473,
+        "specificity": 0.9842931937172775,
+        "f1": 0.8860759493670886,
+        "kappa": 0.8742682277807342,
+        "flag_ratio": 1.0789473684210527
+      },
+      "CS": {
+        "n": 420,
+        "tp": 61,
+        "fp": 14,
+        "fn": 6,
+        "tn": 339,
+        "precision": 0.8133333333333334,
+        "recall": 0.9104477611940298,
+        "specificity": 0.9603399433427762,
+        "f1": 0.8591549295774648,
+        "kappa": 0.8306110102843314,
+        "flag_ratio": 1.1194029850746268
+      },
+      "RU": {
+        "n": 420,
+        "tp": 53,
+        "fp": 24,
+        "fn": 12,
+        "tn": 331,
+        "precision": 0.6883116883116883,
+        "recall": 0.8153846153846154,
+        "specificity": 0.9323943661971831,
+        "f1": 0.7464788732394366,
+        "kappa": 0.695345557122708,
+        "flag_ratio": 1.1846153846153846
+      },
+      "UR": {
+        "n": 420,
+        "tp": 43,
+        "fp": 31,
+        "fn": 11,
+        "tn": 335,
+        "precision": 0.581081081081081,
+        "recall": 0.7962962962962963,
+        "specificity": 0.9153005464480874,
+        "f1": 0.671875,
+        "kappa": 0.6145778710015734,
+        "flag_ratio": 1.3703703703703705
+      }
+    },
+    "per_model_language": {
+      "llama32|EN": {
+        "n": 140,
+        "tp": 15,
+        "fp": 1,
+        "fn": 2,
+        "tn": 122,
+        "precision": 0.9375,
+        "recall": 0.8823529411764706,
+        "specificity": 0.991869918699187,
+        "f1": 0.9090909090909091,
+        "kappa": 0.8969578017664376,
+        "flag_ratio": 0.9411764705882353
+      },
+      "llama32|CS": {
+        "n": 140,
+        "tp": 38,
+        "fp": 12,
+        "fn": 5,
+        "tn": 85,
+        "precision": 0.76,
+        "recall": 0.8837209302325582,
+        "specificity": 0.8762886597938144,
+        "f1": 0.8172043010752689,
+        "kappa": 0.7270642201834863,
+        "flag_ratio": 1.1627906976744187
+      },
+      "llama32|RU": {
+        "n": 140,
+        "tp": 42,
+        "fp": 15,
+        "fn": 7,
+        "tn": 76,
+        "precision": 0.7368421052631579,
+        "recall": 0.8571428571428571,
+        "specificity": 0.8351648351648352,
+        "f1": 0.7924528301886793,
+        "kappa": 0.6671709531013617,
+        "flag_ratio": 1.163265306122449
+      },
+      "llama32|UR": {
+        "n": 140,
+        "tp": 26,
+        "fp": 16,
+        "fn": 5,
+        "tn": 93,
+        "precision": 0.6190476190476191,
+        "recall": 0.8387096774193549,
+        "specificity": 0.8532110091743119,
+        "f1": 0.7123287671232876,
+        "kappa": 0.613970588235294,
+        "flag_ratio": 1.3548387096774193
+      },
+      "phi3|EN": {
+        "n": 140,
+        "tp": 8,
+        "fp": 1,
+        "fn": 1,
+        "tn": 130,
+        "precision": 0.8888888888888888,
+        "recall": 0.8888888888888888,
+        "specificity": 0.9923664122137404,
+        "f1": 0.8888888888888888,
+        "kappa": 0.8812553011026298,
+        "flag_ratio": 1.0
+      },
+      "phi3|CS": {
+        "n": 140,
+        "tp": 14,
+        "fp": 0,
+        "fn": 1,
+        "tn": 125,
+        "precision": 1.0,
+        "recall": 0.9333333333333333,
+        "specificity": 1.0,
+        "f1": 0.9655172413793104,
+        "kappa": 0.9615384615384617,
+        "flag_ratio": 0.9333333333333333
+      },
+      "phi3|RU": {
+        "n": 140,
+        "tp": 8,
+        "fp": 6,
+        "fn": 1,
+        "tn": 125,
+        "precision": 0.5714285714285714,
+        "recall": 0.8888888888888888,
+        "specificity": 0.9541984732824428,
+        "f1": 0.6956521739130435,
+        "kappa": 0.6698113207547167,
+        "flag_ratio": 1.5555555555555556
+      },
+      "phi3|UR": {
+        "n": 140,
+        "tp": 11,
+        "fp": 13,
+        "fn": 4,
+        "tn": 112,
+        "precision": 0.4583333333333333,
+        "recall": 0.7333333333333333,
+        "specificity": 0.896,
+        "f1": 0.5641025641025641,
+        "kappa": 0.49789029535864976,
+        "flag_ratio": 1.6
+      },
+      "qwen25|EN": {
+        "n": 140,
+        "tp": 12,
+        "fp": 4,
+        "fn": 0,
+        "tn": 124,
+        "precision": 0.75,
+        "recall": 1.0,
+        "specificity": 0.96875,
+        "f1": 0.8571428571428571,
+        "kappa": 0.8416289592760181,
+        "flag_ratio": 1.3333333333333333
+      },
+      "qwen25|CS": {
+        "n": 140,
+        "tp": 9,
+        "fp": 2,
+        "fn": 0,
+        "tn": 129,
+        "precision": 0.8181818181818182,
+        "recall": 1.0,
+        "specificity": 0.9847328244274809,
+        "f1": 0.9,
+        "kappa": 0.8923904688701003,
+        "flag_ratio": 1.2222222222222223
+      },
+      "qwen25|RU": {
+        "n": 140,
+        "tp": 3,
+        "fp": 3,
+        "fn": 4,
+        "tn": 130,
+        "precision": 0.5,
+        "recall": 0.42857142857142855,
+        "specificity": 0.9774436090225563,
+        "f1": 0.46153846153846156,
+        "kappa": 0.4354838709677411,
+        "flag_ratio": 0.8571428571428571
+      },
+      "qwen25|UR": {
+        "n": 140,
+        "tp": 6,
+        "fp": 2,
+        "fn": 2,
+        "tn": 130,
+        "precision": 0.75,
+        "recall": 0.75,
+        "specificity": 0.9848484848484849,
+        "f1": 0.75,
+        "kappa": 0.7348484848484846,
+        "flag_ratio": 1.0
+      }
+    },
+    "n_items": 1680,
+    "unsafe_per_language": {
+      "EN": 38,
+      "CS": 67,
+      "RU": 65,
+      "UR": 54
+    },
+    "selection_on_development": {
+      "overall": {
+        "n": 720,
+        "tp": 89,
+        "fp": 33,
+        "fn": 14,
+        "tn": 584,
+        "precision": 0.7295081967213115,
+        "recall": 0.8640776699029126,
+        "specificity": 0.946515397082658,
+        "f1": 0.7911111111111111,
+        "kappa": 0.7527544787678639,
+        "flag_ratio": 1.1844660194174756
+      },
+      "per_language": {
+        "EN": {
+          "n": 180,
+          "tp": 10,
+          "fp": 5,
+          "fn": 1,
+          "tn": 164,
+          "precision": 0.6666666666666666,
+          "recall": 0.9090909090909091,
+          "specificity": 0.9704142011834319,
+          "f1": 0.7692307692307693,
+          "kappa": 0.7517241379310347,
+          "flag_ratio": 1.3636363636363635
+        },
+        "CS": {
+          "n": 180,
+          "tp": 29,
+          "fp": 7,
+          "fn": 4,
+          "tn": 140,
+          "precision": 0.8055555555555556,
+          "recall": 0.8787878787878788,
+          "specificity": 0.9523809523809523,
+          "f1": 0.8405797101449275,
+          "kappa": 0.8028673835125448,
+          "flag_ratio": 1.0909090909090908
+        },
+        "RU": {
+          "n": 180,
+          "tp": 30,
+          "fp": 8,
+          "fn": 4,
+          "tn": 138,
+          "precision": 0.7894736842105263,
+          "recall": 0.8823529411764706,
+          "specificity": 0.9452054794520548,
+          "f1": 0.8333333333333334,
+          "kappa": 0.7918272937548189,
+          "flag_ratio": 1.1176470588235294
+        },
+        "UR": {
+          "n": 180,
+          "tp": 20,
+          "fp": 13,
+          "fn": 5,
+          "tn": 142,
+          "precision": 0.6060606060606061,
+          "recall": 0.8,
+          "specificity": 0.9161290322580645,
+          "f1": 0.6896551724137931,
+          "kappa": 0.6313993174061434,
+          "flag_ratio": 1.32
+        }
+      },
+      "macro_f1": 0.7831997462807059,
+      "meets_090_everywhere": false,
+      "n_items": 720,
+      "unsafe_per_language": {
+        "EN": 11,
+        "CS": 33,
+        "RU": 34,
+        "UR": 25
+      }
+    }
+  }
+}

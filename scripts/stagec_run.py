@@ -12,12 +12,18 @@
    adjudications in a re-uploaded dataset replace the copies in old bundles.
 2. Prints the configured judge and its fingerprint (production judging is
    gated by require_validated_judge: the PASS manifest must match it).
-3. Steps, each bounded by the remaining time budget (killed at the limit):
-   harm gate -> benign gate (if uploaded) -> Exp 2 main judging (only with a
-   PASS harm manifest) -> Exp 2 robustness judging (only after main is done).
-   With --dev-sample-dir, the ONLY step is a rubric-iteration run on that
-   development sample (calibrate_judge writes a feedback report, never a
-   manifest); use it while revising the rubric.
+3. Steps, each bounded by the remaining time budget (killed at the limit). Modes:
+   --dev-sample-dir      rubric iteration on a development sample (feedback
+                         report, never a manifest)
+   --validation-predict  two-phase validation phase 1: the frozen judge's
+                         predictions on the validation set, no verdict
+   --screen              measurement option 2: benign gate -> the configured
+                         judge SCREENS Exp 2 main, then robustness (eval_main
+                         families only; scripts/exp2_verify.py); humans label
+                         the flagged responses + a random audit afterwards
+   (default, final)      benign gate (if uploaded) -> Exp 2 main judging (only
+                         with the committed PASS harm manifest from the
+                         two-phase scoring) -> Exp 2 robustness (after main)
    Every step caches its work as it goes, so a killed or budget-starved step
    loses at most one chunk and the next run continues from the cache.
 4. ALWAYS (even after errors) writes --out-zip: a resume bundle with the
@@ -95,8 +101,18 @@ def run_step(cmd: list[str], timeout_s: int) -> int:
 
 
 def plan(robustness: bool, dev_sample_dir: str | None = None,
-         dev_judge_models: tuple[str, ...] = ()) -> list[tuple[str, list[str], callable]]:
+         dev_judge_models: tuple[str, ...] = (),
+         validation_predict: bool = False, screen: bool = False) -> list[tuple[str, list[str], callable]]:
     py = sys.executable
+    benign = ("benign_gate", [py, "scripts/calibrate_judge.py", "--kind", "benign",
+                              "--sample-dir", BENIGN_DIR], lambda st: (ROOT / BENIGN_DIR).is_dir())
+    if screen:
+        scr = [py, "scripts/exp2_verify.py", "screen", "--run-dir"]
+        return [benign,
+                ("screen_main", scr + ["outputs/exp2/main"],
+                 lambda st: (ROOT / "outputs/exp2/main/generations.jsonl").exists()),
+                ("screen_robustness", scr + ["outputs/exp2/robustness"],
+                 lambda st: robustness and st["steps"].get("screen_main") == 0)]
     if dev_sample_dir:
         ready = lambda st: (ROOT / dev_sample_dir).is_dir()  # noqa: E731
         steps = [("rubric_dev", [py, "scripts/calibrate_judge.py", "--sample-dir", dev_sample_dir], ready)]
@@ -104,13 +120,16 @@ def plan(robustness: bool, dev_sample_dir: str | None = None,
             steps.append((f"rubric_dev[{m}]", [py, "scripts/calibrate_judge.py", "--sample-dir",
                                                 dev_sample_dir, "--judge-model", m], ready))
         return steps
+    if validation_predict:
+        # Two-phase validation, phase 1: the frozen judge's predictions on the validation
+        # set, no verdict. The verdict comes from scripts/exp1_gold_audit.py score-two-phase.
+        return [("validation_predict", [py, "scripts/calibrate_judge.py", "--sample-dir", HARM_DIR,
+                                        "--predict-only"],
+                 lambda st: (ROOT / HARM_DIR).is_dir())]
+    # Final run. The harm verdict is the committed two-phase manifest (the original
+    # validation gold was shown to be lenient, so it is not re-scored here).
     return [
-        ("harm_gate", [py, "scripts/calibrate_judge.py", "--sample-dir", HARM_DIR,
-                       "--development-sample-dir", DEV_DIR],
-         lambda st: (ROOT / HARM_DIR).is_dir()),
-        ("benign_gate", [py, "scripts/calibrate_judge.py", "--kind", "benign",
-                         "--sample-dir", BENIGN_DIR],
-         lambda st: (ROOT / BENIGN_DIR).is_dir()),
+        benign,
         ("exp2_main", [py, "-m", "csjail.run_eval", "--out-dir", "outputs/exp2/main", "--judge-only"],
          lambda st: harm_passed()),
         ("exp2_robustness", [py, "scripts/exp2_robustness.py", "--judge-only",
@@ -173,11 +192,19 @@ def main(argv=None) -> int:
     ap.add_argument("--dev-judge-models", nargs="*", default=[],
                     help="with --dev-sample-dir: also score the sample with these judge models "
                          "(same rubric) for comparison")
+    ap.add_argument("--validation-predict", action="store_true",
+                    help="two-phase validation phase 1: cache the frozen judge's predictions on "
+                         "the validation set; no verdict, no Exp 2")
+    ap.add_argument("--screen", action="store_true",
+                    help="measurement option 2: benign gate, then screen Exp 2 (eval_main) with the "
+                         "configured judge for human verification")
     args = ap.parse_args(argv)
     t0 = time.monotonic()
     left = lambda: int(args.time_budget_h * 3600 - (time.monotonic() - t0))  # noqa: E731
-    status = {"started_utc": now(), "mode": "rubric_dev" if args.dev_sample_dir else "gates+exp2",
-              "inputs": [], "steps": {}, "errors": []}
+    mode = ("rubric_dev" if args.dev_sample_dir else
+            "validation_predict" if args.validation_predict else
+            "screen" if args.screen else "final")
+    status = {"started_utc": now(), "mode": mode, "inputs": [], "steps": {}, "errors": []}
     try:
         status["inputs"] = collect_inputs(Path(args.input_root), Path(args.scratch), ROOT)
         if not status["inputs"]:
@@ -191,7 +218,8 @@ def main(argv=None) -> int:
                            "benign_fingerprint": c.fingerprint("benign")["fingerprint_id"]}
         print(f"[stagec] judge {status['judge']}")
         for name, cmd, ready in plan(not args.no_robustness, args.dev_sample_dir,
-                                     tuple(args.dev_judge_models)):
+                                     tuple(args.dev_judge_models), args.validation_predict,
+                                     args.screen):
             if not ready(status):
                 status["steps"][name] = "skipped: prerequisite not met"
             elif left() < 300:

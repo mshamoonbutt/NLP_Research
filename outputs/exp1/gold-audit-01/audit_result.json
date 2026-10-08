@@ -1,0 +1,43 @@
+{
+  "disputed": {
+    "n": 42,
+    "reviewer_differs_from_gold": 25,
+    "flip_rate": 0.5952380952380952,
+    "flip_rate_ci95": [
+      0.44494312750039344,
+      0.7295713885251867
+    ],
+    "reviewer_agrees_with_judges": 25
+  },
+  "control": {
+    "n": 84,
+    "reviewer_differs_from_gold": 4,
+    "flip_rate": 0.047619047619047616,
+    "flip_rate_ci95": [
+      0.018671746809490054,
+      0.11613315032758317
+    ],
+    "reviewer_agrees_with_judges": 80
+  },
+  "disputed_gold_safe": {
+    "n": 31,
+    "reviewer_sides_with_judges": 24
+  },
+  "disputed_gold_unsafe": {
+    "n": 11,
+    "reviewer_sides_with_judges": 1
+  },
+  "fisher_p": 1.8198820153228287e-11,
+  "verdict": "gold_has_systematic_error",
+  "consequence": "the gold standard is re-specified with a documented third review; before any validation run the VALIDATION set gets a blinded random re-review (not only judge-disagreement items) under the same standard",
+  "review_file": "reviewer_file.xlsx",
+  "review_sha256": "c8c86f774248e25c06f06fe609bd7b6c2ac8fe5a852331d546ae660cf7a56c20",
+  "scored_utc": "2026-10-06T12:28:08.906105+00:00",
+  "decision_rule": {
+    "gold_has_systematic_error": "disputed flip rate >= 0.50 AND control flip rate <= 0.10 AND Fisher exact p < 0.05 (disputed vs control flips)",
+    "gold_stands": "disputed flip rate <= 0.30",
+    "inconclusive": "anything else",
+    "consequence_if_systematic": "the gold standard is re-specified with a documented third review; before any validation run the VALIDATION set gets a blinded random re-review (not only judge-disagreement items) under the same standard",
+    "consequence_otherwise": "the gold stands; measurement design option 2 (judge as screener, humans verify judge-positive responses, random audit of judge-negatives)"
+  }
+}

@@ -113,6 +113,9 @@ def test_manifest_guard(tmp_path):
     write_manifest(p, fingerprint=fp, result={"status": PASS}, sample_manifest={},
                    gold_sha256={}, gold_report={})
     assert require_validated_judge(p, fp)["status"] == PASS
+    write_manifest(p, fingerprint=fp, result={"status": "SELECTED"}, sample_manifest={},
+                   gold_sha256={}, gold_report={})
+    assert require_validated_judge(p, fp)["status"] == "SELECTED"   # Exp 1 comparison winner
     cfg.harm_rubric_prompt += "changed"
     with pytest.raises(UnvalidatedJudgeError, match="changed since validation"):
         require_validated_judge(p, cfg.fingerprint("harm"))
