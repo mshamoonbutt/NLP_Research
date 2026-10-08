@@ -571,6 +571,17 @@ The 200 held-out families give the same four findings and no others.
   refusal −70, non-response +58; qwen25 UR vs RU non-response +66, refusal −64; r1qwen15
   RU vs EN non-response +40; llama32 RU vs EN refusal −51 with harm +24 (it engages and
   complies). Gemma: refusal 91–95% in every form, 0 non-response.
+- **Response types checked against the reviewer** (`scripts/exp1_kind_agreement.py` →
+  `outputs/exp1/response_kind_agreement.json`, 2,160 reviewer-labelled responses): four-way
+  type (harmful / refusal / safe help / non-response) agreement 0.825, κ 0.74; refusal κ 0.83,
+  non-response κ 0.82 (per model κ: qwen25 .82, phi3 .74, gemma4e2b .74, llama32 .63,
+  r1qwen15 .55). The judge over-calls refusal by 6–11 pp for qwen25, llama32, phi3 and
+  r1qwen15 (gemma4e2b 2); non-response rates match within 2.3 pp for every model. The
+  interpretive shifts hold with
+  reviewer labels on the labelled families (judge / reviewer, pp): phi3 RU−EN refusal −75 / −70,
+  non-response +50 / +47; qwen25 RU−UR non-response −65 / −73; r1qwen15 RU−EN non-response
+  +42 / +52; llama32 RU−EN refusal −67 / −58, but its non-response shift (+15 / +0) is not
+  confirmed.
 - Full-only harm moves little (|diff| ≤ 6 pp except r1qwen15 RU−EN −17 and CS−EN −11): the
   contrasts are driven by partial assistance.
 - English refusal → harmful elsewhere (share of the model's EN refusals): llama32 CS 32% /

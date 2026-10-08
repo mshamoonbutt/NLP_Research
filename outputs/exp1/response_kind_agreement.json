@@ -1,0 +1,1198 @@
+{
+  "kind": "exp1_response_kind_agreement",
+  "types": [
+    "harmful_compliance",
+    "refusal",
+    "safe_helpful",
+    "nonresponse"
+  ],
+  "nonresponse_kinds": [
+    "unintelligible",
+    "irrelevant",
+    "empty"
+  ],
+  "overall": {
+    "n": 2160,
+    "agreement": 0.825,
+    "kappa_4type": 0.7399706301336357,
+    "refusal": {
+      "judge_rate": 0.5175925925925926,
+      "reviewer_rate": 0.44074074074074077,
+      "kappa": 0.8266488170045353
+    },
+    "nonresponse": {
+      "judge_rate": 0.2550925925925926,
+      "reviewer_rate": 0.2601851851851852,
+      "kappa": 0.8220933281636258
+    }
+  },
+  "confusion_judge_by_reviewer": {
+    "harmful_compliance|harmful_compliance": 242,
+    "harmful_compliance|nonresponse": 36,
+    "harmful_compliance|refusal": 2,
+    "harmful_compliance|safe_helpful": 74,
+    "nonresponse|harmful_compliance": 26,
+    "nonresponse|nonresponse": 483,
+    "nonresponse|refusal": 3,
+    "nonresponse|safe_helpful": 39,
+    "refusal|harmful_compliance": 14,
+    "refusal|nonresponse": 37,
+    "refusal|refusal": 941,
+    "refusal|safe_helpful": 126,
+    "safe_helpful|harmful_compliance": 9,
+    "safe_helpful|nonresponse": 6,
+    "safe_helpful|refusal": 6,
+    "safe_helpful|safe_helpful": 116
+  },
+  "per_model": {
+    "gemma4e2b": {
+      "n": 240,
+      "agreement": 0.9791666666666666,
+      "kappa_4type": 0.7424892703862656,
+      "refusal": {
+        "judge_rate": 0.9666666666666667,
+        "reviewer_rate": 0.95,
+        "kappa": 0.791666666666666
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      }
+    },
+    "llama32": {
+      "n": 560,
+      "agreement": 0.7410714285714286,
+      "kappa_4type": 0.6253212685551337,
+      "refusal": {
+        "judge_rate": 0.49464285714285716,
+        "reviewer_rate": 0.4017857142857143,
+        "kappa": 0.7637885856713746
+      },
+      "nonresponse": {
+        "judge_rate": 0.10714285714285714,
+        "reviewer_rate": 0.13035714285714287,
+        "kappa": 0.42909312233718766
+      }
+    },
+    "phi3": {
+      "n": 560,
+      "agreement": 0.8178571428571428,
+      "kappa_4type": 0.7381366072370019,
+      "refusal": {
+        "judge_rate": 0.41785714285714287,
+        "reviewer_rate": 0.30892857142857144,
+        "kappa": 0.7523068129235961
+      },
+      "nonresponse": {
+        "judge_rate": 0.3767857142857143,
+        "reviewer_rate": 0.38392857142857145,
+        "kappa": 0.8636271392816073
+      }
+    },
+    "qwen25": {
+      "n": 560,
+      "agreement": 0.8964285714285715,
+      "kappa_4type": 0.8157529001333069,
+      "refusal": {
+        "judge_rate": 0.6285714285714286,
+        "reviewer_rate": 0.5714285714285714,
+        "kappa": 0.8665254237288136
+      },
+      "nonresponse": {
+        "judge_rate": 0.2714285714285714,
+        "reviewer_rate": 0.2625,
+        "kappa": 0.9133211678832117
+      }
+    },
+    "r1qwen15": {
+      "n": 240,
+      "agreement": 0.7166666666666667,
+      "kappa_4type": 0.5467925576228826,
+      "refusal": {
+        "judge_rate": 0.09583333333333334,
+        "reviewer_rate": 0.025,
+        "kappa": 0.3895870736086175
+      },
+      "nonresponse": {
+        "judge_rate": 0.5333333333333333,
+        "reviewer_rate": 0.5291666666666667,
+        "kappa": 0.7908533184606805
+      }
+    }
+  },
+  "per_model_condition": {
+    "gemma4e2b|EN": {
+      "n": 60,
+      "agreement": 0.9833333333333333,
+      "kappa_4type": 0.0,
+      "refusal": {
+        "judge_rate": 1.0,
+        "reviewer_rate": 0.9833333333333333,
+        "kappa": 0.0
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      }
+    },
+    "gemma4e2b|CS": {
+      "n": 60,
+      "agreement": 0.9833333333333333,
+      "kappa_4type": 0.6610169491525415,
+      "refusal": {
+        "judge_rate": 0.9833333333333333,
+        "reviewer_rate": 0.9666666666666667,
+        "kappa": 0.6590909090909087
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      }
+    },
+    "gemma4e2b|RU": {
+      "n": 60,
+      "agreement": 1.0,
+      "kappa_4type": 1.0,
+      "refusal": {
+        "judge_rate": 0.9333333333333333,
+        "reviewer_rate": 0.9333333333333333,
+        "kappa": 1.0
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      }
+    },
+    "gemma4e2b|UR": {
+      "n": 60,
+      "agreement": 0.95,
+      "kappa_4type": 0.6078431372549018,
+      "refusal": {
+        "judge_rate": 0.95,
+        "reviewer_rate": 0.9166666666666666,
+        "kappa": 0.7333333333333336
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      }
+    },
+    "llama32|EN": {
+      "n": 140,
+      "agreement": 0.8857142857142857,
+      "kappa_4type": 0.6398713826366559,
+      "refusal": {
+        "judge_rate": 0.8571428571428571,
+        "reviewer_rate": 0.7785714285714286,
+        "kappa": 0.6915254237288135
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.05,
+        "kappa": 0.0
+      }
+    },
+    "llama32|CS": {
+      "n": 140,
+      "agreement": 0.7214285714285714,
+      "kappa_4type": 0.6028513238289206,
+      "refusal": {
+        "judge_rate": 0.45714285714285713,
+        "reviewer_rate": 0.32857142857142857,
+        "kappa": 0.6761984861227923
+      },
+      "nonresponse": {
+        "judge_rate": 0.05714285714285714,
+        "reviewer_rate": 0.11428571428571428,
+        "kappa": 0.18814432989690794
+      }
+    },
+    "llama32|RU": {
+      "n": 140,
+      "agreement": 0.6928571428571428,
+      "kappa_4type": 0.5823794658342004,
+      "refusal": {
+        "judge_rate": 0.22857142857142856,
+        "reviewer_rate": 0.17857142857142858,
+        "kappa": 0.7147335423197492
+      },
+      "nonresponse": {
+        "judge_rate": 0.20714285714285716,
+        "reviewer_rate": 0.14285714285714285,
+        "kappa": 0.6315789473684212
+      }
+    },
+    "llama32|UR": {
+      "n": 140,
+      "agreement": 0.6642857142857143,
+      "kappa_4type": 0.5426426635156738,
+      "refusal": {
+        "judge_rate": 0.4357142857142857,
+        "reviewer_rate": 0.32142857142857145,
+        "kappa": 0.7304812834224599
+      },
+      "nonresponse": {
+        "judge_rate": 0.16428571428571428,
+        "reviewer_rate": 0.21428571428571427,
+        "kappa": 0.3741721854304635
+      }
+    },
+    "phi3|EN": {
+      "n": 140,
+      "agreement": 0.8714285714285714,
+      "kappa_4type": 0.5145444037757658,
+      "refusal": {
+        "judge_rate": 0.9,
+        "reviewer_rate": 0.8071428571428572,
+        "kappa": 0.5224719101123596
+      },
+      "nonresponse": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      }
+    },
+    "phi3|CS": {
+      "n": 140,
+      "agreement": 0.75,
+      "kappa_4type": 0.6268088347296268,
+      "refusal": {
+        "judge_rate": 0.6071428571428571,
+        "reviewer_rate": 0.38571428571428573,
+        "kappa": 0.5778210116731517
+      },
+      "nonresponse": {
+        "judge_rate": 0.10714285714285714,
+        "reviewer_rate": 0.11428571428571428,
+        "kappa": 0.7461139896373054
+      }
+    },
+    "phi3|RU": {
+      "n": 140,
+      "agreement": 0.7857142857142857,
+      "kappa_4type": 0.6500291642363136,
+      "refusal": {
+        "judge_rate": 0.15714285714285714,
+        "reviewer_rate": 0.04285714285714286,
+        "kappa": 0.3873085339168489
+      },
+      "nonresponse": {
+        "judge_rate": 0.5785714285714286,
+        "reviewer_rate": 0.55,
+        "kappa": 0.8258345428156748
+      }
+    },
+    "phi3|UR": {
+      "n": 140,
+      "agreement": 0.8642857142857143,
+      "kappa_4type": 0.4894433781190021,
+      "refusal": {
+        "judge_rate": 0.007142857142857143,
+        "reviewer_rate": 0.0,
+        "kappa": 0.0
+      },
+      "nonresponse": {
+        "judge_rate": 0.8214285714285714,
+        "reviewer_rate": 0.8714285714285714,
+        "kappa": 0.53515625
+      }
+    },
+    "qwen25|EN": {
+      "n": 140,
+      "agreement": 0.95,
+      "kappa_4type": 0.7992214710100387,
+      "refusal": {
+        "judge_rate": 0.8714285714285714,
+        "reviewer_rate": 0.85,
+        "kappa": 0.9107142857142856
+      },
+      "nonresponse": {
+        "judge_rate": 0.007142857142857143,
+        "reviewer_rate": 0.014285714285714285,
+        "kappa": 0.6634615384615402
+      }
+    },
+    "qwen25|CS": {
+      "n": 140,
+      "agreement": 0.9,
+      "kappa_4type": 0.6826424870466322,
+      "refusal": {
+        "judge_rate": 0.8642857142857143,
+        "reviewer_rate": 0.7785714285714286,
+        "kappa": 0.7114393679148059
+      },
+      "nonresponse": {
+        "judge_rate": 0.007142857142857143,
+        "reviewer_rate": 0.02142857142857143,
+        "kappa": 0.4945848375451292
+      }
+    },
+    "qwen25|RU": {
+      "n": 140,
+      "agreement": 0.7714285714285715,
+      "kappa_4type": 0.5914272685818514,
+      "refusal": {
+        "judge_rate": 0.6928571428571428,
+        "reviewer_rate": 0.5642857142857143,
+        "kappa": 0.6993772815117028
+      },
+      "nonresponse": {
+        "judge_rate": 0.21428571428571427,
+        "reviewer_rate": 0.17142857142857143,
+        "kappa": 0.7254901960784312
+      }
+    },
+    "qwen25|UR": {
+      "n": 140,
+      "agreement": 0.9642857142857143,
+      "kappa_4type": 0.8659003831417625,
+      "refusal": {
+        "judge_rate": 0.08571428571428572,
+        "reviewer_rate": 0.09285714285714286,
+        "kappa": 0.9560853199498119
+      },
+      "nonresponse": {
+        "judge_rate": 0.8571428571428571,
+        "reviewer_rate": 0.8428571428571429,
+        "kappa": 0.8879999999999999
+      }
+    },
+    "r1qwen15|EN": {
+      "n": 60,
+      "agreement": 0.6833333333333333,
+      "kappa_4type": 0.4392523364485982,
+      "refusal": {
+        "judge_rate": 0.05,
+        "reviewer_rate": 0.016666666666666666,
+        "kappa": 0.4871794871794877
+      },
+      "nonresponse": {
+        "judge_rate": 0.2833333333333333,
+        "reviewer_rate": 0.2,
+        "kappa": 0.6846846846846846
+      }
+    },
+    "r1qwen15|CS": {
+      "n": 60,
+      "agreement": 0.48333333333333334,
+      "kappa_4type": 0.2737212026552128,
+      "refusal": {
+        "judge_rate": 0.18333333333333332,
+        "reviewer_rate": 0.06666666666666667,
+        "kappa": 0.4827586206896549
+      },
+      "nonresponse": {
+        "judge_rate": 0.15,
+        "reviewer_rate": 0.21666666666666667,
+        "kappa": 0.44751381215469643
+      }
+    },
+    "r1qwen15|RU": {
+      "n": 60,
+      "agreement": 0.7166666666666667,
+      "kappa_4type": 0.4107452339688043,
+      "refusal": {
+        "judge_rate": 0.15,
+        "reviewer_rate": 0.016666666666666666,
+        "kappa": 0.17525773195876343
+      },
+      "nonresponse": {
+        "judge_rate": 0.7,
+        "reviewer_rate": 0.7166666666666667,
+        "kappa": 0.717741935483871
+      }
+    },
+    "r1qwen15|UR": {
+      "n": 60,
+      "agreement": 0.9833333333333333,
+      "kappa_4type": 0.0,
+      "refusal": {
+        "judge_rate": 0.0,
+        "reviewer_rate": 0.0,
+        "kappa": null
+      },
+      "nonresponse": {
+        "judge_rate": 1.0,
+        "reviewer_rate": 0.9833333333333333,
+        "kappa": 0.0
+      }
+    }
+  },
+  "paired_shifts_on_labelled_families": {
+    "gemma4e2b": {
+      "refusal_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": 0.04999999999999993,
+          "ci": [
+            -0.016666666666666666,
+            0.13333333333333333
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.016666666666666607,
+          "ci": [
+            -0.08333333333333333,
+            0.05
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.06666666666666665,
+          "ci": [
+            -0.13333333333333333,
+            -0.016666666666666666
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.01666666666666672,
+          "ci": [
+            -0.05,
+            0.0
+          ]
+        }
+      ],
+      "refusal_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": 0.033333333333333326,
+          "ci": [
+            -0.05,
+            0.11666666666666667
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.01666666666666672,
+          "ci": [
+            -0.06666666666666667,
+            0.1
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.04999999999999993,
+          "ci": [
+            -0.13333333333333333,
+            0.016666666666666666
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.016666666666666607,
+          "ci": [
+            -0.08333333333333333,
+            0.03333333333333333
+          ]
+        }
+      ],
+      "nonresponse_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "nonresponse_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    "llama32": {
+      "refusal_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": 0.22857142857142856,
+          "ci": [
+            0.12857142857142856,
+            0.32857142857142857
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.31666666666666665,
+          "ci": [
+            -0.4666666666666667,
+            -0.16666666666666666
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.6666666666666666,
+          "ci": [
+            -0.7833333333333333,
+            -0.55
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.4666666666666666,
+          "ci": [
+            -0.6,
+            -0.3333333333333333
+          ]
+        }
+      ],
+      "refusal_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": 0.15,
+          "ci": [
+            0.05714285714285714,
+            0.24285714285714285
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.21666666666666667,
+          "ci": [
+            -0.35,
+            -0.08333333333333333
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.5833333333333334,
+          "ci": [
+            -0.7,
+            -0.45
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.4833333333333334,
+          "ci": [
+            -0.6166666666666667,
+            -0.3333333333333333
+          ]
+        }
+      ],
+      "nonresponse_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": -0.15000000000000002,
+          "ci": [
+            -0.22857142857142856,
+            -0.07142857142857142
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.033333333333333326,
+          "ci": [
+            -0.08333333333333333,
+            0.15
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.15,
+          "ci": [
+            0.06666666666666667,
+            0.25
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.05,
+          "ci": [
+            0.0,
+            0.11666666666666667
+          ]
+        }
+      ],
+      "nonresponse_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": -0.028571428571428567,
+          "ci": [
+            -0.11428571428571428,
+            0.05714285714285714
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.16666666666666666,
+          "ci": [
+            -0.3,
+            -0.03333333333333333
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            -0.11666666666666667,
+            0.11666666666666667
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.04999999999999999,
+          "ci": [
+            -0.06666666666666667,
+            0.16666666666666666
+          ]
+        }
+      ]
+    },
+    "phi3": {
+      "refusal_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": 0.44999999999999996,
+          "ci": [
+            0.35714285714285715,
+            0.5428571428571428
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.18333333333333335,
+          "ci": [
+            0.08333333333333333,
+            0.3
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.75,
+          "ci": [
+            -0.85,
+            -0.6333333333333333
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.31666666666666665,
+          "ci": [
+            -0.45,
+            -0.2
+          ]
+        }
+      ],
+      "refusal_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": 0.34285714285714286,
+          "ci": [
+            0.2642857142857143,
+            0.42142857142857143
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.016666666666666666,
+          "ci": [
+            0.0,
+            0.05
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.7,
+          "ci": [
+            -0.8166666666666667,
+            -0.5833333333333334
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.3666666666666667,
+          "ci": [
+            -0.5333333333333333,
+            -0.2
+          ]
+        }
+      ],
+      "nonresponse_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": -0.4714285714285715,
+          "ci": [
+            -0.5571428571428572,
+            -0.38571428571428573
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.30000000000000004,
+          "ci": [
+            -0.4666666666666667,
+            -0.13333333333333333
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.5,
+          "ci": [
+            0.38333333333333336,
+            0.6333333333333333
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.06666666666666667,
+          "ci": [
+            0.016666666666666666,
+            0.13333333333333333
+          ]
+        }
+      ],
+      "nonresponse_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": -0.4357142857142858,
+          "ci": [
+            -0.5214285714285715,
+            -0.35
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.41666666666666663,
+          "ci": [
+            -0.5666666666666667,
+            -0.26666666666666666
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.4666666666666667,
+          "ci": [
+            0.3333333333333333,
+            0.6
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.06666666666666667,
+          "ci": [
+            0.016666666666666666,
+            0.13333333333333333
+          ]
+        }
+      ]
+    },
+    "qwen25": {
+      "refusal_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": 0.17142857142857149,
+          "ci": [
+            0.08571428571428572,
+            0.2571428571428571
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.6499999999999999,
+          "ci": [
+            0.5166666666666667,
+            0.7666666666666667
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.16666666666666674,
+          "ci": [
+            -0.31666666666666665,
+            -0.016666666666666666
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.06666666666666665,
+          "ci": [
+            -0.16666666666666666,
+            0.03333333333333333
+          ]
+        }
+      ],
+      "refusal_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": 0.2142857142857143,
+          "ci": [
+            0.11428571428571428,
+            0.30714285714285716
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.43333333333333335,
+          "ci": [
+            0.3,
+            0.5666666666666667
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": -0.3333333333333333,
+          "ci": [
+            -0.48333333333333334,
+            -0.18333333333333332
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.1333333333333333,
+          "ci": [
+            -0.26666666666666666,
+            -0.016666666666666666
+          ]
+        }
+      ],
+      "nonresponse_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": -0.20714285714285713,
+          "ci": [
+            -0.2785714285714286,
+            -0.14285714285714285
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.6499999999999999,
+          "ci": [
+            -0.7833333333333333,
+            -0.5166666666666667
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.23333333333333334,
+          "ci": [
+            0.13333333333333333,
+            0.35
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "nonresponse_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 140,
+          "diff": -0.15,
+          "ci": [
+            -0.22142857142857142,
+            -0.08571428571428572
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.7333333333333333,
+          "ci": [
+            -0.85,
+            -0.6
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.13333333333333333,
+          "ci": [
+            0.05,
+            0.21666666666666667
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.016666666666666666,
+          "ci": [
+            -0.05,
+            0.0
+          ]
+        }
+      ]
+    },
+    "r1qwen15": {
+      "refusal_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": 0.033333333333333326,
+          "ci": [
+            -0.1,
+            0.16666666666666666
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.15,
+          "ci": [
+            0.06666666666666667,
+            0.25
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.09999999999999999,
+          "ci": [
+            0.0,
+            0.2
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.1333333333333333,
+          "ci": [
+            0.03333333333333333,
+            0.25
+          ]
+        }
+      ],
+      "refusal_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": 0.05,
+          "ci": [
+            -0.016666666666666666,
+            0.11666666666666667
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": 0.016666666666666666,
+          "ci": [
+            0.0,
+            0.05
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.0,
+          "ci": [
+            -0.05,
+            0.05
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.05,
+          "ci": [
+            -0.016666666666666666,
+            0.11666666666666667
+          ]
+        }
+      ],
+      "nonresponse_judge": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": -0.5499999999999999,
+          "ci": [
+            -0.6833333333333333,
+            -0.4
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.30000000000000004,
+          "ci": [
+            -0.4166666666666667,
+            -0.18333333333333332
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.41666666666666663,
+          "ci": [
+            0.25,
+            0.5666666666666667
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": -0.13333333333333333,
+          "ci": [
+            -0.2833333333333333,
+            0.0
+          ]
+        }
+      ],
+      "nonresponse_reviewer": [
+        {
+          "contrast": "CS-RU",
+          "n_pairs": 60,
+          "diff": -0.5,
+          "ci": [
+            -0.6333333333333333,
+            -0.36666666666666664
+          ]
+        },
+        {
+          "contrast": "RU-UR",
+          "n_pairs": 60,
+          "diff": -0.2666666666666666,
+          "ci": [
+            -0.38333333333333336,
+            -0.15
+          ]
+        },
+        {
+          "contrast": "RU-EN",
+          "n_pairs": 60,
+          "diff": 0.5166666666666666,
+          "ci": [
+            0.35,
+            0.6666666666666666
+          ]
+        },
+        {
+          "contrast": "CS-EN",
+          "n_pairs": 60,
+          "diff": 0.016666666666666663,
+          "ci": [
+            -0.13333333333333333,
+            0.16666666666666666
+          ]
+        }
+      ]
+    }
+  }
+}
