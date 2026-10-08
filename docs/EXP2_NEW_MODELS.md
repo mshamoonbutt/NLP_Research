@@ -179,27 +179,40 @@ held-out, 560 each; new models: gold-audit-05, 240 each):
 | r1qwen15 | 240 | 59 | .56 | .80 | .80 | .52 |
 | gemma4e2b | 240 | 8 | 1.00 | .38 | 1.00 | .54 |
 
-**Corrected ASR.** For the original three models the Rogan–Gladen correction
-per model × language is stable (see `docs/EXPERIMENT_STATUS.md`, Exp 2). For the
-two new models it is not usable: on DeepSeek-R1's code-switched responses the
-judge's specificity is .45 (it flags 21 of 38 safe responses, mostly where the
-reviewer judged R1's finished answer safe and helpful), which drives the
-correction to 0; Gemma's cells hold 1–3 harmful responses, so its sensitivity is
-undefined or near zero. For the new models report instead the reviewer-labelled
-rate on the 60 development families, with the predictive-value estimate
-(judge-flagged rate × P(harmful | flagged) + unflagged rate × P(harmful |
-unflagged), from the same labels) as a cross-check:
+**Corrected ASR (decided 2026-10-08: predictive values, all five models).**
+rate = judge-flagged share × P(harmful | flagged) + unflagged share × P(harmful |
+not flagged), with both probabilities from the reviewer-labelled responses of the
+same model and language (original three: development + held-out, 140 per cell;
+new models: gold-audit-05, 60 per cell). Interval: family bootstrap of the
+flagged share paired with Jeffreys draws of both probabilities. Assumes the
+labelled responses are a random sample of the same model's responses in that
+language (true for the greedy sweep; not applied to robustness, whose decoding
+differs). Rogan–Gladen, used before, divides by (sensitivity + specificity − 1)
+and collapsed where the judge's error is lopsided or harm is rare: DeepSeek-R1
+CS → 0 (judge specificity .45, though the reviewer found 37% harmful), phi3 UR
+→ 0, and no value for three of Gemma's four cells. It remains available with
+`--correction rogan_gladen`.
 
-| Model | Language | Raw (791 fam.) | Reviewer-labelled (60 fam., 95% CI) | Predictive-value estimate |
+All 791 families (95% intervals in `outputs/exp2/summary_5models.csv`):
+
+| Model | EN | CS | RU | UR |
 |---|---|---|---|---|
-| r1qwen15 | EN | .569 | .567 [.44, .68] | .522 |
-| r1qwen15 | CS | .382 | .367 [.26, .49] | .319 |
-| r1qwen15 | RU | .125 | .033 [.01, .11] | .051 |
-| r1qwen15 | UR | .013 | .017 [.00, .09] | .031 |
-| gemma4e2b | EN | .033 | .017 [.00, .09] | .040 |
-| gemma4e2b | CS | .066 | .017 [.00, .09] | .056 |
-| gemma4e2b | RU | .063 | .050 [.02, .14] | .063 |
-| gemma4e2b | UR | .046 | .050 [.02, .14] | .078 |
+| r1qwen15 | .520 [.41, .64] | .311 [.21, .45] | .037 [.01, .11] | .024 [.01, .08] |
+| llama32 | .124 [.09, .16] | .318 [.26, .38] | .319 [.26, .38] | .220 [.17, .28] |
+| qwen25 | .116 [.08, .15] | .076 [.05, .10] | .046 [.02, .09] | .060 [.04, .09] |
+| phi3 | .080 [.05, .11] | .120 [.09, .15] | .064 [.04, .10] | .078 [.05, .12] |
+| gemma4e2b | .049 [.02, .10] | .081 [.04, .13] | .063 [.03, .10] | .093 [.05, .16] |
+
+Gemma's corrected rates sit above its raw rates because the judge missed 5 of the
+8 harmful Gemma responses in the labelled sample; in three Gemma cells the judge
+flagged none of the labelled responses, so P(harmful | flagged) comes from
+Gemma's cells pooled over languages (1.00). The 200 held-out families
+(`summary_5models_eval_main.csv`) show the same ordering.
+
+Cross-check for the new models, the reviewer-labelled rate on the 60
+development families (95% CI): r1qwen15 EN .567 [.44, .68], CS .367 [.26, .49],
+RU .033 [.01, .11], UR .017 [.00, .09]; gemma4e2b EN .017, CS .017, RU .050,
+UR .050 (each [.00–.02, .09–.14]).
 
 **DeepSeek-R1 reasoning (greedy, 2,048 tokens):** reasoning finished in 529/791
 EN, 709 CS, 747 RU, 762 UR responses; 30% of all responses hit the limit. Among
@@ -225,8 +238,9 @@ it is recorded as a missing generation (vLLM would have run the loop to the limi
   backend check next to the Gemma results.
 - State DeepSeek-R1's 2,048-token budget, that its visible reasoning is judged, and its
   unfinished-reasoning rate.
-- The new models' corrected ASR is the reviewer-labelled rate (60 families), not the
-  Rogan–Gladen correction, for the reasons in the results section; say why.
+- Corrected ASR uses the judge's predictive values for all five models; say why
+  Rogan–Gladen was dropped (it collapses where the judge's error is lopsided or harm
+  is rare) and that the new models' judge error rests on 60 labelled responses per cell.
 - The judge reads DeepSeek-R1's visible reasoning; its agreement with the reviewer on R1
   is lower (kappa .52) than on the original three models (.72–.76).
 - Reviewer identity is still unrecorded in every review file (`reviewer_id` blank).

@@ -426,10 +426,15 @@ Remaining steps:
   DeepSeek-R1-Distill-Qwen-1.5B, all judged (0 judge errors). Raw ASR, all 791
   families (EN / CS / RU / UR): r1qwen15 .569 / .382 / .125 / .013; gemma4e2b
   .033 / .066 / .063 / .046. Judge kappa with the reviewer: original three
-  .72–.76, r1qwen15 .52, gemma4e2b .54. For the new models the Rogan–Gladen
-  correction is not usable (R1 CS judge specificity .45; Gemma 1–3 harmful per
-  cell); their corrected values are the reviewer-labelled rates on 60 families
-  (r1qwen15 .567 / .367 / .033 / .017; gemma4e2b .017 / .017 / .050 / .050).
+  .72–.76, r1qwen15 .52, gemma4e2b .54. **Correction method (decided
+  2026-10-08): predictive values for all five models** (flagged share ×
+  P(harmful | flagged) + unflagged share × P(harmful | not flagged), from the
+  reviewer-labelled responses of the same model and language); Rogan–Gladen
+  collapsed where the judge's error is lopsided or harm is rare (R1 CS → 0,
+  phi3 UR → 0, Gemma cells undefined). Corrected ASR, all 791 families (EN /
+  CS / RU / UR): r1qwen15 .520 / .311 / .037 / .024; llama32 .124 / .318 / .319 /
+  .220; qwen25 .116 / .076 / .046 / .060; phi3 .080 / .120 / .064 / .078;
+  gemma4e2b .049 / .081 / .063 / .093.
   Robustness: r1qwen15 CS .536 / .805 / .480, RU .150 / .375 / .135; gemma4e2b
   CS .084 / .110 / .085, RU .082 / .115 / .090 (per-draw / any-of-5 / greedy).
   Backend check (qwen25 Ollama vs vLLM): ASR within 2 points, McNemar p ≥ .42.
@@ -444,10 +449,11 @@ Remaining steps:
 - **Raw ASR, all 791 families (EN / CS / RU / UR):** llama32 .118 / .373 / .359
   / .298; phi3 .082 / .113 / .100 / .102; qwen25 .154 / .092 / .034 / .061.
   The 200 held-out families (`--split eval_main`) give the same pattern.
-- **Corrected ASR** (per model × language judge error from Exp 1, development
-  + held-out, 140 responses per cell; re-aggregated 2026-10-08, raw ASR
-  unchanged), all 791 families EN / CS / RU / UR: llama32 .125 / .328 / .281 /
-  .219; phi3 .085 / .121 / .064 / .000; qwen25 .127 / .078 / .029 / .062.
+- **Corrected ASR, superseded 2026-10-08 by the predictive-value correction
+  above** (these were Rogan–Gladen, per model × language judge error from Exp 1,
+  development + held-out, 140 responses per cell), all 791 families EN / CS / RU /
+  UR: llama32 .125 / .328 / .281 / .219; phi3 .085 / .121 / .064 / .000; qwen25
+  .127 / .078 / .029 / .062.
   E.g. llama32 CS .328 [.237, .418] (was .312 [.141, .464] with the 60
   development responses per cell), RU .281 [.165, .380]. 11 of 12 intervals
   narrow (median width −40%); qwen25 RU widens (7 harmful in its cell, judge
@@ -472,10 +478,11 @@ Remaining steps:
   both resume from `judgments.jsonl`.
 - **Reporting:** `python -m csjail.aggregate outputs/exp2/main [--split eval_main]`
   prints raw ASR and ASR corrected for the judge's error per model × language
-  (Rogan–Gladen with Exp 1 recall and specificity; interval pairs the family
-  bootstrap with posterior draws of both). Assumes the judge's error in each
-  cell transfers from the 1,680 reviewer-labelled Exp 1 responses (development
-  + held-out) to the full sweep.
+  (default since 2026-10-08: the judge's predictive values from the
+  reviewer-labelled responses of that model and language; `--correction
+  rogan_gladen` for the earlier method). Interval pairs the family bootstrap with
+  posterior draws. Assumes the labelled responses are a random sample of the
+  same model's greedy responses in that language.
 - **Superseded:** the screen-and-verify design (`exp2_verify.py`) and the Kaggle
   `screen` mode are no longer the plan.
 
