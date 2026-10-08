@@ -170,7 +170,9 @@ rate-limit bound.
 python scripts/exp3_isolation.py --results outputs/exp2/main outputs/exp2/main-r1 outputs/exp2/main-gemma4 --out-dir outputs/exp3   # CPU; add --split eval_main --out-dir outputs/exp3/eval_main for the 200 held-out
 python scripts/exp4_features.py --results outputs/exp2/main outputs/exp2/main-r1 outputs/exp2/main-gemma4 --tokenizer llama32=unsloth/Llama-3.2-3B-Instruct --out-dir outputs/exp4   # CPU + network (tokenizer.json only)
 python scripts/prepare_capability_sets.py --urdummlu-dataset <hf-id-or-use---urdummlu-file>  # CPU+network, before Exp 8
-python scripts/exp4b_comprehension.py --baseline-results outputs/exp2/main       # [GPU][API]
+python scripts/exp4b_comprehension.py --generate-only --models qwen25 phi3 llama32 r1qwen15   # [GPU] Kaggle: notebooks/kaggle_exp4b.ipynb (+ gemma4e2b via Ollama)
+python scripts/exp4b_comprehension.py --score-only --models qwen25 phi3 llama32 r1qwen15 gemma4e2b --baseline-results outputs/exp2/main outputs/exp2/main-r1 outputs/exp2/main-gemma4   # laptop (Ollama judge)
+python scripts/exp4b_comprehension.py --score-review outputs/exp4b/review_sample.csv   # after the blinded scorer audit
 python scripts/prepare_external_english_pairs.py --n 1000                        # [untested] B_ext source
 python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main   # [API]
 python scripts/exp7_train_arms.py --model phi3 --arm C --budget 100 --naturalness-csv <rated>   # [GPU]

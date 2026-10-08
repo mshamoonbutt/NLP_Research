@@ -88,46 +88,60 @@ def parse_comprehension(raw: str) -> ComprehensionResult:
 
 
 class ComprehensionJudge:
-    def __init__(self, *, model: str = "gpt-4o-mini", temperature: float = 0.0,
-                 max_tokens: int = 120, timeout_s: float = 60, concurrency: int = 16,
-                 max_retries: int = 5):
+    """The comprehension rubric through the configured Exp 1 judge's provider and model
+    (configs/judge.yaml, e.g. DeepSeek V4.1 Flash via the local Ollama app), with the same
+    client settings as csjail.judge.Judge. The HTTP client and semaphore are created inside
+    each score_sync event loop (reusing them across loops stalled the judge before)."""
+
+    def __init__(self, cfg=None):
+        from csjail.judge import OPENAI_COMPATIBLE, load_judge_config
         try:
             from openai import AsyncOpenAI  # noqa: WPS433
         except ImportError as e:
-            raise RuntimeError("openai package not installed") from e
-        key = os.environ.get("OPENAI_API_KEY")
-        if not key:
-            raise RuntimeError("OPENAI_API_KEY env var is required")
-        self.model, self.temperature, self.max_tokens = model, temperature, max_tokens
-        self.max_retries = max_retries
-        self._client = AsyncOpenAI(api_key=key, timeout=timeout_s)
-        self._sem = asyncio.Semaphore(concurrency)
+            raise RuntimeError("openai package not installed: pip install -e '.[judge]'") from e
+        self.cfg = cfg or load_judge_config()
+        base_url, key_env = OPENAI_COMPATIBLE[self.cfg.provider]
+        api_key = os.environ.get(key_env) if key_env else "ollama"   # Ollama ignores the key
+        if not api_key:
+            raise RuntimeError(f"{key_env} env var is required for the {self.cfg.provider} scorer")
+        self._client_factory = lambda: AsyncOpenAI(api_key=api_key, base_url=base_url,  # noqa: E731
+                                                   timeout=self.cfg.timeout_s)
 
     @property
     def fingerprint(self) -> dict:
-        return scorer_fingerprint(self.model)
+        return scorer_fingerprint(f"{self.cfg.provider}:{self.cfg.model_id}")
 
-    async def _one(self, original: str, description: str) -> ComprehensionResult:
+    async def _one(self, client, sem, original: str, description: str) -> ComprehensionResult:
+        from csjail.judge import _retry_wait
+
         if not (description or "").strip():
             return ComprehensionResult("not_demonstrated", "empty description", "")
         msg = COMPREHENSION_RUBRIC.replace("{original}", original).replace(
             "{description}", description)
-        delay = 1.0
-        for _attempt in range(self.max_retries):
+        delay, bad = 1.0, None
+        for _attempt in range(self.cfg.max_retries):
             try:
-                async with self._sem:
-                    resp = await self._client.chat.completions.create(
-                        model=self.model, messages=[{"role": "user", "content": msg}],
-                        temperature=self.temperature, max_tokens=self.max_tokens)
-                return parse_comprehension(resp.choices[0].message.content or "")
-            except Exception:  # broad: openai SDK raises many types
-                await asyncio.sleep(delay)
-                delay = min(delay * 2, 30.0)
-        return ComprehensionResult(None, "", "")
+                async with sem:
+                    resp = await client.chat.completions.create(
+                        model=self.cfg.model_id, messages=[{"role": "user", "content": msg}],
+                        temperature=self.cfg.temperature, max_tokens=self.cfg.max_tokens,
+                        **({"reasoning_effort": "none"} if self.cfg.provider == "ollama" else {}))
+                res = parse_comprehension(resp.choices[0].message.content or "")
+                if res.label is not None or bad is not None:   # a malformed answer gets one retry
+                    return res
+                bad = res
+            except Exception as e:  # broad: openai SDK raises many types
+                await asyncio.sleep(_retry_wait(str(e).lower(), delay))
+                delay = min(delay * 2, 60.0)
+        return bad or ComprehensionResult(None, "", "")
 
     def score_sync(self, pairs: list[tuple[str, str]]) -> list[ComprehensionResult]:
         async def _all():
-            return await asyncio.gather(*(self._one(o, d) for o, d in pairs))
+            client, sem = self._client_factory(), asyncio.Semaphore(self.cfg.concurrency)
+            try:
+                return await asyncio.gather(*(self._one(client, sem, o, d) for o, d in pairs))
+            finally:
+                await client.close()
         return asyncio.run(_all())
 
 
