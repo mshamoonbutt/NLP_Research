@@ -239,6 +239,21 @@ def test_full_wiring(env, monkeypatch):
     flags = json.loads((tmp / "exp8" / "acceptance_flags.json").read_text(encoding="utf-8"))
     e = flags["flags"][0]
     assert e["arm"] == "E" and e["flags"]["capability_retention_min_mmlu"] == "NA"
+    # Kaggle generates without a judge; the laptop judges the cache without loading a model,
+    # including arm E's system-prompted generations
+    split8 = ["--exp0-dir", exp0_dir, "--models", "phi3", "--arms", "A", "E", "--skip-capability",
+              "--judge-manifest", str(env["man"]), "--benign-judge-manifest", str(env["bman"]),
+              "--out-dir", str(tmp / "exp8s")]
+    assert exp8.main(split8 + ["--judge-only"]) == 1              # nothing generated yet
+    assert exp8.main(split8 + ["--skip-judge"]) == 0
+    gman = json.loads((tmp / "exp8s" / "run_manifest.json").read_text(encoding="utf-8"))
+    assert gman["generation_only"] and set(gman["provenance"]) == {"phi3/A", "phi3/E"}
+    assert not (tmp / "exp8s" / "acceptance_flags.json").exists()
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    assert exp8.main(split8 + ["--judge-only"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
+    judged = json.loads((tmp / "exp8s" / "acceptance_flags.json").read_text(encoding="utf-8"))
+    assert judged["flags"] == flags["flags"]                    # same numbers as the one-step run
 
 
 def test_robustness_and_comprehension_wiring(env, monkeypatch):

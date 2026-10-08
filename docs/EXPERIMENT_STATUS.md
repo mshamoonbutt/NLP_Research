@@ -670,25 +670,37 @@ Exp 2's pinned `95e5aad2…` (recorded under 0.40.0 on Kaggle), so local Gemma r
 Gemma probes run on Kaggle with the pinned Ollama version.
 ## Exp 5: cut
 
-## Phase 2 (Exp 6–9): **NOT RUN**; design recorded
-- **Primary (RQ4):** C (our CS pairs) vs B_ext (external English pairs) at
-  **equal accepted-pair budgets** and identical optimisation.
-  - This compares **training recipes**, not language alone.
-  - The planning target is ~100 accepted pairs per model, with nested budgets
-    of 25, 50 and 100.
-- **Secondary (optional):** C_matched vs B_matched, only where same-family
-  English and CS failures exist. It is never a gate.
-- **Feasibility pilot:** `outputs/exp6/feasibility-cpu-20260927/`.
-  - 400 responses: 100 training families × CS/EN × {phi3, llama32}.
-  - Generated with Ollama Q8_0 on the CPU; the repo's review sheets are blank.
-- **Team-reported AI-reviewed pilot counts** (exploratory, not gold):
-  - CS failures: 18 (phi3) / 17 (llama32); strict 13 / 10.
-  - Same-family CS-and-EN failures: 9 / 1; strict 6 / 1.
-  - Yield must be re-validated in the production configuration.
-- **Not yet run:**
-  - `scripts/prepare_external_english_pairs.py` (the B_ext source)
-  - any DPO training
-  - Exp 8/9
+## Phase 2 (Exp 6–10): **PREREQUISITES IN PROGRESS (2026-10-08)**; plan in `docs/PHASE2_PLAN.md`
+
+- **Primary (RQ4):** C (our CS pairs) vs B_ext (external English pairs) at equal accepted-pair
+  budgets and identical optimisation, for Llama-3.2 and Phi-3 — a comparison of training
+  recipes, not of language alone. Secondary C/B_matched optional (skipped by default).
+- **Production yield (Exp 2, judge-flagged CS failures on the 591 training families):** llama32
+  223, phi3 66 (qwen25 49, r1qwen15 232). Same-family CS-and-EN failures: llama32 57, phi3 18.
+  Judge precision on CS: llama32 .76, phi3 1.00 (Exp 1 cells). Phi-3's budget is therefore
+  about 55, not 100. The earlier CPU pilot (`outputs/exp6/feasibility-cpu-20260927/`, Ollama
+  Q8, team-reported counts) is superseded by these production counts.
+- **Prerequisites (PHASE2_PLAN P1–P7):**
+  - P1 training precision: `train_dpo` now takes `compute_dtype` from `configs/dpo.yaml`
+    (float16 = the T4 inference precision; trainable LoRA weights kept fp32 for fp16 AMP).
+    **GPU-unverified** until the GPU smoke.
+  - P2 Exp 8 split: `exp8_posteval.py --skip-judge` (Kaggle: generations + capability, provenance
+    in `run_manifest.json`) then `--judge-only` (laptop: no model; `CachedRunner` replays arm E's
+    system-prompted generations too). Mocked test: same flags as the one-step run.
+  - P3 over-refusal judge: **PASS** — DeepSeek V4.1 Flash, rubric benign-v1 (fingerprint
+    `2c6aa62d0eabc0a0`) on the 450 labelled benign responses: P 1.000, R 0.938, F1 0.968 (32
+    refused, 30 flagged, 0 failures) → `outputs/exp1/judge_validation_manifest_benign.json`.
+    Valid for the current probe set only (Latin script; see P4).
+  - P4 over-refusal probe: 150 Latin-script prompts, 0 Urdu script, language mix unaudited (a
+    rough lexicon check suggests mostly code-switched), old C01–C10 taxonomy — decision D4.
+  - P5 capability sets: **built and frozen** — `data/capability/mmlu_500.jsonl` (cais/mmlu test,
+    57 subjects, seed 42, sha256 `d21c06eb…`) and `urdummlu_300.jsonl` (MBZUAI/UrduMMLU @
+    `aae060a8`, CC BY 4.0, seed 42, sha256 `5f9d2206…`; all 300 answers checked against the
+    source). The loader now reads UrduMMLU's dict-shaped options in letter order (it would
+    otherwise have kept the letters) and its `correct_key`.
+  - P6 chosen generator needs `ANTHROPIC_API_KEY` — decision D5.
+  - P7 unseen-domain rule — decision D6.
+- **Not yet run:** Exp 6 (pairs), `prepare_external_english_pairs.py`, GPU smoke, Exp 7–10.
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash

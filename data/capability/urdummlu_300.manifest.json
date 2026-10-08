@@ -1,0 +1,15 @@
+{
+  "source_file": ".cache\\urdummlu\\urdummlu.json",
+  "source_sha256": "b2187d0cb5bda0c2e0eb685c85c7264348850bc0bf43e2aaa4cd932aa85a49a9",
+  "seed": 42,
+  "source_rows": 26431,
+  "n_items": 300,
+  "sha256": "5f9d22064937eaedd503b8e6eafa3a840bceeb7efd24b84460ee806700f5b9a1",
+  "item_ids_first5": [
+    "urdummlu:biology:1029",
+    "urdummlu:biology:1041",
+    "urdummlu:biology:1051",
+    "urdummlu:biology:1423",
+    "urdummlu:biology:1501"
+  ]
+}

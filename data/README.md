@@ -117,6 +117,8 @@ manifests are committed.
 | `refusal_exemplars.jsonl`, `refusal_exemplars_en.jsonl` | few-shot refusal exemplars (English ones model-assisted, pending review) | yes |
 | `judge_calibration/*.jsonl` | legacy English 30+30 smoke set only | yes |
 | `qa/` | templates: QA ledger, duplicate decisions | yes |
+| `capability/mmlu_500.jsonl` (+ `.manifest.json`) | Exp 8 capability: 500 items of MMLU (`cais/mmlu`, config all, test split, seed 42; MIT licence), frozen | yes |
+| `capability/urdummlu_300.jsonl` (+ `.manifest.json`) | Exp 8 capability: 300 items of UrduMMLU (`MBZUAI/UrduMMLU` @ `aae060a8`, file `urdummlu.json`, sha256 `b2187d0c…`, seed 42; CC BY 4.0 — cite the authors), frozen | yes |
 | `pref_pairs_en_external.jsonl` | B_ext source, built by `scripts/prepare_external_english_pairs.py` | no |
 
 ## Finalized long-format record (`dataset_final.jsonl`)

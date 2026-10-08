@@ -108,10 +108,14 @@ def train_dpo(base_hf_id: str, pairs: list[dict], dpo_config: dict[str, Any], ou
     if mismatched:
         print(f"[train] WARNING: training stack differs from pins: {mismatched}")
 
+    dtype_name = str(dpo_config.get("compute_dtype", "float16"))
+    dtype = {"float16": torch.float16, "bfloat16": torch.bfloat16}[dtype_name]
+    if dtype is torch.bfloat16 and not torch.cuda.is_bf16_supported():
+        raise RuntimeError("compute_dtype bfloat16 on a GPU without bf16 (e.g. T4); use float16")
     bnb = None
     if str(dpo_config.get("quantization", "")).startswith("4bit"):
         bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
-                                 bnb_4bit_compute_dtype=torch.bfloat16,
+                                 bnb_4bit_compute_dtype=dtype,
                                  bnb_4bit_use_double_quant=True)
     tok = AutoTokenizer.from_pretrained(base_hf_id, revision=revision, trust_remote_code=True)
     if tok.chat_template is None:
@@ -119,7 +123,7 @@ def train_dpo(base_hf_id: str, pairs: list[dict], dpo_config: dict[str, Any], ou
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     model = AutoModelForCausalLM.from_pretrained(
-        base_hf_id, revision=revision, quantization_config=bnb, torch_dtype=torch.bfloat16,
+        base_hf_id, revision=revision, quantization_config=bnb, torch_dtype=dtype,
         trust_remote_code=True, device_map="auto")
     if bnb is not None:
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
@@ -149,10 +153,16 @@ def train_dpo(base_hf_id: str, pairs: list[dict], dpo_config: dict[str, Any], ou
         beta=float(dpo_config.get("beta", 0.1)), loss_type=dpo_config.get("loss_type", "sigmoid"),
         max_length=int(dpo_config.get("max_length", 1024)),
         max_prompt_length=int(dpo_config.get("max_prompt_length", 512)),
-        bf16=True, gradient_checkpointing=True, logging_steps=10, save_strategy="no",
+        bf16=dtype is torch.bfloat16, fp16=dtype is torch.float16,
+        gradient_checkpointing=True, logging_steps=10, save_strategy="no",
         report_to=[], seed=int(dpo_config.get("seed", 42)))
     trainer = DPOTrainer(model=model, args=args, train_dataset=train_ds, processing_class=tok,
                          peft_config=peft_config)
+    if dtype is torch.float16:
+        # fp16 AMP cannot unscale fp16 gradients: the trainable LoRA weights stay fp32.
+        for p in trainer.model.parameters():
+            if p.requires_grad:
+                p.data = p.data.float()
     trainable = sum(p.numel() for p in trainer.model.parameters() if p.requires_grad)
     adapted = sorted({n.rsplit(".lora_A", 1)[0].rsplit(".", 1)[-1]
                       for n, _ in trainer.model.named_parameters() if ".lora_A" in n})

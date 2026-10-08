@@ -40,17 +40,18 @@ def normalize(r: dict, i: int, *, source: str) -> dict:
     choices = r.get("choices") or r.get("options") or r.get("Options")
     if choices is None and all(k in r for k in ("A", "B", "C", "D")):
         choices = [r["A"], r["B"], r["C"], r["D"]]
-    ans = r.get("answer") if r.get("answer") is not None else r.get("Answer")
+    ans = next((r[k] for k in ("answer", "Answer", "correct_key") if r.get(k) is not None), None)
     if q is None or choices is None or ans is None:
         raise KeyError(f"unrecognized schema; row keys: {sorted(r.keys())[:15]}")
-    choices = list(choices)
+    # {"A": text, "B": text, ...} (UrduMMLU): the texts in letter order, not the letters
+    choices = [choices[k] for k in sorted(choices)] if isinstance(choices, dict) else list(choices)
     if isinstance(ans, int) or (isinstance(ans, str) and ans.strip().isdigit()):
         idx = int(ans)
     else:
         idx = LETTERS.index(str(ans).strip().upper()[0])
     if not 0 <= idx < len(choices):
         raise ValueError(f"row {i}: answer index {idx} out of range for {len(choices)} choices")
-    subject = r.get("subject") or r.get("Subject") or r.get("category")
+    subject = r.get("subject") or r.get("Subject") or r.get("category") or r.get("subdomain")
     return {"id": f"{source}:{subject or 'na'}:{i}", "question": q, "choices": choices,
             "answer_idx": idx, "subject": subject}
 
@@ -107,6 +108,8 @@ def main(argv=None) -> int:
         p = Path(args.urdummlu_file)
         if p.suffix.lower() == ".csv":
             rows = list(csvmod.DictReader(p.open(encoding="utf-8-sig")))
+        elif p.suffix.lower() == ".json":   # one JSON array (UrduMMLU's urdummlu.json)
+            rows = json.loads(p.read_text(encoding="utf-8"))
         else:
             rows = [json.loads(line) for line in p.open(encoding="utf-8") if line.strip()]
         items = build(rows, args.urdummlu_n, args.seed, source="urdummlu")

@@ -5,6 +5,7 @@
 
 dpo:
   quantization: 4bit_nf4
+  compute_dtype: float16          # Kaggle T4 has no bf16; = the inference precision (models.yaml dtype)
   loss_type: sigmoid              # standard DPO; loss kept pluggable for optional arms F/G
   beta: 0.1
   learning_rate: 5.0e-5

@@ -177,7 +177,8 @@ python scripts/prepare_external_english_pairs.py --n 1000                       
 python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main   # [API]
 python scripts/exp7_train_arms.py --model phi3 --arm C --budget 100 --naturalness-csv <rated>   # [GPU]
 python scripts/exp7_train_arms.py --model phi3 --arm B_ext --budget 100                          # [GPU]
-python scripts/exp8_posteval.py --arms A B_ext C E                               # [GPU][API]
+python scripts/exp8_posteval.py --arms A B_ext C E --skip-judge                  # [GPU] Kaggle: generations + capability
+python scripts/exp8_posteval.py --arms A B_ext C E --judge-only                  # laptop: judge the copied outputs/exp8/<tag> (Ollama)
 python scripts/exp9_ablations.py ncurve --model phi3                             # CPU
 ```
 

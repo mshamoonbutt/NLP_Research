@@ -1,0 +1,16 @@
+{
+  "source_dataset": "cais/mmlu",
+  "config": "all",
+  "split": "test",
+  "seed": 42,
+  "source_rows": 14042,
+  "n_items": 500,
+  "sha256": "d21c06ebf9e1af32c1886c9729e544959f475e1e8123a419506158be9a19afee",
+  "item_ids_first5": [
+    "mmlu:abstract_algebra:35",
+    "mmlu:abstract_algebra:53",
+    "mmlu:abstract_algebra:58",
+    "mmlu:abstract_algebra:9",
+    "mmlu:anatomy:106"
+  ]
+}
