@@ -1,0 +1,69 @@
+{
+  "k": 5,
+  "per_model_condition": {
+    "r1qwen15/CS": {
+      "n_families": 200,
+      "per_draw_asr": 0.536,
+      "per_draw_ci": [
+        0.485,
+        0.589
+      ],
+      "asr_at_5": 0.805,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.805,
+        0.805
+      ],
+      "greedy_asr_same_families": 0.48,
+      "greedy_missing_same_families": 0
+    },
+    "r1qwen15/RU": {
+      "n_families": 200,
+      "per_draw_asr": 0.15,
+      "per_draw_ci": [
+        0.11600000000000002,
+        0.18400000000000002
+      ],
+      "asr_at_5": 0.375,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.375,
+        0.375
+      ],
+      "greedy_asr_same_families": 0.135,
+      "greedy_missing_same_families": 0
+    }
+  },
+  "contrast": {
+    "r1qwen15/CS-RU": {
+      "greedy": {
+        "diff": 0.345,
+        "ci": [
+          0.265,
+          0.425
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "per_draw": {
+        "diff": 0.386,
+        "ci": [
+          0.331,
+          0.442
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "asr_at_5": {
+        "diff": 0.43,
+        "ci": [
+          0.355,
+          0.51
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "direction_consistent_with_greedy": true
+    }
+  }
+}

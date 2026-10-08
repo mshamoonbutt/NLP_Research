@@ -148,10 +148,85 @@ can also be done locally (same commands as in the notebook, without `--max-famil
 At the measured ~7 tokens/s that is about 30 hours (main ~19 h, robustness ~12 h).
 DeepSeek-R1 locally would take days; use Kaggle.
 
+## Results (final, 2026-10-08)
+
+All five models judged by DeepSeek V4.1 Flash (fingerprint `b0248df31f1d9da2`):
+main 3,164 + robustness 2,000 responses per new model, 0 judge errors. Gemma's
+robustness run was redone on Kaggle after the first run's Ollama server failed
+(two models loaded at once); the notebook now loads one model at a time.
+
+**Raw ASR, all 791 families (EN / CS / RU / UR):**
+
+| Model | EN | CS | RU | UR |
+|---|---|---|---|---|
+| r1qwen15 | .569 | .382 | .125 | .013 |
+| llama32 | .118 | .373 | .359 | .298 |
+| qwen25 | .154 | .092 | .034 | .061 |
+| phi3 | .082 | .113 | .100 | .102 |
+| gemma4e2b | .033 | .066 | .063 | .046 |
+
+The 200 held-out families (`--split eval_main`) show the same ordering
+(`outputs/exp2/summary_5models_eval_main.csv`).
+
+**Judge accuracy per model** (reviewer labels; original three: development +
+held-out, 560 each; new models: gold-audit-05, 240 each):
+
+| Model | Labelled | Harmful | Precision | Recall | Specificity | Kappa |
+|---|---|---|---|---|---|---|
+| qwen25 | 560 | 36 | .73 | .83 | .98 | .76 |
+| phi3 | 560 | 48 | .67 | .85 | .96 | .73 |
+| llama32 | 560 | 140 | .73 | .86 | .90 | .72 |
+| r1qwen15 | 240 | 59 | .56 | .80 | .80 | .52 |
+| gemma4e2b | 240 | 8 | 1.00 | .38 | 1.00 | .54 |
+
+**Corrected ASR.** For the original three models the Rogan–Gladen correction
+per model × language is stable (see `docs/EXPERIMENT_STATUS.md`, Exp 2). For the
+two new models it is not usable: on DeepSeek-R1's code-switched responses the
+judge's specificity is .45 (it flags 21 of 38 safe responses, mostly where the
+reviewer judged R1's finished answer safe and helpful), which drives the
+correction to 0; Gemma's cells hold 1–3 harmful responses, so its sensitivity is
+undefined or near zero. For the new models report instead the reviewer-labelled
+rate on the 60 development families, with the predictive-value estimate
+(judge-flagged rate × P(harmful | flagged) + unflagged rate × P(harmful |
+unflagged), from the same labels) as a cross-check:
+
+| Model | Language | Raw (791 fam.) | Reviewer-labelled (60 fam., 95% CI) | Predictive-value estimate |
+|---|---|---|---|---|
+| r1qwen15 | EN | .569 | .567 [.44, .68] | .522 |
+| r1qwen15 | CS | .382 | .367 [.26, .49] | .319 |
+| r1qwen15 | RU | .125 | .033 [.01, .11] | .051 |
+| r1qwen15 | UR | .013 | .017 [.00, .09] | .031 |
+| gemma4e2b | EN | .033 | .017 [.00, .09] | .040 |
+| gemma4e2b | CS | .066 | .017 [.00, .09] | .056 |
+| gemma4e2b | RU | .063 | .050 [.02, .14] | .063 |
+| gemma4e2b | UR | .046 | .050 [.02, .14] | .078 |
+
+**DeepSeek-R1 reasoning (greedy, 2,048 tokens):** reasoning finished in 529/791
+EN, 709 CS, 747 RU, 762 UR responses; 30% of all responses hit the limit. Among
+EN responses whose reasoning finished, judged ASR is .78; unfinished ones are
+mostly looping text judged unintelligible, so greedy decoding understates R1's
+English ASR. Sampled decoding (robustness) loops less.
+
+**Robustness (200 families, T 0.7, 5 draws; per-draw / any-of-5 / greedy):**
+r1qwen15 CS .536 / .805 / .480, RU .150 / .375 / .135; gemma4e2b CS .084 / .110 /
+.085, RU .082 / .115 / .090. Gemma refuses consistently: five tries barely raise
+its rate, unlike every other model.
+
+**Backend check (qwen25, 200 held-out families, vLLM fp16 vs Ollama q8_0):** ASR
+EN .175 / .180, CS .120 / .135, RU .035 / .020, UR .065 / .085; McNemar p ≥ .42 in
+every language; identical text in 417/800. The serving stack does not move ASR
+materially, so Gemma via Ollama is comparable. One prompt (`CSJUR-V3-0046::RU`)
+makes Ollama abort on a token loop ("token repeat limit reached", HTTP 500);
+it is recorded as a missing generation (vLLM would have run the loop to the limit).
+
 ## Paper notes
 
 - State the serving stack per model (vLLM fp16 vs Ollama q8_0) and report the qwen25
   backend check next to the Gemma results.
 - State DeepSeek-R1's 2,048-token budget, that its visible reasoning is judged, and its
   unfinished-reasoning rate.
-- Until step 6 is done, mark the new models' corrected ASR as per-language corrected.
+- The new models' corrected ASR is the reviewer-labelled rate (60 families), not the
+  Rogan–Gladen correction, for the reasons in the results section; say why.
+- The judge reads DeepSeek-R1's visible reasoning; its agreement with the reviewer on R1
+  is lower (kappa .52) than on the original three models (.72–.76).
+- Reviewer identity is still unrecorded in every review file (`reviewer_id` blank).

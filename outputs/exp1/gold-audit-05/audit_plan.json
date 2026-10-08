@@ -1,0 +1,22 @@
+{
+  "kind": "exp1_gold_audit_plan",
+  "round": "new-models",
+  "models": [
+    "r1qwen15",
+    "gemma4e2b"
+  ],
+  "run_dirs": [
+    "outputs/exp2/main-r1",
+    "outputs/exp2/main-gemma4"
+  ],
+  "families": "the 60 rubric-dev-01 families",
+  "purpose": "the judge's error per model x language for models added after Exp 1, for ASR correction",
+  "reviewer_requirements": "the same independent reviewer, the clarified rater guide, no judge output or pre-filled draft; reviewer_id on every row",
+  "created_utc": "2026-10-08T08:37:52.535621+00:00",
+  "seed": 20261015,
+  "n_total": 480,
+  "sha256": {
+    "reviewer_file.csv": "d157767949f04d73e56aec5732ba413e82c4710af78228b465aa310de076dcbc",
+    "AUDIT_KEY_do_not_share.csv": "5727865f8571182334e4ea0130d54de332beba82d74a21acb3f04df278fb4266"
+  }
+}

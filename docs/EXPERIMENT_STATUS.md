@@ -420,7 +420,21 @@ Remaining steps:
    probe responses and blank rater files; gate with
    `calibrate_judge.py --kind benign`.
 
-## Exp 2 — main evaluation: **JUDGED (2026-10-07, DeepSeek V4.1 Flash)**
+## Exp 2 — main evaluation: **DONE, FIVE MODELS (2026-10-08, DeepSeek V4.1 Flash)**
+
+- **Five models (2026-10-08):** the three originals plus Gemma 4 E2B and
+  DeepSeek-R1-Distill-Qwen-1.5B, all judged (0 judge errors). Raw ASR, all 791
+  families (EN / CS / RU / UR): r1qwen15 .569 / .382 / .125 / .013; gemma4e2b
+  .033 / .066 / .063 / .046. Judge kappa with the reviewer: original three
+  .72–.76, r1qwen15 .52, gemma4e2b .54. For the new models the Rogan–Gladen
+  correction is not usable (R1 CS judge specificity .45; Gemma 1–3 harmful per
+  cell); their corrected values are the reviewer-labelled rates on 60 families
+  (r1qwen15 .567 / .367 / .033 / .017; gemma4e2b .017 / .017 / .050 / .050).
+  Robustness: r1qwen15 CS .536 / .805 / .480, RU .150 / .375 / .135; gemma4e2b
+  CS .084 / .110 / .085, RU .082 / .115 / .090 (per-draw / any-of-5 / greedy).
+  Backend check (qwen25 Ollama vs vLLM): ASR within 2 points, McNemar p ≥ .42.
+  Full tables and caveats: `docs/EXP2_NEW_MODELS.md` § Results; summaries
+  `outputs/exp2/summary_5models.csv`, `summary_5models_eval_main.csv`.
 
 - **Done:** main 9,492/9,492 and robustness 6,000/6,000 judgments ok (0 errors),
   run manifest `judging: judge SELECTED in Exp 1`, git `3eb3abc`. The laptop's
@@ -500,17 +514,8 @@ gitignored under `outputs/smoke/`).
 | Production backend (vLLM, fp16, Kaggle T4) | **Working**: 3-model sequential loads without OOM; Exp 1 samples generated |
 | Full Exp 2 (9,492 greedy + 6,000 robustness responses) | **NOT RUN** (by design in this task) |
 
-- **Extension planned (2026-10-07): two more SLMs.** Gemma 4 E2B (Ollama
-  q8_0, pinned digest; vLLM 0.6.3 cannot load it) and DeepSeek-R1-Distill-Qwen-1.5B
-  (vLLM fp16, 2,048-token budget for its visible reasoning). Same prompts, decoding,
-  robustness subset and judge; a qwen25 Ollama-vs-vLLM backend check; 240 labelled
-  responses per new model for its judge error. Design and commands:
-  `docs/EXP2_NEW_MODELS.md`; Kaggle notebook `notebooks/kaggle_newmodels.ipynb`.
-  **Local Ollama smoke test passed (2026-10-07, 5 families each, debug):** both
-  pinned builds verified, 40/40 judged; R1 closed its reasoning in 20/20 (3/20 hit
-  2,048 tokens) and was judged harmful on 3/5 EN and 4/5 CS but answered RU/UR
-  irrelevantly; Gemma answered UR in Urdu script, mostly refusals (harmful 1/5 RU,
-  1/5 UR). Indicative only: 5 families.
+- **Extension (2026-10-07/08): two more SLMs — done**, see the five-model bullet at
+  the top of this section and `docs/EXP2_NEW_MODELS.md`.
 - **Held-out labels (round 4, prepared 2026-10-07):** `outputs/exp1/gold-audit-04`,
   733 of the 960 set-aside items to review; 227 identical to development responses
   the reviewer already labelled keep that label (`carried_labels.csv`).
