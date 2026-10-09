@@ -1,0 +1,17 @@
+{
+  "kind": "exp6_pair_review_plan",
+  "created_utc": "2026-10-09T06:26:17.118271+00:00",
+  "seed": 20261009,
+  "n_rows": 156,
+  "per_model": {
+    "llama32": 90,
+    "phi3": 66
+  },
+  "take_rule": "all Phi-3 pairs; the first 90 Llama pairs in the seeded domain-balanced order",
+  "keep_rule": "rejected_harmful = yes AND chosen_refusal_ok = yes",
+  "cap": 60,
+  "sha256": {
+    "review_file.csv": "089177da839f9a3d1cbe050977bdc1bc63201c90e2e49ea9e64b8412d0ab7747",
+    "review_key.csv": "1ac796f8eee823a3fd204a0fa441c429f596a26a7b77e474f6148dcbdea6c4d8"
+  }
+}

@@ -88,7 +88,8 @@ def main(argv=None) -> int:
     ap.add_argument("--split-manifest", default=None)
     ap.add_argument("--tag", default=None, help="adapter suffix, e.g. ablation_D2 or n50")
     ap.add_argument("--models-root", default=str(ROOT / "outputs" / "models"))
-    ap.add_argument("--probe", default=str(ROOT / "data" / "overrefusal_probe.jsonl"))
+    ap.add_argument("--probe", default=str(ROOT / "data" / "benign_probe_v2.jsonl"),
+                    help="harmless prompts; rows with a `condition` also get per-form over-refusal")
     ap.add_argument("--judge-manifest",
                     default=str(ROOT / "outputs" / "exp1" / "judge_validation_manifest.json"))
     ap.add_argument("--benign-judge-manifest",
@@ -164,7 +165,8 @@ def main(argv=None) -> int:
             bjudge, _, bdebug = prepare_judge("benign", args.benign_judge_manifest,
                                               args.allow_unvalidated_judge)
             debug = debug or bdebug
-    probe_rows = [ProbeRow(id=f"probe::{r['id']}", base_id=r["id"], prompt=r["prompt"])
+    probe_rows = [ProbeRow(id=f"probe::{r['id']}", base_id=r.get("base_id", r["id"]), prompt=r["prompt"],
+                           condition=r.get("condition", "unlabeled"), domain_id=r.get("domain_id"))
                   for r in read_jsonl(args.probe)] if not args.skip_overrefusal else []
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -206,6 +208,9 @@ def main(argv=None) -> int:
                                             chunk_size=64, skip_judge=args.skip_judge)
                     orr = over_refusal_rate([benign_refused(r) for r in brecs])
                     row.update({"orr": orr["orr"], "orr_missing": orr["n_missing"]})
+                    for cond in sorted({r["condition"] for r in brecs} - {"unlabeled"}):
+                        row[f"orr_{cond}"] = over_refusal_rate(
+                            [benign_refused(r) for r in brecs if r["condition"] == cond])["orr"]
                     for r in brecs:
                         r["probe"] = True
                     recs += brecs
@@ -326,9 +331,10 @@ def main(argv=None) -> int:
         "n_eval_families": len(ev), "sampling": sampling, "judge": judge.fingerprint,
         "benign_judge": bjudge.fingerprint if bjudge else None, "provenance": prov,
         "capability": capability, "generation_only": False,
-        "probe": args.probe, "probe_language_coverage": "unaudited: probe items carry no "
-        "condition tags (mostly Roman-Urdu/English code-switched); do not claim per-condition "
-        "over-refusal coverage until audited"}, indent=2, default=str), encoding="utf-8")
+        "probe": args.probe, "probe_language_coverage": "benign_probe_v2: 60 harmless prompts x "
+        "EN/CS/RU/UR (see data/benign_probe_v2.manifest.json); the benign judge was validated on "
+        "Latin-script responses only, so RU/UR over-refusal labels need the post-training audit"},
+        indent=2, default=str), encoding="utf-8")
     print(f"[exp8] wrote {out_dir}")
     return 0
 

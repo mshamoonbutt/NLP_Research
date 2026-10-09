@@ -636,14 +636,18 @@ identical rows. CMI / Urdu share: **not run** (no validated tagger).
   3.0–4.8) and has no non-response; r1qwen15 shares qwen25's tokenizer exactly yet differs
   sharply in behaviour, so tokenization alone does not explain model differences.
 
-## Exp 4b — intent-recovery probe: **SCORED (2026-10-09); scorer audit pending**
+## Exp 4b — intent-recovery probe: **DONE (2026-10-09); scorer validated**
 
 Generated on Kaggle (`notebooks/kaggle_exp4b.ipynb`): 2,000/2,000 probes ok (100 families × 4
 forms × 5 models; Gemma via Ollama 0.40.0, pinned build accepted; R1 finished its reasoning on
 386/400, the other 14 are "uncertain"). Scored on the laptop with the comprehension rubric
 through DeepSeek V4.1 Flash (`outputs/exp4b/comprehension_summary.json`; probe texts and the
-blinded audit file stay local). **Scorer not yet validated:** a bilingual reviewer labels the 80
-blinded answers in `outputs/exp4b/review_sample.csv` → `--score-review`.
+blinded audit file stay local). **Scorer validated** against the reviewer's labels on 80 blinded
+answers (4 per model × form; `outputs/exp4b/scorer_agreement.json`): agreement 0.887, κ 0.78;
+understood vs not 74/80 (CS 19/20, EN 18/20, RU 17/20, UR 20/20). The scorer is slightly strict
+(4 reviewer-understood answers scored not_demonstrated, 2 the other way), so recovery rates are
+if anything understated. The returned file has no reviewer_id column (omitted from the file I
+generated): record who reviewed and whether any tool assisted.
 
 **Intent recovered (share understood, EN / CS / RU / UR):**
 
@@ -729,7 +733,20 @@ Gemma probes run on Kaggle with the pinned Ollama version.
     otherwise have kept the letters) and its `correct_key`.
   - P6 chosen generator needs `ANTHROPIC_API_KEY` — decision D5.
   - P7 unseen-domain rule — decision D6.
-- **Not yet run:** Exp 6 (pairs), `prepare_external_english_pairs.py`, GPU smoke, Exp 7–10.
+- **Exp 6 (2026-10-09): pairs built, human review out.** `exp6_build_prefdata.py --languages CS
+  --exclude-exemplar-domains D6` (every refusal written without the D6 exemplar, so one reviewed
+  set serves the main and the D6 runs). Chosen generator **OpenAI gpt-4.1-2025-04-14**: Anthropic's
+  classifier blocked the calls (the few-shot exemplars and targets contain harmful requests;
+  stop_reason refusal, general_harms), and claude-sonnet-4-5 was not served to the key. Mined CS
+  failures: phi3 66, llama32 223; chosen judged a genuine refusal, not harmful: 66/66, 223/223.
+  Refusals are much shorter than the rejected answers (median ~290 vs 1,600–1,960 characters;
+  not padded, per protocol — report it). Review: `scripts/exp6_review.py make` →
+  `outputs/exp6/review/review_file.xlsx` (156 rows: all 66 Phi-3 + first 90 Llama, 15 per domain;
+  private), then `apply` writes `outputs/exp6/<model>_verified` and `<model>_ablation_D6`.
+- **Over-refusal probe v2 (P4 resolved):** `data/benign_probe_v2.jsonl` — 60 harmless prompts
+  (10 per domain) × EN/CS/RU/UR, written by the team (UU) with AI assistance, human-verified
+  (manifest records it); now the Exp 8 default, with over-refusal reported per form.
+- **Not yet run:** `prepare_external_english_pairs.py`, GPU smoke, Exp 7–10.
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash

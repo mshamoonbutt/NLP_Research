@@ -174,7 +174,9 @@ python scripts/exp4b_comprehension.py --generate-only --models qwen25 phi3 llama
 python scripts/exp4b_comprehension.py --score-only --models qwen25 phi3 llama32 r1qwen15 gemma4e2b --baseline-results outputs/exp2/main outputs/exp2/main-r1 outputs/exp2/main-gemma4   # laptop (Ollama judge)
 python scripts/exp4b_comprehension.py --score-review outputs/exp4b/review_sample.csv   # after the blinded scorer audit
 python scripts/prepare_external_english_pairs.py --n 1000                        # [untested] B_ext source
-python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main   # [API]
+python scripts/exp6_build_prefdata.py --model phi3 --results outputs/exp2/main --languages CS --exclude-exemplar-domains D6   # [API] (and llama32)
+python scripts/exp6_review.py make                                              # blinded human check of the pairs
+python scripts/exp6_review.py apply --review outputs/exp6/review/review_returned.xlsx   # -> <model>_verified, <model>_ablation_D6
 python scripts/exp7_train_arms.py --model phi3 --arm C --budget 100 --naturalness-csv <rated>   # [GPU]
 python scripts/exp7_train_arms.py --model phi3 --arm B_ext --budget 100                          # [GPU]
 python scripts/exp8_posteval.py --arms A B_ext C E --skip-judge                  # [GPU] Kaggle: generations + capability

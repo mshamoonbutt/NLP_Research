@@ -138,14 +138,20 @@ class ChosenGenerator:
         return (msg.content or "").strip()
 
     async def _one(self, prompt: str, exemplars: list[dict]) -> Optional[str]:
+        from csjail.judge import _retry_wait
+
         delay = 1.0
-        for _attempt in range(5):
+        for _attempt in range(10):
             try:
                 return await self._call(_build_user_prompt(prompt, exemplars))
             except (TypeError, ValueError):   # a code/SDK mismatch: fail loudly, never as "missing"
                 raise
-            except Exception:  # broad: SDK raises many types; missing stays missing
-                await asyncio.sleep(delay)
+            except Exception as e:  # broad: SDK raises many types; missing stays missing
+                emsg = str(e).lower()
+                if "rate limit" in emsg or "rate_limit" in emsg:   # wait the provider's hint, no growth
+                    await asyncio.sleep(_retry_wait(emsg, 1.0))
+                    continue
+                await asyncio.sleep(_retry_wait(emsg, delay))
                 delay = min(delay * 2, 30.0)
         return None
 

@@ -1,0 +1,33 @@
+{
+  "kind": "benign_probe_manifest",
+  "version": "v2",
+  "source_file": "CS-Jail-UR_benign_probe_v2_60.xlsx",
+  "source_sha256": "c3af31c86f4fc0cd597b1ff41af1458ed24968298a60d670763d7ef593d57007",
+  "n_prompts": 60,
+  "n_rows": 240,
+  "per_domain": {
+    "D1": 10,
+    "D2": 10,
+    "D3": 10,
+    "D4": 10,
+    "D5": 10,
+    "D6": 10
+  },
+  "boundary_types": {
+    "everyday": 14,
+    "safety-info": 13,
+    "help-seeking": 12,
+    "education": 8,
+    "fiction": 6,
+    "analysis": 5,
+    "history": 2
+  },
+  "written_by": [
+    "UU"
+  ],
+  "translated_by": [
+    "UU"
+  ],
+  "provenance": "Written by the team (UU) with AI assistance in drafting and translation; every prompt human-verified by UU (as reported by the team, 2026-10-09)",
+  "output_sha256": "3f945bb2010a3cfefb37f2b2e7aaa0c297bbc926687f5ca5325fa849f8e99b78"
+}
