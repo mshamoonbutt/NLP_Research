@@ -1,0 +1,157 @@
+{
+  "kind": "pairs_manifest",
+  "created_utc": "2026-10-09T11:18:08.875395+00:00",
+  "model": "llama32",
+  "tag": "ablation_D6",
+  "dataset_version": "final-791-ddc14ecbc568",
+  "split_id": "1af335defc251d52",
+  "split_scheme": "main",
+  "excluded_domains": [
+    "D6"
+  ],
+  "excluded_exemplar_domains": [
+    "D6"
+  ],
+  "results_models_ignored": [
+    "phi3",
+    "qwen25"
+  ],
+  "judge_fingerprint": {
+    "provider": "ollama",
+    "model": "deepseek-v4.1-flash:cloud",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "b0248df31f1d9da2"
+  },
+  "chosen_generator": {
+    "provider": "openai",
+    "model": "gpt-4.1-2025-04-14",
+    "temperature": 0.7,
+    "max_tokens": 300
+  },
+  "target_pairs_cap": 250,
+  "per_language": {
+    "CS": {
+      "mining": {
+        "counts": {
+          "in_condition": 791,
+          "excluded_not_train_pool_or_group_relative": 200,
+          "not_unsafe": 368,
+          "mined": 223
+        },
+        "mined_by_domain": {
+          "D1": 34,
+          "D2": 32,
+          "D3": 28,
+          "D4": 44,
+          "D5": 44,
+          "D6": 41
+        }
+      },
+      "chosen_validation": {
+        "ok": 223
+      },
+      "n_duplicates_removed": 0,
+      "quality_approved": {
+        "n": 223,
+        "by_domain": {
+          "D1": 34,
+          "D2": 32,
+          "D3": 28,
+          "D4": 44,
+          "D5": 44,
+          "D6": 41
+        }
+      },
+      "length": {
+        "n": 223,
+        "median_chosen_chars": 290.0,
+        "median_rejected_chars": 1602.0,
+        "ratio": 0.18102372034956304,
+        "tolerance": 0.15,
+        "within_tolerance": false
+      }
+    }
+  },
+  "budgets": {
+    "CS": {
+      "n_available": 223,
+      "runnable": [
+        25,
+        50,
+        100,
+        "all"
+      ],
+      "not_supported": [],
+      "status": "OK"
+    }
+  },
+  "matched": null,
+  "families": {
+    "CS": [
+      "37",
+      "CSJUR-X1-0001",
+      "334",
+      "CSJUR-V4-0020",
+      "993",
+      "72",
+      "959",
+      "25",
+      "CSJUR-V4-0002",
+      "266",
+      "442",
+      "CSJUR-V4-0059",
+      "8",
+      "300",
+      "358",
+      "756",
+      "190",
+      "236",
+      "28",
+      "272",
+      "316",
+      "739",
+      "674",
+      "268",
+      "310",
+      "461",
+      "79",
+      "CSJUR-V3-0065",
+      "321",
+      "647",
+      "369",
+      "CSJUR-V3-0092",
+      "70",
+      "CSJUR-V3-0052",
+      "561",
+      "82",
+      "139",
+      "286",
+      "329",
+      "474",
+      "CSJUR-X2-0012",
+      "443",
+      "460",
+      "26",
+      "CSJUR-V4-0004",
+      "625",
+      "471",
+      "73",
+      "CSJUR-X1-0004",
+      "732",
+      "304"
+    ]
+  },
+  "naturalness_gate": "PENDING: native speaker rates naturalness_sample.csv; mean >= 4 and clean_refusal=yes required before training C/D",
+  "human_verified": {
+    "source": "outputs/exp6/llama32",
+    "n_pairs": 51,
+    "budget": 51,
+    "keep_rule": "rejected_harmful = yes AND chosen_refusal_ok = yes",
+    "review_sha256": "c2d3b1e9add0f57d6ecbb85a33a5e60e9fbe78e2f718300b827ae2267c2b6d79"
+  }
+}

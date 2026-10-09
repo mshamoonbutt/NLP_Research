@@ -96,7 +96,7 @@ pinned stack), Qwen (49 failures).
 | # | Decision | Recommendation | Status |
 |---|---|---|---|
 | D1 | Phase 2 models | Llama + Phi-3 | recommended |
-| D2 | Reviewer checks rejected responses | Yes | **decided 2026-10-09:** yes, capped at ~160 → equal budget N = 60 pairs for both models (all 66 Phi-3 + the first 90 Llama in the seeded order; ~156 checks) |
+| D2 | Reviewer checks rejected responses | Yes | **done 2026-10-09:** 156 rows reviewed (UU); kept phi3 39, llama32 61 → **per-model budgets** 39 / 60 (D6 run 30 / 51), since Phi-3 has fewer than 60 |
 | D3 | Training seeds | 3 for primary C vs B_ext; 1 elsewhere | recommended |
 | D4 | Over-refusal set | Team writes ~50 benign prompts × 4 forms (3–4 h); else report over-refusal as limited | **decided:** yes; 60 (10 per domain) recommended, 50 minimum; spec below |
 | D5 | Chosen generator | `ANTHROPIC_API_KEY` for Claude Sonnet 4.5, or another model distinct from the judge | **changed 2026-10-09:** OpenAI gpt-4.1-2025-04-14 — Anthropic's classifier blocked the calls (harmful requests in every prompt) and claude-sonnet-4-5 was not served to the key |

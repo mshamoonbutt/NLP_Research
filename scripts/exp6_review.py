@@ -18,7 +18,7 @@ apply -> per model, ready for exp7 --pairs-dir:
   outputs/exp6/<model>_ablation_<D>/   the same minus the drawn Exp 9 domain, ablation split
 each with pairs_cs_all.jsonl, pairs_manifest.json and naturalness.csv (the Exp 7 gate format).
 Kept = rejected_harmful yes AND chosen_refusal_ok yes, in the original order. The equal budgets
-(main N = min(60, kept per model); ablation N = min over models after removing the domain) go
+(per model: main N = min(60, kept), ablation N = min(60, kept without the domain)) go
 to review/verified_summary.json.
 """
 from __future__ import annotations
@@ -134,11 +134,16 @@ def load_returned(path: Path) -> dict[str, dict]:
     return {norm(r.get("review_id")): {k: norm(r.get(k)) for k in LABELS} for r in recs if r.get("review_id")}
 
 
-def cmd_apply(exp6: Path, review: Path, ablation_split: Path) -> int:
+def cmd_apply(exp6: Path, review: Path, ablation_split: Path, reviewer_id: str | None = None,
+              provenance: str | None = None) -> int:
     out = exp6 / "review"
     with (out / "review_key.csv").open(encoding="utf-8") as f:
         key = {r["review_id"]: r for r in csv.DictReader(f)}
     rev = load_returned(review)
+    filled = 0
+    for lab in rev.values():   # --reviewer-id fills blank cells only, and the summary says so
+        if reviewer_id and not lab["reviewer_id"]:
+            lab["reviewer_id"], filled = reviewer_id, filled + 1
     problems = [f"{k}: missing" for k in key if k not in rev]
     for k, lab in rev.items():
         if k not in key:
@@ -157,6 +162,7 @@ def cmd_apply(exp6: Path, review: Path, ablation_split: Path) -> int:
     dom, ab_split = ab["ablation_domain"], ab["split_id"]
     kept, summary = {}, {"kind": "exp6_pair_review_result", "review_file": review.name,
                          "review_sha256": sha256_file(review), "reviewer_ids": sorted({l["reviewer_id"] for l in rev.values()}),
+                         "reviewer_id_filled_from_cli": filled, "provenance": provenance,
                          "models": {}}
     for model in TAKE:
         pairs = {p["base_id"]: p for p in ordered(exp6, model)}
@@ -171,14 +177,16 @@ def cmd_apply(exp6: Path, review: Path, ablation_split: Path) -> int:
             "naturalness_mean_all": statistics.fmean(int(l["chosen_natural"]) for l in lab.values()),
             "naturalness_mean_kept": statistics.fmean(int(lab[p["base_id"]]["chosen_natural"]) for p in keep)
             if keep else None}
-    summary["budget_main"] = min(CAP, *(len(k) for k, _ in kept.values()))
-    summary["budget_ablation"] = min(summary["models"][m]["kept_without_" + dom] for m in TAKE)
+    # Per model (protocol: ~100 per model, adjusted down if fewer qualify); C and B_ext stay equal
+    # within a model because Exp 7 trains B_ext on as many pairs as C.
+    summary["budget_main"] = {m: min(CAP, len(k)) for m, (k, _) in kept.items()}
+    summary["budget_ablation"] = {m: min(CAP, summary["models"][m]["kept_without_" + dom]) for m in TAKE}
     for model, (keep, lab) in kept.items():
         man = json.loads((exp6 / model / "pairs_manifest.json").read_text(encoding="utf-8"))
         for tag, ps, split_id, excl, budget in (
-                ("verified", keep, man["split_id"], man.get("excluded_domains", []), summary["budget_main"]),
+                ("verified", keep, man["split_id"], man.get("excluded_domains", []), summary["budget_main"][model]),
                 (f"ablation_{dom}", [p for p in keep if p["domain_id"] != dom], ab_split, [dom],
-                 summary["budget_ablation"])):
+                 summary["budget_ablation"][model])):
             d = exp6 / f"{model}_{tag}"
             d.mkdir(parents=True, exist_ok=True)
             write_pairs(str(d / "pairs_cs_all.jsonl"), ps)
@@ -188,7 +196,7 @@ def cmd_apply(exp6: Path, review: Path, ablation_split: Path) -> int:
             (d / "pairs_manifest.json").write_text(json.dumps({
                 **man, "created_utc": datetime.now(timezone.utc).isoformat(), "tag": tag, "split_id": split_id,
                 "excluded_domains": excl, "families": {"CS": [p["base_id"] for p in ps]},
-                "human_verified": {"source": f"outputs/exp6/{model}", "n_pairs": len(ps), "equal_budget": budget,
+                "human_verified": {"source": f"outputs/exp6/{model}", "n_pairs": len(ps), "budget": budget,
                                    "keep_rule": "rejected_harmful = yes AND chosen_refusal_ok = yes",
                                    "review_sha256": summary["review_sha256"]}}, ensure_ascii=False, indent=2),
                 encoding="utf-8")
@@ -205,13 +213,16 @@ def main(argv=None) -> int:
     m.add_argument("--seed", type=int, default=20261009)
     a = sub.add_parser("apply")
     a.add_argument("--review", required=True)
+    a.add_argument("--reviewer-id", default=None, help="fill blank reviewer_id cells (recorded)")
+    a.add_argument("--provenance", default=None, help="how the labels were made, as stated by the team")
     a.add_argument("--ablation-split", default=str(ROOT / "outputs/exp9/ablation_D6/split_manifest.json"))
     for p in (m, a):
         p.add_argument("--exp6-root", default=str(ROOT / "outputs" / "exp6"))
     args = ap.parse_args(argv)
     if args.cmd == "make":
         return cmd_make(Path(args.exp6_root), args.seed)
-    return cmd_apply(Path(args.exp6_root), Path(args.review), Path(args.ablation_split))
+    return cmd_apply(Path(args.exp6_root), Path(args.review), Path(args.ablation_split),
+                     args.reviewer_id, args.provenance)
 
 
 if __name__ == "__main__":

@@ -49,7 +49,8 @@ def test_review_round_trip(tmp_path):
     assert rv.main(["apply", "--exp6-root", str(exp6), "--review", str(ret), "--ablation-split", str(ab)]) == 0
     s = json.loads((exp6 / "review" / "verified_summary.json").read_text())
     assert s["models"]["phi3"]["kept"] == 2 and s["models"]["llama32"]["kept"] == 3
-    assert s["budget_main"] == 2 and s["budget_ablation"] == 1       # phi3 keeps D6 + D2; minus D6 -> 1
+    assert s["budget_main"] == {"phi3": 2, "llama32": 3}             # per model
+    assert s["budget_ablation"] == {"phi3": 1, "llama32": 2}         # phi3 keeps D6 + D2; minus D6 -> 1
     assert [p["base_id"] for p in read_pairs(str(exp6 / "phi3_verified" / "pairs_cs_all.jsonl"))] == ["phi3-1", "phi3-2"]
     assert [p["domain_id"] for p in read_pairs(str(exp6 / "llama32_ablation_D6" / "pairs_cs_all.jsonl"))] == ["D1", "D3"]
     man = json.loads((exp6 / "llama32_ablation_D6" / "pairs_manifest.json").read_text())
@@ -60,3 +61,7 @@ def test_review_round_trip(tmp_path):
         w.writeheader()
         w.writerows(rows)
     assert rv.main(["apply", "--exp6-root", str(exp6), "--review", str(ret), "--ablation-split", str(ab)]) == 1
+    assert rv.main(["apply", "--exp6-root", str(exp6), "--review", str(ret), "--ablation-split", str(ab),
+                    "--reviewer-id", "UU", "--provenance", "test"]) == 0     # fills the blank only
+    s = json.loads((exp6 / "review" / "verified_summary.json").read_text())
+    assert s["reviewer_id_filled_from_cli"] == 1 and s["provenance"] == "test"

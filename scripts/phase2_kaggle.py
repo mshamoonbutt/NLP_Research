@@ -118,7 +118,7 @@ def plan(model: str, n: int, nab: int, seeds: list[int], ncurve: list[int]):
 
 def cmd_run(model: str, seeds: list[int], ncurve: list[int]) -> int:
     summ = json.loads((ROOT / "outputs/exp6/review/verified_summary.json").read_text(encoding="utf-8"))
-    jobs, evals = plan(model, summ["budget_main"], summ["budget_ablation"], seeds, ncurve)
+    jobs, evals = plan(model, summ["budget_main"][model], summ["budget_ablation"][model], seeds, ncurve)
     for name, args in jobs:
         if (ROOT / "outputs" / "models" / name / "training_manifest.json").exists():
             print(f"[run] skip trained {name}", flush=True)
