@@ -199,15 +199,49 @@ def cmd_decide(models: list[str], epochs: int) -> int:
     return 0 if ok else 10
 
 
-def cmd_pack() -> int:
-    files = [ROOT / "outputs/exp6/review/verified_summary.json"]
+def bundle_files() -> list[Path]:
+    """Repo-relative paths the private bundle must provide (pack writes them; stage checks them)."""
+    files = [Path("outputs/exp6/review/verified_summary.json")]
     for m in ("phi3", "llama32"):
         for tag in ("verified", f"ablation_{AB}"):
-            files += sorted((ROOT / "outputs" / "exp6" / f"{m}_{tag}").glob("*"))
-    files += sorted((ROOT / "data").glob("pref_pairs_en_external*"))
-    missing = [str(f) for f in files[:1] if not f.exists()]
-    if missing or len(files) < 10:
-        print(f"FAIL: run `exp6_review.py apply` first (missing {missing or 'verified pair sets'})", file=sys.stderr)
+            files += [Path(f"outputs/exp6/{m}_{tag}") / f for f in ("pairs_cs_all.jsonl", "pairs_manifest.json",
+                                                                    "naturalness.csv")]
+    return files + [Path("data/pref_pairs_en_external.jsonl"), Path(f"data/pref_pairs_en_external_no{AB}.jsonl")]
+
+
+def cmd_stage(search: Path) -> int:
+    """Kaggle: find the private bundle anywhere under `search` (the zip itself, or the tree Kaggle
+    unpacked it into, at any depth) and copy it into the repo; list what is there if not found."""
+    zips = sorted(search.glob("**/phase2_upload.zip"))
+    if zips:
+        with zipfile.ZipFile(zips[0]) as z:
+            z.extractall(ROOT)
+        src = f"zip {zips[0]}"
+    else:
+        hits = sorted(search.glob("**/outputs/exp6/review/verified_summary.json"))
+        if not hits:
+            print(f"FAIL: no phase2_upload.zip or outputs/exp6/review/verified_summary.json under {search}. Found:",
+                  file=sys.stderr)
+            for p in sorted(search.glob("*/*"))[:40] + sorted(search.glob("*/*/*"))[:40]:
+                print("  ", p, file=sys.stderr)
+            return 1
+        root = hits[0].parents[3]          # <root>/outputs/exp6/review/verified_summary.json
+        for d in ("outputs", "data"):
+            shutil.copytree(root / d, ROOT / d, dirs_exist_ok=True)
+        src = f"tree {root}"
+    missing = [str(f) for f in bundle_files() if not (ROOT / f).exists()]
+    if missing:
+        print(f"FAIL: bundle from {src} lacks {missing}", file=sys.stderr)
+        return 1
+    print(f"[stage] bundle from {src}: all {len(bundle_files())} files in place", flush=True)
+    return 0
+
+
+def cmd_pack() -> int:
+    files = [ROOT / f for f in bundle_files()]
+    missing = [str(f) for f in files if not f.exists()]
+    if missing:
+        print(f"FAIL: run `exp6_review.py apply` first (missing {missing})", file=sys.stderr)
         return 1
     out = ROOT / "outputs" / "phase2_upload.zip"
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
@@ -233,7 +267,11 @@ def main(argv=None) -> int:
     d.add_argument("--models", nargs="+", required=True)
     d.add_argument("--epochs", required=True, type=int)
     sub.add_parser("pack")
+    st = sub.add_parser("stage")
+    st.add_argument("--search", default="/kaggle/input")
     args = ap.parse_args(argv)
+    if args.cmd == "stage":
+        return cmd_stage(Path(args.search))
     if args.cmd == "smoke":
         return cmd_smoke(args.model, args.step)
     if args.cmd == "run":

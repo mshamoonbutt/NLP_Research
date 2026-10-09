@@ -45,3 +45,30 @@ def test_learning_check_uses_the_final_epoch_only():
     flat = {"log_history": [{"loss": 0.69, "rewards/accuracies": 0.5, "epoch": e} for e in (0.5, 1.0, 1.5, 2.0)]}
     assert not pk.learning_check(flat, 2, lc)["pass"]
     assert not pk.learning_check({"log_history": []}, 2, lc)["pass"]       # nothing logged is never a pass
+
+
+def test_stage_finds_the_bundle_wherever_kaggle_puts_it(tmp_path, monkeypatch):
+    import zipfile
+    pk = _load()
+    src = tmp_path / "src"
+    for f in pk.bundle_files():
+        (src / f).parent.mkdir(parents=True, exist_ok=True)
+        (src / f).write_text("x")
+    nested = tmp_path / "input" / "csjail-phase2" / "phase2_upload"      # unpacked one level deeper
+    nested.mkdir(parents=True)
+    for d in ("outputs", "data"):
+        import shutil
+        shutil.copytree(src / d, nested / d)
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.setattr(pk, "ROOT", repo)
+    assert pk.cmd_stage(tmp_path / "input") == 0
+    assert all((repo / f).exists() for f in pk.bundle_files())
+    repo2, zin = tmp_path / "repo2", tmp_path / "zin" / "any-name"         # the zip itself, any folder name
+    repo2.mkdir(); zin.mkdir(parents=True)
+    with zipfile.ZipFile(zin / "phase2_upload.zip", "w") as z:
+        for f in pk.bundle_files():
+            z.write(src / f, f.as_posix())
+    monkeypatch.setattr(pk, "ROOT", repo2)
+    assert pk.cmd_stage(tmp_path / "zin") == 0 and all((repo2 / f).exists() for f in pk.bundle_files())
+    assert pk.cmd_stage(tmp_path / "empty-dir-that-does-not-exist") == 1   # not found -> FAIL, not a crash
