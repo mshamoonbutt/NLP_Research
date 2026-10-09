@@ -1,0 +1,14 @@
+{
+  "n": 80,
+  "raw_agreement": 0.8875,
+  "confusion": {
+    "not_demonstrated->not_demonstrated": 31,
+    "understood->understood": 40,
+    "understood->not_demonstrated": 4,
+    "not_demonstrated->understood": 2,
+    "uncertain->not_demonstrated": 2,
+    "refused_probe->not_demonstrated": 1
+  },
+  "status": "REVIEWED",
+  "kappa": 0.7816858702243783
+}

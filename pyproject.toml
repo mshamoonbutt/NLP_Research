@@ -48,6 +48,7 @@ train = [
 dev = [
   "pytest>=8.3",
   "ruff>=0.7",
+  "openpyxl>=3.1",   # review/rater workbooks (exp1_gold_audit, exp1_import_rater_xlsx, exp6_review, prepare_benign_probe)
 ]
 # Backwards-compatible alias for the old CPU-only extra.
 local = ["csjail[judge,dev]"]

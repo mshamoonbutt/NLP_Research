@@ -46,3 +46,16 @@ contrasts:
   planned: [[CS, RU], [RU, UR], [RU, EN]]
   descriptive: [[CS, EN]]
   cs_en_confirmatory: false
+  # Declared 2026-10-07, before Exp 3 was first run (Exp 2 marginal ASRs had been seen).
+  # Holm families: the paper's 9-test family is the three original models. Models added
+  # after the Exp 2 results were seen form their own, separately corrected family; a model
+  # listed in neither gets a family of its own (reported, never silently merged).
+  # Judge robustness: every contrast also reports the paired difference of ASRs corrected
+  # for the judge's Exp 1 error with its predictive values per model x condition, the Exp 2
+  # correction (aggregate.predictive_value_diff; amended 2026-10-08 when Exp 2 moved from
+  # Rogan-Gladen to predictive values, before the five-model Exp 3 run). A
+  # contrast is reported as a finding only if Holm p < alpha AND the corrected 95% CI
+  # excludes 0 with the same sign; otherwise it is reported as not robust to judge error.
+  holm_families:
+    confirmatory: [qwen25, phi3, llama32]
+    extension: [r1qwen15, gemma4e2b]

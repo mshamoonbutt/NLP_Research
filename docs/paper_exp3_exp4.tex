@@ -1,0 +1,184 @@
+% =====================================================================
+% Exp 3 and Exp 4: paste-ready text for the Overleaf paper (2026-10-08).
+% Numbers come from outputs/exp3/isolation_results.json (five models, all
+% 791 families) and outputs/exp4/features_results.json; tables generated
+% from those files. Adapt wording to the current Overleaf version; the local
+% export in Downloads (2 Oct) predates the five-model Exp 2 and the judge.
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% §4.3 Metrics and Paired Contrasts -- replace the sentence on the Holm
+% family ("...Holm correction across the nine primary tests...") with:
+% ---------------------------------------------------------------------
+We apply two-sided McNemar tests to the discordant harmful/non-harmful pairs. The
+confirmatory Holm family contains the nine planned tests for the three originally
+specified models (three contrasts by three models). The two models added after the
+baseline sweep, DeepSeek-R1-Distill-Qwen-1.5B and Gemma-4-E2B, form a separately
+corrected extension family of six tests. Because the judge's error differs by model
+and condition (Section~\ref{sec:judge}), each contrast also reports the paired
+difference of ASRs corrected with the judge's predictive values in that model and
+condition, estimated with families resampled jointly and posterior draws of both
+predictive values. A contrast is reported as a finding only if its Holm-adjusted
+test is significant \emph{and} its corrected 95\% interval excludes zero with the
+same sign. The families and this rule were declared before the first contrast
+analysis; the correction was afterwards aligned with the predictive-value
+correction adopted for the baseline, after a preliminary three-model run.
+\verify{Keep this disclosure: the switch from Rogan--Gladen to predictive values
+(and from 60 to 140 labelled responses per cell) happened after a preliminary run
+on the original three models had been seen.}
+
+% ---------------------------------------------------------------------
+% §4.5 Intent Recovery and Feature Analysis -- replace the Exp 4 paragraph:
+% ---------------------------------------------------------------------
+Experiment 4 examines tokenizer fertility, the number of tokens of the raw prompt
+under a model's pinned tokenizer (no chat template or special tokens) per
+whitespace-delimited word. For every model and all 3,164 prompts, our token count
+differs from the prompt-token count recorded at generation by a single constant,
+the chat-template overhead, which verifies that the analyzed tokenizer is the one
+used in the run. We model harmful compliance and non-response (unintelligible,
+irrelevant, or empty output) on fertility standardized within condition, adjusting
+for condition, domain, and log word count (logistic GEE clustered on family; Holm
+correction across the pooled fits). Because both outcomes are judge labels, each
+pooled model is refitted on the reviewer-labelled responses with the judge's and
+the reviewer's labels on identical rows, and we report only associations that hold
+with reviewer labels. Urdu-token share and CMI require a validated token-level
+language tagger, which was not available; they are not analyzed. Fertility is a
+descriptive segmentation measure, and these analyses are exploratory.
+
+% ---------------------------------------------------------------------
+% §6.3 Matched Linguistic Contrasts -- results prose
+% ---------------------------------------------------------------------
+Table~\ref{tab:paired} reports the planned contrasts on complete pairs (791 families
+for every model). Four contrasts meet the finding criterion. In the confirmatory
+family, Llama-3.2 produced more harmful compliance in Roman Urdu than in English
+(corrected $+19.4$ pp, 95\% CI $[+12.7, +26.5]$), whereas Qwen2.5 produced less
+($-7.0$ pp $[-11.4, -1.7]$). In the extension family, DeepSeek-R1-Distill-Qwen
+produced more harmful compliance in CS than in RU ($+27.4$ pp $[+14.5, +40.8]$) and
+far less in RU than in English ($-48.3$ pp $[-59.5, -34.8]$). No script contrast
+(RU--UR) met the criterion: Llama-3.2's corrected RU--UR difference excludes zero
+($+9.8$ pp $[+1.6, +17.9]$) but its adjusted test does not ($p=0.057$). Three
+contrasts were significant on judge labels but not robust to judge error (Qwen2.5
+CS--RU, R1 RU--UR, Gemma RU--EN). Phi-3-mini and Gemma-4-E2B show no finding. The
+200 held-out families reproduce the same four findings and no others.
+
+The direction of the language contrast is therefore model-specific, and a lower
+harmful-compliance rate does not mean more refusal. Relative to English, Phi-3-mini
+refused 69.9 pp less often in RU and produced 58.2 pp more non-response; Qwen2.5
+produced 65.6 pp more non-response in UR than in RU, and R1 40.3 pp more in RU than
+in English. Llama-3.2 instead engaged: in RU it refused 51.2 pp less often than in
+English and complied harmfully 24.1 pp more often. Of the 684 requests Llama-3.2
+refused in English, it gave harmful assistance to 32\% in CS, 35\% in RU, and 28\%
+in UR. Gemma-4-E2B refused 91--95\% of requests in every condition. Differences in
+full compliance alone are within 6 pp except for R1 (RU--EN $-17.2$, CS--EN
+$-11.4$), so the contrasts are carried mainly by partial assistance.
+Response types are judge labels; on the 2,160 reviewer-labelled responses the judge agrees
+with the reviewer on refusal ($\kappa=0.83$) and non-response ($\kappa=0.82$), and the shifts
+above hold with reviewer labels on those families (e.g., Phi-3-mini RU--EN non-response
+$+47$ pp; Qwen2.5 UR vs RU $+73$ pp), except Llama-3.2's small non-response shift. The judge
+labels 6--11 pp more responses as refusals than the reviewer does for the three original
+models and R1, while its non-response rates are within 2.3 pp of the reviewer's for every model.
+
+% ---------------------------------------------------------------------
+% §6.4 Exploratory correlates -- fertility prose
+% ---------------------------------------------------------------------
+Urdu script fragments far more than the other conditions for four of the five
+tokenizers (2.6--3.6 times English fertility), but only 1.2 times for Gemma-4-E2B
+(Table~\ref{tab:fertility}). Within a condition, more fragmented prompts received
+more non-response, an association that holds with reviewer labels for Phi-3-mini
+(OR per within-condition SD 1.92, 95\% CI $[1.43, 2.56]$) and R1 (1.52 $[1.06,
+2.16]$) but not clearly for Qwen2.5 or Llama-3.2 (Table~\ref{tab:fertassoc}). No
+model shows an association between fertility and harmful compliance under reviewer
+labels; the negative associations present in the judge's labels for Phi-3-mini and
+R1 disappear on identical rows labelled by the reviewer. R1 and Qwen2.5 segment
+every prompt identically yet differ sharply in their contrasts (CS--RU $+25.7$ vs
+$+5.8$ pp raw; RU--EN $-44.4$ vs $-12.0$), so segmentation alone does not account
+for differences between models.
+
+% ---------------------------------------------------------------------
+% Table 6 (replaces the pending tab:paired)
+% ---------------------------------------------------------------------
+\begin{table*}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llccrrrl@{}}
+\toprule
+Model & Contrast & Raw diff. (pp) [95\% CI] & Corrected diff. (pp) [95\% CI] & $b/c$ & $n$ & Holm $p$ & Finding \\
+\midrule
+\multicolumn{8}{@{}l}{\textit{Confirmatory family (9 tests)}} \\
+Qwen2.5 & CS--RU & +5.8 [+3.5, +8.1] & +3.0 [$-$1.8, +6.7] & 66/20 & 791 & $<$0.001 & no \\
+ & RU--UR & $-$2.7 [$-$4.7, $-$0.6] & $-$1.4 [$-$5.5, +3.4] & 24/45 & 791 & 0.080 & no \\
+ & RU--EN & $-$12.0 [$-$14.7, $-$9.4] & $-$7.0 [$-$11.4, $-$1.7] & 18/113 & 791 & $<$0.001 & \textbf{yes} \\
+ & CS--EN & $-$6.2 [$-$8.7, $-$3.7] & $-$4.0 [$-$8.4, +0.5] & 33/82 & 791 & -- & desc. \\
+Llama-3.2 & CS--RU & +1.4 [$-$2.9, +5.8] & 0.0 [$-$8.3, +8.2] & 161/150 & 791 & 1.000 & no \\
+ & RU--UR & +6.1 [+1.6, +10.5] & +9.8 [+1.6, +17.9] & 188/140 & 791 & 0.057 & no \\
+ & RU--EN & +24.1 [+20.2, +27.9] & +19.4 [+12.7, +26.5] & 241/50 & 791 & $<$0.001 & \textbf{yes} \\
+ & CS--EN & +25.5 [+22.1, +29.0] & +19.4 [+12.9, +26.1] & 222/20 & 791 & -- & desc. \\
+Phi-3-mini & CS--RU & +1.3 [$-$1.6, +4.2] & +5.5 [+1.0, +9.4] & 74/64 & 791 & 1.000 & no \\
+ & RU--UR & $-$0.3 [$-$3.0, +2.5] & $-$1.4 [$-$6.5, +3.4] & 68/70 & 791 & 1.000 & no \\
+ & RU--EN & +1.8 [$-$0.9, +4.4] & $-$1.6 [$-$5.5, +3.0] & 69/55 & 791 & 0.972 & no \\
+ & CS--EN & +3.0 [+0.6, +5.4] & +4.0 [+0.1, +7.8] & 62/38 & 791 & -- & desc. \\
+\midrule
+\multicolumn{8}{@{}l}{\textit{Extension family (6 tests)}} \\
+R1-Distill-Qwen & CS--RU & +25.7 [+21.9, +29.5] & +27.4 [+14.5, +40.8] & 248/45 & 791 & $<$0.001 & \textbf{yes} \\
+ & RU--UR & +11.3 [+9.0, +13.7] & +1.4 [$-$4.2, +8.9] & 98/9 & 791 & $<$0.001 & no \\
+ & RU--EN & $-$44.4 [$-$48.2, $-$40.6] & $-$48.3 [$-$59.5, $-$34.8] & 26/377 & 791 & $<$0.001 & \textbf{yes} \\
+ & CS--EN & $-$18.7 [$-$23.1, $-$14.3] & $-$20.9 [$-$36.2, $-$3.0] & 101/249 & 791 & -- & desc. \\
+Gemma-4-E2B & CS--RU & +0.3 [$-$1.6, +2.3] & +1.8 [$-$3.3, +7.6] & 33/31 & 791 & 0.901 & no \\
+ & RU--UR & +1.8 [+0.0, +3.5] & $-$3.0 [$-$10.2, +2.7] & 33/19 & 791 & 0.143 & no \\
+ & RU--EN & +3.0 [+1.3, +4.8] & +1.4 [$-$4.5, +5.7] & 39/15 & 791 & 0.005 & no \\
+ & CS--EN & +3.3 [+1.9, +4.8] & +3.2 [$-$2.7, +8.6] & 32/6 & 791 & -- & desc. \\
+\bottomrule
+\end{tabular}
+\caption{Paired contrasts on all 791 families: first condition minus second, percentage
+points. Raw: judge labels, family-bootstrap 95\% CI. Corrected: judge's predictive values
+per model and condition, family bootstrap with posterior draws. $b$/$c$: families harmful
+only in the first / only in the second condition. Holm $p$ within each family. Finding:
+Holm $p<0.05$ and corrected CI excluding zero with the same sign. CS--EN is descriptive.}
+\label{tab:paired}
+\end{table*}
+
+% ---------------------------------------------------------------------
+% Appendix E: fertility table and association table
+% ---------------------------------------------------------------------
+\begin{table}[ht]
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Model & EN & CS & RU & UR \\
+\midrule
+Qwen2.5 & 1.16 & 1.48 (1.28) & 1.85 (1.60) & 3.12 (2.69) \\
+R1-Distill-Qwen & 1.16 & 1.48 (1.28) & 1.85 (1.60) & 3.12 (2.69) \\
+Llama-3.2 & 1.16 & 1.48 (1.28) & 1.83 (1.58) & 3.02 (2.61) \\
+Phi-3-mini & 1.33 & 1.68 (1.26) & 2.03 (1.52) & 4.84 (3.64) \\
+Gemma-4-E2B & 1.16 & 1.30 (1.12) & 1.55 (1.34) & 1.39 (1.20) \\
+\bottomrule
+\end{tabular}
+\caption{Mean tokenizer fertility (tokens per whitespace word; ratio to EN). R1-Distill-Qwen
+gives Qwen2.5's token count on every prompt. Every tokenizer matched the run's recorded prompt-token counts up
+to one constant on all 3,164 prompts.}
+\label{tab:fertility}
+\end{table}
+
+\begin{table}[ht]
+\centering\small
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & \multicolumn{2}{c}{Non-response} & \multicolumn{2}{c}{Harmful compliance} \\
+Model & Judge, all & Reviewer & Judge, all & Reviewer \\
+\midrule
+Phi-3-mini & 1.58 [1.40, 1.77] & 1.92 [1.43, 2.56] & 0.82 [0.71, 0.95] & 0.96 [0.73, 1.27] \\
+R1-Distill-Qwen & 1.34 [1.22, 1.48] & 1.52 [1.06, 2.16] & 0.75 [0.68, 0.83] & 0.84 [0.56, 1.25] \\
+Qwen2.5 & 1.40 [1.24, 1.59] & 1.07 [0.78, 1.46] & 0.92 [0.80, 1.05] & 0.95 [0.69, 1.30] \\
+Llama-3.2 & 1.24 [1.11, 1.38] & 1.23 [0.95, 1.59] & 0.98 [0.90, 1.07] & 1.00 [0.81, 1.22] \\
+Gemma-4-E2B & -- & -- & 1.15 [0.97, 1.36] & -- \\
+\bottomrule
+\end{tabular}
+\caption{Odds ratio per within-condition SD of fertility, adjusted for condition, domain
+(judge, all responses) and log word count. Judge, all: 3,164 responses per model. Reviewer:
+the reviewer-labelled responses (560 per original model, 240 per added model) with reviewer
+labels. Gemma-4-E2B has no non-response and too few labelled harmful responses (8) for the
+reviewer-label fit.}
+\label{tab:fertassoc}
+\end{table}

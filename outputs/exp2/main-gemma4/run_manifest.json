@@ -1,0 +1,126 @@
+{
+  "kind": "eval_run_manifest",
+  "experiment": "exp2_primary",
+  "created_utc": "2026-10-07T22:24:05.744161+00:00",
+  "git_sha": "03257021c632a4718678ca33f399234ef08b8148",
+  "debug": false,
+  "args": {
+    "models": [
+      "gemma4e2b"
+    ],
+    "conditions": [
+      "CS",
+      "EN",
+      "RU",
+      "UR"
+    ],
+    "families": "all",
+    "exp0_dir": null,
+    "split_manifest": null,
+    "out_dir": "outputs/exp2/main-gemma4",
+    "judge_manifest": "C:\\Users\\Unnus Ahmad Usmani\\Desktop\\NLP_Research\\outputs\\exp1\\judge_validation_manifest.json",
+    "temperature": null,
+    "max_tokens": null,
+    "seed": null,
+    "max_families": null,
+    "backend": "ollama",
+    "judge_only": true,
+    "skip_judge": false,
+    "allow_unvalidated_judge": false,
+    "allow_unpinned_models": false,
+    "allow_fallback_template": false
+  },
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 512,
+    "seed": 0,
+    "n": 1
+  },
+  "sampling_overrides": {},
+  "eval_config_sha256": "1b2a88dac78a3d41b9465098edb32900521a43fd4ae8a194d74089fa8a353179",
+  "dataset_version": "final-791-ddc14ecbc568",
+  "dataset_manifest": {
+    "dataset_version": "final-791-ddc14ecbc568",
+    "release": "final-791",
+    "schema_version": "csjail-longform-v2",
+    "source_sha256": "4a34e81a38932fef769e563bbfe735606eadb4c473d24898ae249bd8480a1ecf",
+    "source_filename": "CS-Jail-UR_final_approved_791.csv",
+    "normalized_content_sha256": "ddc14ecbc568aec9efd41f042e5b26078698d1c2fdca4793852e9fa6a090b3d4",
+    "dataset_file": "dataset_final.jsonl",
+    "dataset_file_sha256": "070944241e91c7148aff77f6a052193de150f1858c287fe15755ed0e01adc53b",
+    "split_file": "split_manifest.json",
+    "split_id": "51c2dd1bb7d72166",
+    "split_scheme": "main",
+    "extends_split_id": "7df6f9b8276fa856",
+    "qa_ledger_sha256": null,
+    "duplicate_decisions_sha256": null,
+    "domain_dictionary_version": "domains-v1",
+    "n_families": 791,
+    "n_rows": 3164,
+    "exposure_samples": [
+      "outputs/exp1/development-cpu-20260926",
+      "outputs/exp6/feasibility-cpu-20260927"
+    ],
+    "eligible_training_families": 591,
+    "gates": {
+      "ingest": "PASS",
+      "structure": "PASS",
+      "split": "PASS",
+      "exposure": "PASS"
+    },
+    "notes": [
+      "no dataset-level kappa gate (docs/PROTOCOL.md §1)",
+      "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+    ]
+  },
+  "split_id": "51c2dd1bb7d72166",
+  "split_scheme": "main",
+  "families_selector": "all",
+  "max_families": null,
+  "n_rows_per_model": 3164,
+  "backend": "ollama",
+  "judging": "judge SELECTED in Exp 1",
+  "judge_fingerprint": {
+    "provider": "ollama",
+    "model": "deepseek-v4.1-flash:cloud",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "b0248df31f1d9da2"
+  },
+  "judge_fingerprint_id": "b0248df31f1d9da2",
+  "judge_validation_manifest_sha256": "9a93a2fdb25ed37899fa17a543d0e1bffbc8462ee966bda8764dc91508b40f2c",
+  "models": {
+    "gemma4e2b": {
+      "backend": "ollama",
+      "model_key": "gemma4e2b",
+      "hf_id": "google/gemma-4-E2B-it",
+      "revision": null,
+      "reference_hf_revision": "3e22461f65e89153144f8adb70e3b8c2cc9845a7",
+      "ollama_tag": "gemma4:e2b-it-q8_0",
+      "ollama_digest": "95e5aad2e60a213acd510ab69f962e45f391df90f24e6aeac65c7f8e84d26b84",
+      "quantization": "Q8_0",
+      "parameter_size": "5.1B",
+      "ollama_parameters": "temperature                    1\ntop_k                          64\ntop_p                          0.95",
+      "chat_template_sha256": "e006c0121ae11c102ba48e4e60165f5e2b1c6b37c712a2c5d5ce07461c0aa749",
+      "template_is_fallback": false,
+      "template_probe": "{{ .Prompt }}",
+      "default_system": null,
+      "system_prompt_sha256": null,
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "num_ctx": 4096,
+      "runtime": {
+        "ollama": "0.40.0"
+      },
+      "thinking": false,
+      "pinned_digest": "95e5aad2e60a213acd510ab69f962e45f391df90f24e6aeac65c7f8e84d26b84",
+      "scope_note": "production backend for this model (vLLM cannot load it): pinned GGUF build via Ollama"
+    }
+  },
+  "planned_primary_responses_this_invocation": 3164
+}

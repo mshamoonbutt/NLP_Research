@@ -138,7 +138,12 @@ CS 28.8, RU 39.4, UR 0.3), which reflects the tagger's failure, not real
 mixing. Its outputs are stored only as `*_heuristic` fields; the validated
 `cmi`/`urdu_word_ratio` fields stay null. Exp 4 must validate token-level
 tagging on bilingual-reviewed samples first, or restrict itself to supported
-analyses such as tokenizer fertility per pinned tokenizer.
+analyses such as tokenizer fertility per pinned tokenizer. **Exp 4 as run
+(2026-10-08): fertility only** (`scripts/exp4_features.py`): each tokenizer is
+verified against the run's recorded prompt-token counts; within-condition
+associations with harm and non-response (GEE, Holm across pooled fits) are
+re-fitted on the reviewer-labelled responses with judge and human labels on the
+same rows, and only associations that hold with human labels are reported.
 
 ## 2. Splits
 
@@ -326,7 +331,17 @@ appended to the cache before judging, and the run is resumable.
 
 **Contrasts (Exp 3).** Planned: CS–RU, RU–UR, RU–EN, run per model as paired
 McNemar with a paired-difference CI (domain-stratified family bootstrap).
-Holm is applied over the declared family: 3 contrasts × 3 models = 9 tests.
+Holm is applied within each declared family (`eval.yaml contrasts.holm_families`):
+confirmatory = 3 contrasts × the 3 original models = 9 tests; extension = the 2
+models added after Exp 2 results were seen, 6 tests, corrected separately.
+
+- Judge robustness (declared before the first run): each contrast also gets the
+  paired difference of ASRs corrected with the judge's predictive values per
+  model × condition, the Exp 2 correction (`aggregate.predictive_value_diff`).
+  A contrast is a **finding** only if Holm-significant AND that corrected 95% CI
+  excludes 0 with the same sign; otherwise "not robust to judge error".
+- Descriptive: paired shifts in refusal, non-response and full-only harm, so a
+  lower harmful rate can be read as refusal or as inability to respond.
 
 - CS–EN is the descriptive headline gap. It becomes confirmatory, and joins
   the Holm family, only if `cs_en_confirmatory` is set before results.

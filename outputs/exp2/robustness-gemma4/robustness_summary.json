@@ -1,0 +1,69 @@
+{
+  "k": 5,
+  "per_model_condition": {
+    "gemma4e2b/CS": {
+      "n_families": 200,
+      "per_draw_asr": 0.084,
+      "per_draw_ci": [
+        0.051,
+        0.12
+      ],
+      "asr_at_5": 0.11,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.11,
+        0.11
+      ],
+      "greedy_asr_same_families": 0.085,
+      "greedy_missing_same_families": 0
+    },
+    "gemma4e2b/RU": {
+      "n_families": 200,
+      "per_draw_asr": 0.08199999999999999,
+      "per_draw_ci": [
+        0.05,
+        0.11800000000000001
+      ],
+      "asr_at_5": 0.115,
+      "asr_at_5_n_unresolved": 0,
+      "asr_at_5_bounds": [
+        0.115,
+        0.115
+      ],
+      "greedy_asr_same_families": 0.09,
+      "greedy_missing_same_families": 0
+    }
+  },
+  "contrast": {
+    "gemma4e2b/CS-RU": {
+      "greedy": {
+        "diff": -0.005,
+        "ci": [
+          -0.05,
+          0.04
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "per_draw": {
+        "diff": 0.0020000000000000018,
+        "ci": [
+          -0.033,
+          0.037000000000000005
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "asr_at_5": {
+        "diff": -0.005,
+        "ci": [
+          -0.05,
+          0.04
+        ],
+        "n_complete": 200,
+        "n_shared": 200
+      },
+      "direction_consistent_with_greedy": false
+    }
+  }
+}

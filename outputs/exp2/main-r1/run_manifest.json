@@ -1,0 +1,121 @@
+{
+  "kind": "eval_run_manifest",
+  "experiment": "exp2_primary",
+  "created_utc": "2026-10-07T21:48:12.270639+00:00",
+  "git_sha": "f6089cae9044c91219af067efa7433dc13c313bf",
+  "debug": false,
+  "args": {
+    "models": [
+      "r1qwen15"
+    ],
+    "conditions": [
+      "CS",
+      "EN",
+      "RU",
+      "UR"
+    ],
+    "families": "all",
+    "exp0_dir": null,
+    "split_manifest": null,
+    "out_dir": "outputs/exp2/main-r1",
+    "judge_manifest": "C:\\Users\\Unnus Ahmad Usmani\\Desktop\\NLP_Research\\outputs\\exp1\\judge_validation_manifest.json",
+    "temperature": null,
+    "max_tokens": null,
+    "seed": null,
+    "max_families": null,
+    "backend": "vllm",
+    "judge_only": true,
+    "skip_judge": false,
+    "allow_unvalidated_judge": false,
+    "allow_unpinned_models": false,
+    "allow_fallback_template": false
+  },
+  "sampling": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 2048,
+    "seed": 0,
+    "n": 1
+  },
+  "sampling_overrides": {},
+  "eval_config_sha256": "1b2a88dac78a3d41b9465098edb32900521a43fd4ae8a194d74089fa8a353179",
+  "dataset_version": "final-791-ddc14ecbc568",
+  "dataset_manifest": {
+    "dataset_version": "final-791-ddc14ecbc568",
+    "release": "final-791",
+    "schema_version": "csjail-longform-v2",
+    "source_sha256": "4a34e81a38932fef769e563bbfe735606eadb4c473d24898ae249bd8480a1ecf",
+    "source_filename": "CS-Jail-UR_final_approved_791.csv",
+    "normalized_content_sha256": "ddc14ecbc568aec9efd41f042e5b26078698d1c2fdca4793852e9fa6a090b3d4",
+    "dataset_file": "dataset_final.jsonl",
+    "dataset_file_sha256": "070944241e91c7148aff77f6a052193de150f1858c287fe15755ed0e01adc53b",
+    "split_file": "split_manifest.json",
+    "split_id": "51c2dd1bb7d72166",
+    "split_scheme": "main",
+    "extends_split_id": "7df6f9b8276fa856",
+    "qa_ledger_sha256": null,
+    "duplicate_decisions_sha256": null,
+    "domain_dictionary_version": "domains-v1",
+    "n_families": 791,
+    "n_rows": 3164,
+    "exposure_samples": [
+      "outputs/exp1/development-cpu-20260926",
+      "outputs/exp6/feasibility-cpu-20260927"
+    ],
+    "eligible_training_families": 591,
+    "gates": {
+      "ingest": "PASS",
+      "structure": "PASS",
+      "split": "PASS",
+      "exposure": "PASS"
+    },
+    "notes": [
+      "no dataset-level kappa gate (docs/PROTOCOL.md §1)",
+      "cmi/urdu_word_ratio present only as *_heuristic (unvalidated)"
+    ]
+  },
+  "split_id": "51c2dd1bb7d72166",
+  "split_scheme": "main",
+  "families_selector": "all",
+  "max_families": null,
+  "n_rows_per_model": 3164,
+  "backend": "vllm",
+  "judging": "judge SELECTED in Exp 1",
+  "judge_fingerprint": {
+    "provider": "ollama",
+    "model": "deepseek-v4.1-flash:cloud",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "b0248df31f1d9da2"
+  },
+  "judge_fingerprint_id": "b0248df31f1d9da2",
+  "judge_validation_manifest_sha256": "9a93a2fdb25ed37899fa17a543d0e1bffbc8462ee966bda8764dc91508b40f2c",
+  "models": {
+    "r1qwen15": {
+      "model_key": "r1qwen15",
+      "hf_id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+      "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+      "tokenizer_revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+      "dtype": "float16",
+      "max_model_len": 4096,
+      "chat_template_sha256": "56a1447ad31926fdc21fb07e56e5642bd9c850c4f52d8c8af7bbe5f079a84f5f",
+      "template_is_fallback": false,
+      "template_probe": "<｜begin▁of▁sentence｜><｜User｜><<USER_MESSAGE>><｜Assistant｜><think>\n",
+      "system_prompt_sha256": null,
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "runtime": {
+        "vllm": "0.6.3.post1",
+        "transformers": "4.46.3",
+        "torch": "2.4.0+cu121",
+        "trl": null,
+        "peft": null
+      }
+    }
+  },
+  "planned_primary_responses_this_invocation": 3164
+}

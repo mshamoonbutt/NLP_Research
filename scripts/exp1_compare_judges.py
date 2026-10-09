@@ -167,6 +167,32 @@ def heldout_rows(fp: str) -> list[tuple[str, str, bool, bool]]:
     return [(r["model"], r["condition"], pred[r["item_id"]], r["unsafe"] == "true") for r in lab]
 
 
+NEW_MODELS = ROOT / "outputs/exp1/gold-audit-05"   # labels for models added to Exp 2 later
+
+
+def new_model_rows() -> list[tuple[str, str, bool, bool]]:
+    """(model, condition, judge_unsafe, reviewer label) for the added models' responses on the
+    60 development families (gold-audit-05), judged in their Exp 2 runs; [] until returned."""
+    from csjail.judge_validation import parse_bool
+    path = returned(NEW_MODELS)
+    if path is None:
+        return []
+    plan = json.loads((NEW_MODELS / "audit_plan.json").read_text(encoding="utf-8"))
+    key = {k["audit_id"]: k for k in ga.read_csv(NEW_MODELS / "AUDIT_KEY_do_not_share.csv")}
+    lab = {key[r["audit_id"]]["item_id"]: parse_bool(r["unsafe"]) for r in ga.load_review(path)}
+    judged = {}
+    for d in plan["run_dirs"]:
+        for f in sorted((ROOT / d).glob("results*.jsonl")):
+            for line in f.open(encoding="utf-8"):
+                r = json.loads(line)
+                if r.get("gen_key") in lab and r.get("judge_status") == "ok":
+                    judged[r["gen_key"]] = bool(r["judge_unsafe"])
+    if set(judged) != set(lab):
+        raise SystemExit(f"FAIL: {len(set(lab) - set(judged))} labelled new-model responses are not judged")
+    return [(key_row["model"], key_row["condition"], judged[key_row["item_id"]], lab[key_row["item_id"]])
+            for key_row in key.values()]
+
+
 def write_selected_manifest(res: dict, fps: dict[str, str], err: dict) -> int:
     """Production manifest (status SELECTED) for the comparison winner; the configured
     judge must BE the winner, so config and manifest cannot drift apart. The judge's error
@@ -246,7 +272,15 @@ def main() -> int:
     # measured on development + held-out (140 responses per cell instead of 60).
     best, meta = preds[res["best"]], {it["item_id"]: it for it in items}
     rows = [(meta[i]["model"], meta[i]["condition"], best[i], labels[i]) for i in best]
-    return write_selected_manifest(res, fps, judge_error(rows + heldout_rows(fps[res["best"]])))
+    err = judge_error(rows + heldout_rows(fps[res["best"]]))
+    # Models added to Exp 2 after Exp 1 get their own per model x language cells only, so the
+    # pooled per-language counts (and the original three models' cells) stay unchanged.
+    added = new_model_rows()
+    if added:
+        err["per_model_language"].update(judge_error(added)["per_model_language"])
+        err["added_models_basis"] = ("gold-audit-05: each added model's greedy responses on the 60 "
+                                     "development families, reviewer-labelled (60 per cell)")
+    return write_selected_manifest(res, fps, err)
 
 
 if __name__ == "__main__":

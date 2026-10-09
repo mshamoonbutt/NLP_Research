@@ -1,0 +1,19 @@
+{
+  "source": "PKU-Alignment/PKU-SafeRLHF",
+  "revision": "9421ffafec3fa40a1f1a7d567b4d525079477ecb",
+  "licence": "CC BY-NC 4.0",
+  "split": "train",
+  "seed": 42,
+  "rows": 73907,
+  "pairs_exactly_one_safe": 10796,
+  "rule": "exactly one response labelled safe; chosen=safe, rejected=unsafe",
+  "leakage_screen": {
+    "method": "token-Jaccard vs held-out EN prompts (csjail.qa.normalize_for_dup)",
+    "threshold": 0.5,
+    "n_heldout_prompts": 200,
+    "dropped": 0
+  },
+  "created_utc": "2026-10-09T06:37:54.943755+00:00",
+  "n": 1000,
+  "sha256": "e30fec99770ad72566922a4f98fdd8bf1612a6d63ec36c043d169b447114e179"
+}

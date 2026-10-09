@@ -239,6 +239,21 @@ def test_full_wiring(env, monkeypatch):
     flags = json.loads((tmp / "exp8" / "acceptance_flags.json").read_text(encoding="utf-8"))
     e = flags["flags"][0]
     assert e["arm"] == "E" and e["flags"]["capability_retention_min_mmlu"] == "NA"
+    # Kaggle generates without a judge; the laptop judges the cache without loading a model,
+    # including arm E's system-prompted generations
+    split8 = ["--exp0-dir", exp0_dir, "--models", "phi3", "--arms", "A", "E", "--skip-capability",
+              "--judge-manifest", str(env["man"]), "--benign-judge-manifest", str(env["bman"]),
+              "--out-dir", str(tmp / "exp8s")]
+    assert exp8.main(split8 + ["--judge-only"]) == 1              # nothing generated yet
+    assert exp8.main(split8 + ["--skip-judge"]) == 0
+    gman = json.loads((tmp / "exp8s" / "run_manifest.json").read_text(encoding="utf-8"))
+    assert gman["generation_only"] and set(gman["provenance"]) == {"phi3/A", "phi3/E"}
+    assert not (tmp / "exp8s" / "acceptance_flags.json").exists()
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    assert exp8.main(split8 + ["--judge-only"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
+    judged = json.loads((tmp / "exp8s" / "acceptance_flags.json").read_text(encoding="utf-8"))
+    assert judged["flags"] == flags["flags"]                    # same numbers as the one-step run
 
 
 def test_robustness_and_comprehension_wiring(env, monkeypatch):
@@ -282,6 +297,33 @@ def test_robustness_and_comprehension_wiring(env, monkeypatch):
     s = json.loads((tmp / "c" / "comprehension_summary.json").read_text(encoding="utf-8"))
     assert {x["condition"] for x in s["summary"]} == {"CS", "EN", "RU", "UR"}
     assert all(x["understood"]["n"] == 6 for x in s["summary"])
+    assert all(c["recovered_in_both"]["n_pairs"] == 6 for c in s["contrasts"]["qwen25"])
+    # the reviewer never sees the scorer's label; it lives in the key and is joined back
+    import csv
+    with (tmp / "c" / "review_sample.csv").open(encoding="utf-8") as f:
+        review = list(csv.DictReader(f))
+    assert review and "comprehension" not in review[0]
+    for r in review:
+        r["human_comprehension"] = "understood"
+    with (tmp / "c" / "review_sample.csv").open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(review[0]))
+        w.writeheader()
+        w.writerows(review)
+    assert comp.main(["--score-review", str(tmp / "c" / "review_sample.csv")]) == 0
+    agr = json.loads((tmp / "c" / "scorer_agreement.json").read_text(encoding="utf-8"))
+    assert agr["n"] == len(review) and agr["raw_agreement"] == 1.0
+    # GPU host generates only; the laptop scores the copied cache without loading a model
+    gen_args = ["--models", "qwen25", "--n-families", "6", "--exp0-dir", exp0_dir, "--out-dir", str(tmp / "c2")]
+    assert comp.main(gen_args + ["--score-only", "--baseline-results", str(out2)]) == 1   # nothing generated
+    assert comp.main(gen_args + ["--generate-only"]) == 0
+    assert not (tmp / "c2" / "comprehension_summary.json").exists()
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    assert comp.main(gen_args + ["--score-only", "--baseline-results", str(out2)]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
+    # reasoning models: only the answer after </think> is scored; unfinished reasoning has none
+    assert comp.probe_answer("<think>\nhmm\n</think>\n\nIt asks X.", True) == "It asks X."
+    assert comp.probe_answer("still thinking", True) is None
+    assert comp.probe_answer("It asks X.", False) == "It asks X."
 
 
 def test_generation_only_and_resume_guard(env):

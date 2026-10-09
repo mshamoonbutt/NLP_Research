@@ -243,12 +243,12 @@ class CachedRunner:
     judging pass needs no GPU. It replays the provenance recorded when the
     generations were made, so cache keys match; any cache miss raises NotCached."""
 
-    def __init__(self, provenance: dict) -> None:
-        self._prov = dict(provenance)
+    def __init__(self, provenance: dict, *, system: Optional[str] = None) -> None:
+        self._prov, self._system = dict(provenance), system   # the system prompt it was recorded with
 
     def provenance(self, system: Optional[str] = None) -> dict[str, Any]:
-        if system is not None:
-            raise NotCached("judge-only mode covers runs without a system prompt only")
+        if system != self._system:
+            raise NotCached("judge-only replay needs the system prompt the generations were made with")
         return dict(self._prov)
 
     def generate(self, prompts: list[str], *args, **kwargs):

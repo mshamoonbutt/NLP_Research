@@ -1,0 +1,1383 @@
+{
+  "families": [
+    "1",
+    "100",
+    "104",
+    "106",
+    "11",
+    "120",
+    "124",
+    "14",
+    "148",
+    "158",
+    "161",
+    "179",
+    "182",
+    "202",
+    "209",
+    "210",
+    "217",
+    "240",
+    "250",
+    "269",
+    "271",
+    "308",
+    "312",
+    "32",
+    "349",
+    "357",
+    "367",
+    "409",
+    "413",
+    "417",
+    "434",
+    "466",
+    "47",
+    "474",
+    "482",
+    "492",
+    "499",
+    "560",
+    "582",
+    "601",
+    "604",
+    "610",
+    "626",
+    "65",
+    "655",
+    "667",
+    "67",
+    "670",
+    "684",
+    "688",
+    "689",
+    "691",
+    "694",
+    "709",
+    "712",
+    "720",
+    "74",
+    "75",
+    "751",
+    "759",
+    "760",
+    "791",
+    "89",
+    "CSJUR-R-0992-01",
+    "CSJUR-V3-0017",
+    "CSJUR-V3-0024",
+    "CSJUR-V3-0034",
+    "CSJUR-V3-0035",
+    "CSJUR-V3-0042",
+    "CSJUR-V3-0043",
+    "CSJUR-V3-0045",
+    "CSJUR-V3-0050",
+    "CSJUR-V3-0062",
+    "CSJUR-V3-0063",
+    "CSJUR-V3-0081",
+    "CSJUR-V3-0085",
+    "CSJUR-V3-0090",
+    "CSJUR-V3-0091",
+    "CSJUR-V4-0003",
+    "CSJUR-V4-0022",
+    "CSJUR-V4-0023",
+    "CSJUR-V4-0054",
+    "CSJUR-V4-0056",
+    "CSJUR-V4-0063",
+    "CSJUR-V4-0066",
+    "CSJUR-V4-0069",
+    "CSJUR-V4-0075",
+    "CSJUR-X1-0005",
+    "CSJUR-X1-0008",
+    "CSJUR-X1-0024",
+    "CSJUR-X1-0032",
+    "CSJUR-X1-0043",
+    "CSJUR-X1-0047",
+    "CSJUR-X1-0059",
+    "CSJUR-X2-0004",
+    "CSJUR-X2-0011",
+    "CSJUR-X2-0026",
+    "CSJUR-X2-0037",
+    "CSJUR-X2-0039",
+    "CSJUR-X2-0040"
+  ],
+  "models": {
+    "qwen25": {
+      "max_tokens": 96
+    },
+    "phi3": {
+      "max_tokens": 96
+    },
+    "llama32": {
+      "max_tokens": 96
+    },
+    "r1qwen15": {
+      "max_tokens": 2048
+    },
+    "gemma4e2b": {
+      "max_tokens": 96
+    }
+  },
+  "scorer": {
+    "scorer_version": "comprehension-scorer-v1",
+    "model": "ollama:deepseek-v4.1-flash:cloud",
+    "rubric_sha256": "61dd4c6624f16aae291356ea486310356b92763bb1e858b8be02626ff238e4d4",
+    "probe_version": "intent-probe-v1",
+    "probe_sha256": "6b95d014c749a1b99b35b3eeb3d7850cc5e98bffd7a2b8ee0bf3e9ec5fc7e713"
+  },
+  "summary": [
+    {
+      "model": "qwen25",
+      "condition": "CS",
+      "understood": {
+        "n": 48,
+        "n_scored": 48,
+        "unsafe_rate": 0.125
+      },
+      "not_demonstrated": {
+        "n": 52,
+        "n_scored": 52,
+        "unsafe_rate": 0.038461538461538464
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.48,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.48,
+      "recovered_and_not_harmful": 0.42
+    },
+    {
+      "model": "qwen25",
+      "condition": "EN",
+      "understood": {
+        "n": 95,
+        "n_scored": 95,
+        "unsafe_rate": 0.12631578947368421
+      },
+      "not_demonstrated": {
+        "n": 5,
+        "n_scored": 5,
+        "unsafe_rate": 0.2
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.95,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.95,
+      "recovered_and_not_harmful": 0.83
+    },
+    {
+      "model": "qwen25",
+      "condition": "RU",
+      "understood": {
+        "n": 17,
+        "n_scored": 17,
+        "unsafe_rate": 0.058823529411764705
+      },
+      "not_demonstrated": {
+        "n": 83,
+        "n_scored": 83,
+        "unsafe_rate": 0.012048192771084338
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.17,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.17,
+      "recovered_and_not_harmful": 0.16
+    },
+    {
+      "model": "qwen25",
+      "condition": "UR",
+      "understood": {
+        "n": 4,
+        "n_scored": 4,
+        "unsafe_rate": 0.25
+      },
+      "not_demonstrated": {
+        "n": 96,
+        "n_scored": 96,
+        "unsafe_rate": 0.041666666666666664
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.04,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.04,
+      "recovered_and_not_harmful": 0.03
+    },
+    {
+      "model": "phi3",
+      "condition": "CS",
+      "understood": {
+        "n": 44,
+        "n_scored": 44,
+        "unsafe_rate": 0.13636363636363635
+      },
+      "not_demonstrated": {
+        "n": 56,
+        "n_scored": 56,
+        "unsafe_rate": 0.08928571428571429
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.44,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.44,
+      "recovered_and_not_harmful": 0.38
+    },
+    {
+      "model": "phi3",
+      "condition": "EN",
+      "understood": {
+        "n": 96,
+        "n_scored": 96,
+        "unsafe_rate": 0.0625
+      },
+      "not_demonstrated": {
+        "n": 4,
+        "n_scored": 4,
+        "unsafe_rate": 0.25
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.96,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.96,
+      "recovered_and_not_harmful": 0.9
+    },
+    {
+      "model": "phi3",
+      "condition": "RU",
+      "understood": {
+        "n": 11,
+        "n_scored": 11,
+        "unsafe_rate": 0.36363636363636365
+      },
+      "not_demonstrated": {
+        "n": 89,
+        "n_scored": 89,
+        "unsafe_rate": 0.07865168539325842
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.11,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.11,
+      "recovered_and_not_harmful": 0.07
+    },
+    {
+      "model": "phi3",
+      "condition": "UR",
+      "understood": {
+        "n": 2,
+        "n_scored": 2,
+        "unsafe_rate": 0.5
+      },
+      "not_demonstrated": {
+        "n": 98,
+        "n_scored": 98,
+        "unsafe_rate": 0.08163265306122448
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.02,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.02,
+      "recovered_and_not_harmful": 0.01
+    },
+    {
+      "model": "llama32",
+      "condition": "CS",
+      "understood": {
+        "n": 58,
+        "n_scored": 58,
+        "unsafe_rate": 0.3448275862068966
+      },
+      "not_demonstrated": {
+        "n": 34,
+        "n_scored": 34,
+        "unsafe_rate": 0.14705882352941177
+      },
+      "refused_probe": {
+        "n": 8,
+        "n_scored": 8,
+        "unsafe_rate": 0.125
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.6304347826086957,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.58,
+      "recovered_and_not_harmful": 0.38
+    },
+    {
+      "model": "llama32",
+      "condition": "EN",
+      "understood": {
+        "n": 61,
+        "n_scored": 61,
+        "unsafe_rate": 0.14754098360655737
+      },
+      "not_demonstrated": {
+        "n": 7,
+        "n_scored": 7,
+        "unsafe_rate": 0.14285714285714285
+      },
+      "refused_probe": {
+        "n": 32,
+        "n_scored": 32,
+        "unsafe_rate": 0.0
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.8970588235294118,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.61,
+      "recovered_and_not_harmful": 0.52
+    },
+    {
+      "model": "llama32",
+      "condition": "RU",
+      "understood": {
+        "n": 34,
+        "n_scored": 34,
+        "unsafe_rate": 0.23529411764705882
+      },
+      "not_demonstrated": {
+        "n": 62,
+        "n_scored": 62,
+        "unsafe_rate": 0.3225806451612903
+      },
+      "refused_probe": {
+        "n": 4,
+        "n_scored": 4,
+        "unsafe_rate": 0.25
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.3541666666666667,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.34,
+      "recovered_and_not_harmful": 0.26
+    },
+    {
+      "model": "llama32",
+      "condition": "UR",
+      "understood": {
+        "n": 60,
+        "n_scored": 60,
+        "unsafe_rate": 0.3
+      },
+      "not_demonstrated": {
+        "n": 37,
+        "n_scored": 37,
+        "unsafe_rate": 0.24324324324324326
+      },
+      "refused_probe": {
+        "n": 3,
+        "n_scored": 3,
+        "unsafe_rate": 0.3333333333333333
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.6185567010309279,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.6,
+      "recovered_and_not_harmful": 0.42
+    },
+    {
+      "model": "r1qwen15",
+      "condition": "CS",
+      "understood": {
+        "n": 32,
+        "n_scored": 32,
+        "unsafe_rate": 0.40625
+      },
+      "not_demonstrated": {
+        "n": 67,
+        "n_scored": 67,
+        "unsafe_rate": 0.2835820895522388
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 1,
+        "n_scored": 1,
+        "unsafe_rate": 1.0
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.32323232323232326,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 1,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.32,
+      "recovered_and_not_harmful": 0.19
+    },
+    {
+      "model": "r1qwen15",
+      "condition": "EN",
+      "understood": {
+        "n": 70,
+        "n_scored": 70,
+        "unsafe_rate": 0.5714285714285714
+      },
+      "not_demonstrated": {
+        "n": 24,
+        "n_scored": 24,
+        "unsafe_rate": 0.5
+      },
+      "refused_probe": {
+        "n": 6,
+        "n_scored": 6,
+        "unsafe_rate": 1.0
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.7446808510638298,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.7,
+      "recovered_and_not_harmful": 0.3
+    },
+    {
+      "model": "r1qwen15",
+      "condition": "RU",
+      "understood": {
+        "n": 13,
+        "n_scored": 13,
+        "unsafe_rate": 0.3076923076923077
+      },
+      "not_demonstrated": {
+        "n": 80,
+        "n_scored": 80,
+        "unsafe_rate": 0.1
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 7,
+        "n_scored": 7,
+        "unsafe_rate": 0.2857142857142857
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.13978494623655913,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 7,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.13,
+      "recovered_and_not_harmful": 0.09
+    },
+    {
+      "model": "r1qwen15",
+      "condition": "UR",
+      "understood": {
+        "n": 2,
+        "n_scored": 2,
+        "unsafe_rate": 0.0
+      },
+      "not_demonstrated": {
+        "n": 92,
+        "n_scored": 92,
+        "unsafe_rate": 0.0
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 6,
+        "n_scored": 6,
+        "unsafe_rate": 0.0
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.02127659574468085,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 6,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.02,
+      "recovered_and_not_harmful": 0.02
+    },
+    {
+      "model": "gemma4e2b",
+      "condition": "CS",
+      "understood": {
+        "n": 84,
+        "n_scored": 84,
+        "unsafe_rate": 0.047619047619047616
+      },
+      "not_demonstrated": {
+        "n": 16,
+        "n_scored": 16,
+        "unsafe_rate": 0.0
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.84,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.84,
+      "recovered_and_not_harmful": 0.8
+    },
+    {
+      "model": "gemma4e2b",
+      "condition": "EN",
+      "understood": {
+        "n": 90,
+        "n_scored": 90,
+        "unsafe_rate": 0.022222222222222223
+      },
+      "not_demonstrated": {
+        "n": 10,
+        "n_scored": 10,
+        "unsafe_rate": 0.0
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.9,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.9,
+      "recovered_and_not_harmful": 0.88
+    },
+    {
+      "model": "gemma4e2b",
+      "condition": "RU",
+      "understood": {
+        "n": 91,
+        "n_scored": 91,
+        "unsafe_rate": 0.03296703296703297
+      },
+      "not_demonstrated": {
+        "n": 9,
+        "n_scored": 9,
+        "unsafe_rate": 0.1111111111111111
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.91,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.91,
+      "recovered_and_not_harmful": 0.88
+    },
+    {
+      "model": "gemma4e2b",
+      "condition": "UR",
+      "understood": {
+        "n": 84,
+        "n_scored": 84,
+        "unsafe_rate": 0.023809523809523808
+      },
+      "not_demonstrated": {
+        "n": 16,
+        "n_scored": 16,
+        "unsafe_rate": 0.0
+      },
+      "refused_probe": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "uncertain": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "scorer_missing": {
+        "n": 0,
+        "n_scored": 0,
+        "unsafe_rate": null
+      },
+      "understood_share_of_decided": 0.84,
+      "note": "diagnostic on a selected subset; not an unbiased replacement for unconditional ASR",
+      "n_probes": 100,
+      "n_valid": 100,
+      "n_reasoning_unfinished": 0,
+      "n_probe_failed": 0,
+      "recovery_rate": 0.84,
+      "recovered_and_not_harmful": 0.82
+    }
+  ],
+  "contrasts": {
+    "qwen25": [
+      {
+        "contrast": "CS-RU",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.06,
+          "ci": [
+            0.0,
+            0.12
+          ],
+          "b": 8,
+          "c": 2,
+          "p": 0.109375
+        },
+        "recovered_in_both": {
+          "n_pairs": 14,
+          "diff": -0.07142857142857142,
+          "ci": [
+            -0.21428571428571427,
+            0.0
+          ],
+          "b": 0,
+          "c": 1,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-UR",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": -0.030000000000000002,
+          "ci": [
+            -0.08,
+            0.01
+          ],
+          "b": 1,
+          "c": 4,
+          "p": 0.375
+        },
+        "recovered_in_both": {
+          "n_pairs": 2,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ],
+          "b": 0,
+          "c": 0,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": -0.11,
+          "ci": [
+            -0.18,
+            -0.04
+          ],
+          "b": 2,
+          "c": 13,
+          "p": 0.00738525390625
+        },
+        "recovered_in_both": {
+          "n_pairs": 16,
+          "diff": -0.0625,
+          "ci": [
+            -0.25,
+            0.125
+          ],
+          "b": 1,
+          "c": 2,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "CS-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": -0.05,
+          "ci": [
+            -0.12,
+            0.02
+          ],
+          "b": 4,
+          "c": 9,
+          "p": 0.266845703125
+        },
+        "recovered_in_both": {
+          "n_pairs": 46,
+          "diff": -0.06521739130434782,
+          "ci": [
+            -0.17391304347826086,
+            0.043478260869565216
+          ],
+          "b": 2,
+          "c": 5,
+          "p": 0.453125
+        }
+      }
+    ],
+    "phi3": [
+      {
+        "contrast": "CS-RU",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.0,
+          "ci": [
+            -0.08,
+            0.09
+          ],
+          "b": 9,
+          "c": 9,
+          "p": 1.0
+        },
+        "recovered_in_both": {
+          "n_pairs": 9,
+          "diff": 0.0,
+          "ci": [
+            -0.4444444444444444,
+            0.4444444444444444
+          ],
+          "b": 2,
+          "c": 2,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-UR",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.020000000000000004,
+          "ci": [
+            -0.06,
+            0.1
+          ],
+          "b": 10,
+          "c": 8,
+          "p": 0.8145294189453125
+        },
+        "recovered_in_both": {
+          "n_pairs": 1,
+          "diff": 0.0,
+          "ci": [
+            0.0,
+            0.0
+          ],
+          "b": 0,
+          "c": 0,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.039999999999999994,
+          "ci": [
+            -0.03,
+            0.11
+          ],
+          "b": 9,
+          "c": 5,
+          "p": 0.4239501953125
+        },
+        "recovered_in_both": {
+          "n_pairs": 10,
+          "diff": 0.09999999999999998,
+          "ci": [
+            -0.2,
+            0.4
+          ],
+          "b": 2,
+          "c": 1,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "CS-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.039999999999999994,
+          "ci": [
+            -0.03,
+            0.11
+          ],
+          "b": 8,
+          "c": 4,
+          "p": 0.3876953125
+        },
+        "recovered_in_both": {
+          "n_pairs": 43,
+          "diff": 0.046511627906976744,
+          "ci": [
+            -0.06976744186046512,
+            0.16279069767441862
+          ],
+          "b": 4,
+          "c": 2,
+          "p": 0.6875
+        }
+      }
+    ],
+    "llama32": [
+      {
+        "contrast": "CS-RU",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": -0.02999999999999997,
+          "ci": [
+            -0.13,
+            0.08
+          ],
+          "b": 13,
+          "c": 16,
+          "p": 0.7103465689955667
+        },
+        "recovered_in_both": {
+          "n_pairs": 22,
+          "diff": 0.09090909090909094,
+          "ci": [
+            -0.13636363636363635,
+            0.3181818181818182
+          ],
+          "b": 4,
+          "c": 2,
+          "p": 0.6875
+        }
+      },
+      {
+        "contrast": "RU-UR",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.009999999999999953,
+          "ci": [
+            -0.1,
+            0.12
+          ],
+          "b": 16,
+          "c": 15,
+          "p": 1.0
+        },
+        "recovered_in_both": {
+          "n_pairs": 26,
+          "diff": 0.0,
+          "ci": [
+            -0.19230769230769232,
+            0.19230769230769232
+          ],
+          "b": 3,
+          "c": 3,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.18999999999999997,
+          "ci": [
+            0.09,
+            0.29
+          ],
+          "b": 24,
+          "c": 5,
+          "p": 0.0008302254277448881
+        },
+        "recovered_in_both": {
+          "n_pairs": 23,
+          "diff": 0.13043478260869568,
+          "ci": [
+            -0.08695652173913043,
+            0.34782608695652173
+          ],
+          "b": 5,
+          "c": 2,
+          "p": 0.453125
+        }
+      },
+      {
+        "contrast": "CS-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.16,
+          "ci": [
+            0.08,
+            0.25
+          ],
+          "b": 19,
+          "c": 3,
+          "p": 0.0008554458618164062
+        },
+        "recovered_in_both": {
+          "n_pairs": 41,
+          "diff": 0.2195121951219512,
+          "ci": [
+            0.07317073170731707,
+            0.3902439024390244
+          ],
+          "b": 11,
+          "c": 2,
+          "p": 0.0224609375
+        }
+      }
+    ],
+    "r1qwen15": [
+      {
+        "contrast": "CS-RU",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.19,
+          "ci": [
+            0.08,
+            0.29
+          ],
+          "b": 26,
+          "c": 7,
+          "p": 0.001727950774169049
+        },
+        "recovered_in_both": {
+          "n_pairs": 9,
+          "diff": 0.1111111111111111,
+          "ci": [
+            -0.2222222222222222,
+            0.4444444444444444
+          ],
+          "b": 2,
+          "c": 1,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-UR",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.14,
+          "ci": [
+            0.08,
+            0.21
+          ],
+          "b": 14,
+          "c": 0,
+          "p": 0.0001220703125
+        },
+        "recovered_in_both": {
+          "n_pairs": 0,
+          "diff": null,
+          "ci": [
+            null,
+            null
+          ],
+          "b": 0,
+          "c": 0,
+          "p": null
+        }
+      },
+      {
+        "contrast": "RU-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": -0.43999999999999995,
+          "ci": [
+            -0.56,
+            -0.32
+          ],
+          "b": 6,
+          "c": 50,
+          "p": 9.131629405642195e-09
+        },
+        "recovered_in_both": {
+          "n_pairs": 13,
+          "diff": 0.0,
+          "ci": [
+            -0.38461538461538464,
+            0.38461538461538464
+          ],
+          "b": 3,
+          "c": 3,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "CS-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": -0.24999999999999994,
+          "ci": [
+            -0.38,
+            -0.12
+          ],
+          "b": 14,
+          "c": 39,
+          "p": 0.0009784411916773207
+        },
+        "recovered_in_both": {
+          "n_pairs": 26,
+          "diff": 0.03846153846153849,
+          "ci": [
+            -0.19230769230769232,
+            0.2692307692307692
+          ],
+          "b": 5,
+          "c": 4,
+          "p": 1.0
+        }
+      }
+    ],
+    "gemma4e2b": [
+      {
+        "contrast": "CS-RU",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.0,
+          "ci": [
+            -0.04,
+            0.04
+          ],
+          "b": 2,
+          "c": 2,
+          "p": 1.0
+        },
+        "recovered_in_both": {
+          "n_pairs": 79,
+          "diff": 0.012658227848101267,
+          "ci": [
+            -0.02531645569620253,
+            0.06329113924050633
+          ],
+          "b": 2,
+          "c": 1,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-UR",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.02,
+          "ci": [
+            -0.02,
+            0.06
+          ],
+          "b": 3,
+          "c": 1,
+          "p": 0.625
+        },
+        "recovered_in_both": {
+          "n_pairs": 76,
+          "diff": 0.013157894736842105,
+          "ci": [
+            0.0,
+            0.039473684210526314
+          ],
+          "b": 1,
+          "c": 0,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "RU-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.02,
+          "ci": [
+            -0.03,
+            0.07
+          ],
+          "b": 4,
+          "c": 2,
+          "p": 0.6875
+        },
+        "recovered_in_both": {
+          "n_pairs": 83,
+          "diff": 0.012048192771084335,
+          "ci": [
+            -0.03614457831325301,
+            0.060240963855421686
+          ],
+          "b": 3,
+          "c": 2,
+          "p": 1.0
+        }
+      },
+      {
+        "contrast": "CS-EN",
+        "probed_families": {
+          "n_pairs": 100,
+          "diff": 0.02,
+          "ci": [
+            -0.02,
+            0.06
+          ],
+          "b": 3,
+          "c": 1,
+          "p": 0.625
+        },
+        "recovered_in_both": {
+          "n_pairs": 79,
+          "diff": 0.02531645569620253,
+          "ci": [
+            -0.02531645569620253,
+            0.0759493670886076
+          ],
+          "b": 3,
+          "c": 1,
+          "p": 0.625
+        }
+      }
+    ]
+  },
+  "scorer_validation": "PENDING: a bilingual reviewer fills human_comprehension in review_sample.csv (labels: understood, not_demonstrated, refused_probe, uncertain), then run --score-review"
+}

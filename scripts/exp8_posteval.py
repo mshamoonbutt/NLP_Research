@@ -88,7 +88,8 @@ def main(argv=None) -> int:
     ap.add_argument("--split-manifest", default=None)
     ap.add_argument("--tag", default=None, help="adapter suffix, e.g. ablation_D2 or n50")
     ap.add_argument("--models-root", default=str(ROOT / "outputs" / "models"))
-    ap.add_argument("--probe", default=str(ROOT / "data" / "overrefusal_probe.jsonl"))
+    ap.add_argument("--probe", default=str(ROOT / "data" / "benign_probe_v2.jsonl"),
+                    help="harmless prompts; rows with a `condition` also get per-form over-refusal")
     ap.add_argument("--judge-manifest",
                     default=str(ROOT / "outputs" / "exp1" / "judge_validation_manifest.json"))
     ap.add_argument("--benign-judge-manifest",
@@ -97,8 +98,23 @@ def main(argv=None) -> int:
                     help="record capability as NOT_RUN (explicit, never 'passed')")
     ap.add_argument("--skip-overrefusal", action="store_true")
     ap.add_argument("--allow-unvalidated-judge", action="store_true", help="DEBUG ONLY")
+    ap.add_argument("--skip-judge", action="store_true",
+                    help="GPU host: generate + capability only; judge later with --judge-only")
+    ap.add_argument("--judge-only", action="store_true",
+                    help="laptop: judge the cached generations of a --skip-judge run (no model loaded)")
     ap.add_argument("--out-dir", default=None)
     args = ap.parse_args(argv)
+    if args.skip_judge and args.judge_only:
+        print("FAIL: --skip-judge and --judge-only exclude each other", file=sys.stderr)
+        return 2
+    out_dir = Path(args.out_dir or ROOT / "outputs" / "exp8" / (args.tag or "main"))
+    prev = None
+    if args.judge_only:   # replay the GPU run: its provenance (cache keys) and capability scores
+        pm = out_dir / "run_manifest.json"
+        prev = json.loads(pm.read_text(encoding="utf-8")) if pm.exists() else {}
+        if not prev.get("provenance"):
+            print(f"FAIL: --judge-only needs the --skip-judge run's {pm}", file=sys.stderr)
+            return 1
 
     models = args.models or phase2_models()
     acc = yaml.safe_load((ROOT / "configs" / "dpo.yaml").read_text(encoding="utf-8"))["acceptance"]
@@ -114,6 +130,10 @@ def main(argv=None) -> int:
     problems = []
     for model in models:
         for arm in args.arms:
+            if prev is not None:
+                if f"{model}/{arm}" not in prev["provenance"]:
+                    problems.append(f"{model}/{arm} is not in the generation run ({out_dir})")
+                continue
             if arm in TRAINED:
                 d = adapter_dir(mroot, arm, model, args.tag)
                 tm = d / "training_manifest.json"
@@ -128,7 +148,7 @@ def main(argv=None) -> int:
         problems.append("arm A (untrained baseline) is required for pre/post comparisons")
     if not args.skip_overrefusal and not Path(args.probe).exists():
         problems.append(f"benign probe missing: {args.probe}")
-    if not args.skip_capability:
+    if not args.skip_capability and prev is None:
         for k in ("mmlu_path", "urdummlu_path"):
             if not (ROOT / cap_cfg[k]).exists():
                 problems.append(f"capability data missing: {cap_cfg[k]} (or pass --skip-capability)")
@@ -137,35 +157,41 @@ def main(argv=None) -> int:
             print(f"FAIL: {p}", file=sys.stderr)
         return 1
 
-    judge, _, debug = prepare_judge("harm", args.judge_manifest, args.allow_unvalidated_judge)
-    bjudge = None
-    if not args.skip_overrefusal:
-        bjudge, _, bdebug = prepare_judge("benign", args.benign_judge_manifest,
-                                          args.allow_unvalidated_judge)
-        debug = debug or bdebug
-    probe_rows = [ProbeRow(id=f"probe::{r['id']}", base_id=r["id"], prompt=r["prompt"])
+    judge = bjudge = None
+    debug = False
+    if not args.skip_judge:   # the GPU host has no judge; judging happens with --judge-only
+        judge, _, debug = prepare_judge("harm", args.judge_manifest, args.allow_unvalidated_judge)
+        if not args.skip_overrefusal:
+            bjudge, _, bdebug = prepare_judge("benign", args.benign_judge_manifest,
+                                              args.allow_unvalidated_judge)
+            debug = debug or bdebug
+    probe_rows = [ProbeRow(id=f"probe::{r['id']}", base_id=r.get("base_id", r["id"]), prompt=r["prompt"],
+                           condition=r.get("condition", "unlabeled"), domain_id=r.get("domain_id"))
                   for r in read_jsonl(args.probe)] if not args.skip_overrefusal else []
 
-    out_dir = Path(args.out_dir or ROOT / "outputs" / "exp8" / (args.tag or "main"))
     out_dir.mkdir(parents=True, exist_ok=True)
-    sampling = dict(ecfg["sampling"])
-    from csjail.models import SLMRunner
+    sampling = dict(prev["sampling"]) if prev else dict(ecfg["sampling"])
+    from csjail.models import CachedRunner, NotCached, SLMRunner
 
     results, table, prov, cap_items = [], [], {}, []
+    capability = dict((prev or {}).get("capability") or {})
     for model in models:
         spec = resolve(model)
         for arm in args.arms:
             adapter = str(adapter_dir(mroot, arm, model, args.tag)) if arm in TRAINED else None
             system = SAFETY_PRIMER if arm == "E" else None
-            runner = SLMRunner(spec, adapter_path=adapter, require_pinned=True)
+            key = f"{model}/{arm}"
+            runner = (CachedRunner(prev["provenance"][key], system=system) if prev else
+                      SLMRunner(spec, adapter_path=adapter, require_pinned=True))
             try:
-                prov[f"{model}/{arm}"] = runner.provenance(system)
+                prov[key] = runner.provenance(system)
                 recs = []
                 for cond in CONDITIONS:
                     recs += evaluate_system(runner=runner, rows=filter_prompts(rows, condition=cond),
                                             arm=arm, sampling=sampling, system=system,
                                             out_dir=out_dir, judge=judge, split=art.split,
-                                            chunk_size=int(ecfg["inference"]["chunk_size"]))
+                                            chunk_size=int(ecfg["inference"]["chunk_size"]),
+                                            skip_judge=args.skip_judge)
                 row = {"model": model, "arm": arm}
                 for cond in CONDITIONS:
                     sub = [r for r in recs if r["condition"] == cond]
@@ -179,9 +205,12 @@ def main(argv=None) -> int:
                                             sampling=sampling, system=system,
                                             out_dir=out_dir / "benign", judge=bjudge,
                                             split={"assignments": {}, "meta": {"split_id": None}},
-                                            chunk_size=64)
+                                            chunk_size=64, skip_judge=args.skip_judge)
                     orr = over_refusal_rate([benign_refused(r) for r in brecs])
                     row.update({"orr": orr["orr"], "orr_missing": orr["n_missing"]})
+                    for cond in sorted({r["condition"] for r in brecs} - {"unlabeled"}):
+                        row[f"orr_{cond}"] = over_refusal_rate(
+                            [benign_refused(r) for r in brecs if r["condition"] == cond])["orr"]
                     for r in brecs:
                         r["probe"] = True
                     recs += brecs
@@ -189,6 +218,9 @@ def main(argv=None) -> int:
                     row.update({"orr": None, "orr_status": "NOT_RUN"})
                 if args.skip_capability:
                     row.update({"mmlu": None, "urdummlu": None, "capability_status": "NOT_RUN"})
+                elif prev:   # scored on the GPU host; capability needs no judge
+                    row.update(capability.get(key) or {"mmlu": None, "urdummlu": None,
+                                                       "capability_status": "NOT_RUN"})
                 else:
                     for k, pk, nk in (("mmlu", "mmlu_path", "mmlu_n"),
                                       ("urdummlu", "urdummlu_path", "urdummlu_n")):
@@ -198,8 +230,13 @@ def main(argv=None) -> int:
                         row[f"{k}_n_unparsed"] = cres["n_unparsed"]
                         cap_items += [{"model": model, "arm": arm, "set": k, **it}
                                       for it in cres["per_item"]]
+                    capability[key] = {k: row[k] for k in ("mmlu", "mmlu_n_unparsed", "urdummlu",
+                                                           "urdummlu_n_unparsed")}
                 results += recs
                 table.append(row)
+            except NotCached as e:
+                print(f"FAIL (judge-only): {e}", file=sys.stderr)
+                return 1
             finally:
                 runner.shutdown()
 
@@ -209,6 +246,15 @@ def main(argv=None) -> int:
     write_csv(out_dir / "mitigation.csv", table)
     if cap_items:  # same MCQ item IDs across arms (paper App. G: identifiers preserved)
         write_jsonl(out_dir / "capability_items.jsonl", cap_items)
+    if args.skip_judge:   # generation-only: the provenance lets --judge-only replay every cache key
+        (out_dir / "run_manifest.json").write_text(json.dumps({
+            "kind": "exp8_run_manifest", "generation_only": True,
+            "created_utc": datetime.now(timezone.utc).isoformat(), "git_sha": git_sha(),
+            "models": models, "arms": args.arms, "tag": args.tag, "split_id": art.split_id,
+            "dataset_version": art.dataset_version, "sampling": sampling, "provenance": prov,
+            "capability": capability, "probe": args.probe}, indent=2, default=str), encoding="utf-8")
+        print(f"[exp8] generation-only run -> {out_dir}; judge it with --judge-only on the laptop")
+        return 0
 
     # identical eval IDs across arms (per model)
     main_recs = [r for r in results if not r.get("probe")]
@@ -284,9 +330,11 @@ def main(argv=None) -> int:
         "split_id": art.split_id, "dataset_version": art.dataset_version,
         "n_eval_families": len(ev), "sampling": sampling, "judge": judge.fingerprint,
         "benign_judge": bjudge.fingerprint if bjudge else None, "provenance": prov,
-        "probe": args.probe, "probe_language_coverage": "unaudited: probe items carry no "
-        "condition tags (mostly Roman-Urdu/English code-switched); do not claim per-condition "
-        "over-refusal coverage until audited"}, indent=2, default=str), encoding="utf-8")
+        "capability": capability, "generation_only": False,
+        "probe": args.probe, "probe_language_coverage": "benign_probe_v2: 60 harmless prompts x "
+        "EN/CS/RU/UR (see data/benign_probe_v2.manifest.json); the benign judge was validated on "
+        "Latin-script responses only, so RU/UR over-refusal labels need the post-training audit"},
+        indent=2, default=str), encoding="utf-8")
     print(f"[exp8] wrote {out_dir}")
     return 0
 

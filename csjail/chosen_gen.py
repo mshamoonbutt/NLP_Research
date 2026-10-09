@@ -88,33 +88,70 @@ def _build_user_prompt(prompt: str, exemplars: list[dict]) -> str:
 
 
 class ChosenGenerator:
-    """Async few-shot refusal generator (Anthropic provider)."""
+    """Async few-shot refusal generator (Anthropic, or an OpenAI-compatible provider from
+    csjail.judge.OPENAI_COMPATIBLE). A provider-side safety block returns None (missing),
+    never an empty "refusal"."""
 
     def __init__(self, cfg: Optional[GeneratorConfig] = None, *, language: str = "CS"):
+        from csjail.judge import OPENAI_COMPATIBLE
+
         self.cfg = cfg or load_generator_config()
         self.language = language
-        if self.cfg.provider != "anthropic":
+        if self.cfg.provider == "anthropic":
+            try:
+                from anthropic import AsyncAnthropic  # noqa: WPS433
+            except ImportError as e:
+                raise RuntimeError("anthropic package not installed: pip install -e '.[judge]'") from e
+            key = os.environ.get("ANTHROPIC_API_KEY")
+            if not key:
+                raise RuntimeError("ANTHROPIC_API_KEY env var is required")
+            self._client = AsyncAnthropic(api_key=key)
+        elif self.cfg.provider in OPENAI_COMPATIBLE:
+            from openai import AsyncOpenAI  # noqa: WPS433
+
+            base_url, key_env = OPENAI_COMPATIBLE[self.cfg.provider]
+            key = os.environ.get(key_env) if key_env else "ollama"
+            if not key:
+                raise RuntimeError(f"{key_env} env var is required for the {self.cfg.provider} generator")
+            self._client = AsyncOpenAI(api_key=key, base_url=base_url)
+        else:
             raise NotImplementedError(f"provider={self.cfg.provider} not implemented")
-        try:
-            from anthropic import AsyncAnthropic  # noqa: WPS433
-        except ImportError as e:
-            raise RuntimeError("anthropic package not installed: pip install -e '.[judge]'") from e
-        key = os.environ.get("ANTHROPIC_API_KEY")
-        if not key:
-            raise RuntimeError("ANTHROPIC_API_KEY env var is required")
-        self._client = AsyncAnthropic(api_key=key)
+
+    async def _call(self, user: str) -> Optional[str]:
+        system = SYSTEM_PROMPTS[self.language]
+        if self.cfg.provider == "anthropic":
+            # anthropic 1.x dropped the `temperature` keyword; the Claude 4.6/4.5 models
+            # still accept it, so it goes in the request body (works on 0.x too).
+            resp = await self._client.messages.create(
+                model=self.cfg.model, max_tokens=self.cfg.max_tokens,
+                extra_body={"temperature": self.cfg.temperature}, system=system,
+                messages=[{"role": "user", "content": user}])
+            if resp.stop_reason == "refusal":   # a safety classifier blocked the call
+                return None
+            return "".join(b.text for b in resp.content if b.type == "text").strip()
+        resp = await self._client.chat.completions.create(
+            model=self.cfg.model, max_tokens=self.cfg.max_tokens, temperature=self.cfg.temperature,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}])
+        msg = resp.choices[0].message
+        if getattr(msg, "refusal", None) and not (msg.content or "").strip():
+            return None                          # the provider declined to write anything
+        return (msg.content or "").strip()
 
     async def _one(self, prompt: str, exemplars: list[dict]) -> Optional[str]:
+        from csjail.judge import _retry_wait
+
         delay = 1.0
-        for _attempt in range(5):
+        for _attempt in range(10):
             try:
-                resp = await self._client.messages.create(
-                    model=self.cfg.model, max_tokens=self.cfg.max_tokens,
-                    temperature=self.cfg.temperature, system=SYSTEM_PROMPTS[self.language],
-                    messages=[{"role": "user", "content": _build_user_prompt(prompt, exemplars)}])
-                return "".join(b.text for b in resp.content if b.type == "text").strip()
-            except Exception:  # broad: SDK raises many types; missing stays missing
-                await asyncio.sleep(delay)
+                return await self._call(_build_user_prompt(prompt, exemplars))
+            except (TypeError, ValueError):   # a code/SDK mismatch: fail loudly, never as "missing"
+                raise
+            except Exception as e:  # broad: SDK raises many types; missing stays missing
+                emsg = str(e).lower()
+                if "rate limit" in emsg or "rate_limit" in emsg:   # wait the provider's hint, no growth
+                    await asyncio.sleep(_retry_wait(emsg, 1.0))
+                    continue
+                await asyncio.sleep(_retry_wait(emsg, delay))
                 delay = min(delay * 2, 30.0)
         return None
 

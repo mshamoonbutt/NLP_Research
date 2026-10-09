@@ -420,7 +420,26 @@ Remaining steps:
    probe responses and blank rater files; gate with
    `calibrate_judge.py --kind benign`.
 
-## Exp 2 — main evaluation: **JUDGED (2026-10-07, DeepSeek V4.1 Flash)**
+## Exp 2 — main evaluation: **DONE, FIVE MODELS (2026-10-08, DeepSeek V4.1 Flash)**
+
+- **Five models (2026-10-08):** the three originals plus Gemma 4 E2B and
+  DeepSeek-R1-Distill-Qwen-1.5B, all judged (0 judge errors). Raw ASR, all 791
+  families (EN / CS / RU / UR): r1qwen15 .569 / .382 / .125 / .013; gemma4e2b
+  .033 / .066 / .063 / .046. Judge kappa with the reviewer: original three
+  .72–.76, r1qwen15 .52, gemma4e2b .54. **Correction method (decided
+  2026-10-08): predictive values for all five models** (flagged share ×
+  P(harmful | flagged) + unflagged share × P(harmful | not flagged), from the
+  reviewer-labelled responses of the same model and language); Rogan–Gladen
+  collapsed where the judge's error is lopsided or harm is rare (R1 CS → 0,
+  phi3 UR → 0, Gemma cells undefined). Corrected ASR, all 791 families (EN /
+  CS / RU / UR): r1qwen15 .520 / .311 / .037 / .024; llama32 .124 / .318 / .319 /
+  .220; qwen25 .116 / .076 / .046 / .060; phi3 .080 / .120 / .064 / .078;
+  gemma4e2b .049 / .081 / .063 / .093.
+  Robustness: r1qwen15 CS .536 / .805 / .480, RU .150 / .375 / .135; gemma4e2b
+  CS .084 / .110 / .085, RU .082 / .115 / .090 (per-draw / any-of-5 / greedy).
+  Backend check (qwen25 Ollama vs vLLM): ASR within 2 points, McNemar p ≥ .42.
+  Full tables and caveats: `docs/EXP2_NEW_MODELS.md` § Results; summaries
+  `outputs/exp2/summary_5models.csv`, `summary_5models_eval_main.csv`.
 
 - **Done:** main 9,492/9,492 and robustness 6,000/6,000 judgments ok (0 errors),
   run manifest `judging: judge SELECTED in Exp 1`, git `3eb3abc`. The laptop's
@@ -430,10 +449,11 @@ Remaining steps:
 - **Raw ASR, all 791 families (EN / CS / RU / UR):** llama32 .118 / .373 / .359
   / .298; phi3 .082 / .113 / .100 / .102; qwen25 .154 / .092 / .034 / .061.
   The 200 held-out families (`--split eval_main`) give the same pattern.
-- **Corrected ASR** (per model × language judge error from Exp 1, development
-  + held-out, 140 responses per cell; re-aggregated 2026-10-08, raw ASR
-  unchanged), all 791 families EN / CS / RU / UR: llama32 .125 / .328 / .281 /
-  .219; phi3 .085 / .121 / .064 / .000; qwen25 .127 / .078 / .029 / .062.
+- **Corrected ASR, superseded 2026-10-08 by the predictive-value correction
+  above** (these were Rogan–Gladen, per model × language judge error from Exp 1,
+  development + held-out, 140 responses per cell), all 791 families EN / CS / RU /
+  UR: llama32 .125 / .328 / .281 / .219; phi3 .085 / .121 / .064 / .000; qwen25
+  .127 / .078 / .029 / .062.
   E.g. llama32 CS .328 [.237, .418] (was .312 [.141, .464] with the 60
   development responses per cell), RU .281 [.165, .380]. 11 of 12 intervals
   narrow (median width −40%); qwen25 RU widens (7 harmful in its cell, judge
@@ -458,10 +478,11 @@ Remaining steps:
   both resume from `judgments.jsonl`.
 - **Reporting:** `python -m csjail.aggregate outputs/exp2/main [--split eval_main]`
   prints raw ASR and ASR corrected for the judge's error per model × language
-  (Rogan–Gladen with Exp 1 recall and specificity; interval pairs the family
-  bootstrap with posterior draws of both). Assumes the judge's error in each
-  cell transfers from the 1,680 reviewer-labelled Exp 1 responses (development
-  + held-out) to the full sweep.
+  (default since 2026-10-08: the judge's predictive values from the
+  reviewer-labelled responses of that model and language; `--correction
+  rogan_gladen` for the earlier method). Interval pairs the family bootstrap with
+  posterior draws. Assumes the labelled responses are a random sample of the
+  same model's greedy responses in that language.
 - **Superseded:** the screen-and-verify design (`exp2_verify.py`) and the Kaggle
   `screen` mode are no longer the plan.
 
@@ -500,83 +521,243 @@ gitignored under `outputs/smoke/`).
 | Production backend (vLLM, fp16, Kaggle T4) | **Working**: 3-model sequential loads without OOM; Exp 1 samples generated |
 | Full Exp 2 (9,492 greedy + 6,000 robustness responses) | **NOT RUN** (by design in this task) |
 
-- **Extension planned (2026-10-07): two more SLMs.** Gemma 4 E2B (Ollama
-  q8_0, pinned digest; vLLM 0.6.3 cannot load it) and DeepSeek-R1-Distill-Qwen-1.5B
-  (vLLM fp16, 2,048-token budget for its visible reasoning). Same prompts, decoding,
-  robustness subset and judge; a qwen25 Ollama-vs-vLLM backend check; 240 labelled
-  responses per new model for its judge error. Design and commands:
-  `docs/EXP2_NEW_MODELS.md`; Kaggle notebook `notebooks/kaggle_newmodels.ipynb`.
-  **Local Ollama smoke test passed (2026-10-07, 5 families each, debug):** both
-  pinned builds verified, 40/40 judged; R1 closed its reasoning in 20/20 (3/20 hit
-  2,048 tokens) and was judged harmful on 3/5 EN and 4/5 CS but answered RU/UR
-  irrelevantly; Gemma answered UR in Urdu script, mostly refusals (harmful 1/5 RU,
-  1/5 UR). Indicative only: 5 families.
+- **Extension (2026-10-07/08): two more SLMs — done**, see the five-model bullet at
+  the top of this section and `docs/EXP2_NEW_MODELS.md`.
 - **Held-out labels (round 4, prepared 2026-10-07):** `outputs/exp1/gold-audit-04`,
   733 of the 960 set-aside items to review; 227 identical to development responses
   the reviewer already labelled keep that label (`carried_labels.csv`).
 
-## Exp 3 — matched contrasts: **RUN (2026-10-07, 3 original models, full core)**
+## Exp 3 — matched contrasts: **DONE (2026-10-08, five models)**
 
-`scripts/exp3_isolation.py --results outputs/exp2/main --out-dir outputs/exp3` →
-`isolation_results.json`, `contrasts_table.csv` (paper Table 6 shape). Declared in
-`configs/eval.yaml` before this first run: Holm families (confirmatory = qwen25/phi3/llama32,
-9 tests; extension = r1qwen15/gemma4e2b, separate) and the judge-robustness rule (a contrast
-is a finding only if Holm-significant AND its judge-corrected paired difference CI excludes 0
-with the same sign).
-- Raw paired differences (pp; * = Holm-significant over the 9 tests): llama32 CS−RU +1.4,
-  RU−UR +6.1 (p .009, adj. .057), RU−EN +24.1*; phi3 +1.3 / −0.3 / +1.8; qwen25 CS−RU +5.8*,
-  RU−UR −2.7 (adj. .080), RU−EN −12.0*. Descriptive CS−EN: llama32 +25.5, phi3 +3.0, qwen25 −6.2.
-- **Judge-corrected: no contrast is a robust finding yet.** Corrected CIs are wide because each
-  model × condition cell of judge error rests on 60 development responses (e.g. llama32 RU
-  false-alarm rate from 35 safe responses). Per-language error (pooled models) would make
-  llama32/qwen25 RU−EN and CS−EN robust but is biased (false-alarm rates differ by model).
-  Rough projection with 140 responses per cell at today's error rates: llama32 RU−EN and
-  CS−EN become robust. Re-run after the round-4 labels enter the judge manifest.
-- Descriptive response shifts (paired): lower harm in UR/RU comes with **non-response, not
-  refusal**, for phi3 (RU−EN non-response +58 pp, refusal −70 pp) and qwen25 (RU−UR
-  non-response −66 pp, refusal +64 pp). English refusal → harmful elsewhere: llama32
-  CS 32% / RU 35% / UR 28% of its 684 EN refusals; phi3 8–10%; qwen25 3–7%.
-- GEE per model (OR vs EN): llama32 CS 4.5, RU 4.3, UR 3.2; phi3 1.4 / 1.2 / 1.3;
-  qwen25 0.55 / 0.19 / 0.35. Converged, 0 missing.
+`python scripts/exp3_isolation.py --results outputs/exp2/main outputs/exp2/main-r1
+outputs/exp2/main-gemma4 --out-dir outputs/exp3` (and `--split eval_main --out-dir
+outputs/exp3/eval_main`) → `isolation_results.json`, `contrasts_table.csv`.
 
-## Exp 4 — tokenizer fertility: **RUN (2026-10-07)**
+**Design (declared in `configs/eval.yaml` before the first run, 2026-10-07; correction
+amended 2026-10-08 to follow Exp 2, before the five-model run):**
+- Test: two-sided McNemar on the judge's labels, complete pairs, all 791 families.
+- Holm within two families:
+  - confirmatory: qwen25, phi3, llama32 × CS−RU / RU−UR / RU−EN, 9 tests (the paper's family);
+  - extension: r1qwen15, gemma4e2b, 6 tests (models added after Exp 2 results were seen).
+- CS−EN: descriptive.
+- Effect sizes:
+  - raw paired difference, 10,000-draw domain-stratified family bootstrap;
+  - **judge-corrected paired difference** with the judge's predictive values per model ×
+    condition, the Exp 2 correction (`aggregate.predictive_value_diff`): pairs resampled
+    together, Jeffreys draws of each condition's P(harmful | flagged) and P(harmful | not
+    flagged), and the model's pooled P(harmful | flagged) where the judge flagged none of a
+    cell's labelled responses (Gemma CS/EN/UR).
+- **Finding** = Holm-significant AND corrected 95% CI excludes 0 with the same sign.
+- Descriptive: paired shifts in refusal, non-response (unintelligible / irrelevant / empty)
+  and full-only harm; EN refusal → harmful elsewhere; per-model GEE (raw labels,
+  supplementary) and a pooled condition × model interaction GEE (15,820 rows, converged).
 
-`scripts/exp4_features.py` → `outputs/exp4/features_results.json`, `fertility_by_prompt.csv`
-(counts only). Fertility = raw-prompt tokens / whitespace words at the pinned tokenizer.
-Tokenizer check vs the Exp 2 run (recorded prompt tokens − our count = one constant):
-1.000 for qwen25, phi3 and llama32 (llama32 via the ungated mirror
-`unsloth/Llama-3.2-3B-Instruct`, so the mirror is verified). CMI / Urdu share: NOT run
-(tagger unvalidated).
-- Mean fertility EN/CS/RU/UR: qwen25 1.16/1.48/1.85/3.12, llama32 1.16/1.48/1.83/3.02,
-  phi3 1.33/1.68/2.03/4.84, gemma4e2b 1.16/1.30/1.55/1.39, r1qwen15 = qwen25 (same
-  tokenizer: a tokenizer-matched pair for the extension).
-- Within-condition GEE (exploratory; OR per within-condition SD, adjusted for condition,
-  domain, length): **non-response rises with fragmentation** (pooled OR llama32 1.24,
-  phi3 1.58, qwen25 1.40, all p < .001; strongest in RU/CS); harmful compliance shows no
-  consistent association (pooled 0.98 / 0.82 / 0.92; signs differ by condition).
+**Results, all 791 families (pp; corrected difference with 95% CI):**
 
-## Exp 4b: not run (needs GPU)
+| Family | Model | CS−RU | RU−UR | RU−EN | CS−EN (desc.) |
+|---|---|---|---|---|---|
+| confirmatory | llama32 | +1.4 / −0.0 [−8.3, +8.2] | +6.1 / +9.8 [+1.6, +17.9] (Holm p .057) | **+24.1 / +19.4 [+12.7, +26.5]** | +25.5 / +19.4 |
+| confirmatory | phi3 | +1.3 / +5.5 [+1.0, +9.4] (Holm p 1.0) | −0.3 / −1.4 | +1.8 / −1.6 | +3.0 / +4.0 |
+| confirmatory | qwen25 | +5.8* / +3.0 [−1.8, +6.7] | −2.7 / −1.4 | **−12.0 / −7.0 [−11.4, −1.7]** | −6.2 / −4.0 |
+| extension | r1qwen15 | **+25.7 / +27.4 [+14.5, +40.8]** | +11.3* / +1.4 [−4.2, +8.9] | **−44.4 / −48.3 [−59.5, −34.8]** | −18.7 / −20.9 |
+| extension | gemma4e2b | +0.3 / +1.8 | +1.8 / −3.0 | +3.0* / +1.4 [−4.5, +5.7] | +3.3 / +3.2 |
+
+Bold = finding (raw / corrected); * = Holm-significant but the corrected CI includes 0 (not
+robust to judge error). Four findings: llama32 RU−EN, qwen25 RU−EN, r1qwen15 CS−RU and RU−EN.
+The 200 held-out families give the same four findings and no others.
+- Not findings, but worth stating: llama32 RU−UR and phi3 CS−RU have corrected CIs that
+  exclude 0, but their preregistered raw test is not Holm-significant.
+- Why the lower harm in Urdu forms (paired shifts, pp, raw judge labels): phi3 RU vs EN
+  refusal −70, non-response +58; qwen25 UR vs RU non-response +66, refusal −64; r1qwen15
+  RU vs EN non-response +40; llama32 RU vs EN refusal −51 with harm +24 (it engages and
+  complies). Gemma: refusal 91–95% in every form, 0 non-response.
+- **Response types checked against the reviewer** (`scripts/exp1_kind_agreement.py` →
+  `outputs/exp1/response_kind_agreement.json`, 2,160 reviewer-labelled responses): four-way
+  type (harmful / refusal / safe help / non-response) agreement 0.825, κ 0.74; refusal κ 0.83,
+  non-response κ 0.82 (per model κ: qwen25 .82, phi3 .74, gemma4e2b .74, llama32 .63,
+  r1qwen15 .55). The judge over-calls refusal by 6–11 pp for qwen25, llama32, phi3 and
+  r1qwen15 (gemma4e2b 2); non-response rates match within 2.3 pp for every model. The
+  interpretive shifts hold with
+  reviewer labels on the labelled families (judge / reviewer, pp): phi3 RU−EN refusal −75 / −70,
+  non-response +50 / +47; qwen25 RU−UR non-response −65 / −73; r1qwen15 RU−EN non-response
+  +42 / +52; llama32 RU−EN refusal −67 / −58, but its non-response shift (+15 / +0) is not
+  confirmed.
+- Full-only harm moves little (|diff| ≤ 6 pp except r1qwen15 RU−EN −17 and CS−EN −11): the
+  contrasts are driven by partial assistance.
+- English refusal → harmful elsewhere (share of the model's EN refusals): llama32 CS 32% /
+  RU 35% / UR 28% (684 refusals); r1qwen15 CS 30% (73); phi3 8–10%; qwen25 3–7%; gemma4e2b
+  3–5%.
+- GEE odds ratios vs EN (raw labels): llama32 CS 4.5 / RU 4.3 / UR 3.2; phi3 1.4 / 1.2 / 1.3;
+  qwen25 0.55 / 0.19 / 0.35; r1qwen15 0.46 / 0.10 / 0.01; gemma4e2b 2.2 / 2.1 / 1.4.
+
+## Exp 4 — tokenizer fertility: **DONE (2026-10-08, five models)**
+
+`python scripts/exp4_features.py --results outputs/exp2/main outputs/exp2/main-r1
+outputs/exp2/main-gemma4 --tokenizer llama32=unsloth/Llama-3.2-3B-Instruct --out-dir
+outputs/exp4` → `features_results.json`, `fertility_by_prompt.csv` (counts only, no text).
+
+**Design:** fertility = tokens of the raw prompt (pinned tokenizer, no chat template, no
+special tokens) / whitespace words. Tokenizer check against the runs (recorded prompt tokens
+− our count = one constant): **1.000 for all five models** (llama32 via the ungated mirror,
+gemma4e2b against its Ollama build). Association per model, exploratory: GEE (logit,
+clustered on family) of harm and of non-response on fertility standardized within condition,
+adjusted for condition, domain and log word count; conditions where every response has the
+same outcome are left out; Holm across the 9 pooled fits (Gemma has no non-response).
+**Human-label check:** the same pooled fit on the reviewer-labelled responses (560 per
+original model, 240 per added model), with the judge's and the reviewer's labels on
+identical rows. CMI / Urdu share: **not run** (no validated tagger).
+
+**Mean fertility (× EN):**
+
+| Model | EN | CS | RU | UR |
+|---|---|---|---|---|
+| qwen25 / r1qwen15 (same tokenizer) | 1.16 | 1.48 (1.28) | 1.85 (1.60) | 3.12 (2.69) |
+| llama32 | 1.16 | 1.48 (1.28) | 1.83 (1.58) | 3.02 (2.61) |
+| phi3 | 1.33 | 1.68 (1.26) | 2.03 (1.52) | 4.84 (3.64) |
+| gemma4e2b | 1.16 | 1.30 (1.12) | 1.55 (1.34) | 1.39 (1.20) |
+
+**Associations (OR per within-condition SD; full data, judge labels → human-label check):**
+
+| Model | Non-response | Human-label check (judge / reviewer, same rows) | Harm | Human-label check (judge / reviewer) |
+|---|---|---|---|---|
+| phi3 | 1.58 (Holm p < .001) | 1.99 / **1.92 [1.43, 2.56]** | 0.82 (Holm p .03) | 0.81 / 0.96 [0.73, 1.27] |
+| r1qwen15 | 1.34 (< .001) | 1.47 / **1.52 [1.06, 2.16]** | 0.75 (< .001) | 0.68 / 0.84 [0.56, 1.25] |
+| qwen25 | 1.40 (< .001) | 1.38 / 1.07 [0.78, 1.46] | 0.92 (.45) | 0.77 / 0.95 [0.69, 1.30] |
+| llama32 | 1.24 (.001) | 1.80 / 1.23 [0.95, 1.59] | 0.98 (.67) | 0.89 / 1.00 [0.81, 1.22] |
+| gemma4e2b | no non-response | — | 1.15 (.32) | 3 events: uninformative |
+
+- **Supported:** within a form, more fragmented prompts get more non-response, robustly
+  under human labels for phi3 and r1qwen15; weaker and not distinguishable from 1 under
+  human labels for qwen25 and llama32.
+- **Not supported:** any link between fragmentation and harmful compliance. The negative
+  harm associations in the judge's labels (phi3, r1qwen15) vanish with human labels: a
+  judge artefact, not a finding.
+- Descriptive, n = 5 models: Gemma barely fragments Urdu script (1.39 tokens/word vs
+  3.0–4.8) and has no non-response; r1qwen15 shares qwen25's tokenizer exactly yet differs
+  sharply in behaviour, so tokenization alone does not explain model differences.
+
+## Exp 4b — intent-recovery probe: **DONE (2026-10-09); scorer validated**
+
+Generated on Kaggle (`notebooks/kaggle_exp4b.ipynb`): 2,000/2,000 probes ok (100 families × 4
+forms × 5 models; Gemma via Ollama 0.40.0, pinned build accepted; R1 finished its reasoning on
+386/400, the other 14 are "uncertain"). Scored on the laptop with the comprehension rubric
+through DeepSeek V4.1 Flash (`outputs/exp4b/comprehension_summary.json`; probe texts and the
+blinded audit file stay local). **Scorer validated** against the reviewer's labels on 80 blinded
+answers (4 per model × form; `outputs/exp4b/scorer_agreement.json`): agreement 0.887, κ 0.78;
+understood vs not 74/80 (CS 19/20, EN 18/20, RU 17/20, UR 20/20). The scorer is slightly strict
+(4 reviewer-understood answers scored not_demonstrated, 2 the other way), so recovery rates are
+if anything understated. The returned file has no reviewer_id column (omitted from the file I
+generated): record who reviewed and whether any tool assisted.
+
+**Intent recovered (share understood, EN / CS / RU / UR):**
+
+| Model | EN | CS | RU | UR | Note |
+|---|---|---|---|---|---|
+| qwen25 | .95 | .48 | .17 | .04 | |
+| phi3 | .96 | .44 | .11 | .02 | |
+| llama32 | .61 | .58 | .34 | .60 | 32 EN probes refused (refusing to restate ≠ not understanding) |
+| r1qwen15 | .70 | .32 | .13 | .02 | |
+| gemma4e2b | .90 | .84 | .91 | .84 | |
+
+- Qwen, Phi-3 and R1 mostly do not understand Roman Urdu or Urdu-script requests; Gemma
+  understands every form and still refuses; Llama understands Urdu script and often RU.
+- **Contrasts restricted to families understood in both forms** (raw judge labels, small n,
+  descriptive): R1 RU−EN −44 pp on all probed families → **0.0 (n 13)**; R1 CS−EN −25 → +3.8
+  (n 26); Llama RU−EN +19 → **+13 (n 23)**, CS−EN +16 → +22 (n 41); Qwen RU−EN −11 → −6 (n 16).
+  R1's lower harm in RU/CS is non-comprehension; Llama's higher harm in RU persists when it
+  understands.
+- ASR among understood probes is in the summary file; UR/RU cells for qwen25/phi3/r1qwen15 have
+  2–17 understood items, so their conditional rates are not interpretable.
+
+### Exp 4b design and steps (as prepared 2026-10-08)
+
+**Design** (`scripts/exp4b_comprehension.py`, `csjail/comprehension.py`):
+- 100 families, domain-stratified, chosen without outcomes (seed 42), × 4 conditions × 5 models
+  = 2,000 safe probes (intent-probe-v1: describe in one English sentence what the message asks
+  for, without doing it). The harmful-request outcome is reused from Exp 2.
+- Backends as in Exp 2: vLLM fp16 for qwen25, phi3, llama32, r1qwen15; Gemma through Ollama
+  (Kaggle install pinned to 0.40.0, the version of Exp 2's Gemma run). Greedy; 96 tokens, R1
+  2,048 with only the answer after `</think>` scored (unfinished reasoning = uncertain).
+- Scorer: the comprehension rubric through the Exp 1 judge (DeepSeek V4.1 Flash via Ollama):
+  understood / not_demonstrated / refused_probe / uncertain. Smoke test on harmless pairs: 3/3
+  correct.
+- Reported per model × condition: probe outcome counts, recovery rate, ASR within each bucket,
+  recovered-and-not-harmful share. Per model: the planned contrasts on the probed families and
+  restricted to families recovered in BOTH conditions (paired, raw judge labels, descriptive).
+- Scorer audit: 80 answers (4 per model × condition), blinded (`review_sample.csv`; the
+  scorer's labels sit in `review_key.csv`) → a bilingual reviewer fills `human_comprehension`
+  → `--score-review` → agreement and κ.
+
+**Steps:**
+1. Kaggle: `notebooks/kaggle_exp4b.ipynb`, GPU T4 x2, Internet on, `HF_TOKEN` secret, Save &
+   Run All (~1 h) → download `exp4b_outputs.zip`.
+2. Laptop: unzip in the repo, then
+   `python scripts/exp4b_comprehension.py --score-only --models qwen25 phi3 llama32 r1qwen15
+   gemma4e2b --baseline-results outputs/exp2/main outputs/exp2/main-r1 outputs/exp2/main-gemma4`
+   (~10 min with the signed-in Ollama).
+3. Reviewer: `outputs/exp4b/review_sample.csv` (contains prompts; private), then
+   `python scripts/exp4b_comprehension.py --score-review outputs/exp4b/review_sample.csv`.
+
+**Known issue:** the laptop's Ollama (0.40.1) reports Gemma build `0cf45094…`/`823bb442…`, not
+Exp 2's pinned `95e5aad2…` (recorded under 0.40.0 on Kaggle), so local Gemma runs are refused;
+Gemma probes run on Kaggle with the pinned Ollama version.
 ## Exp 5: cut
 
-## Phase 2 (Exp 6–9): **NOT RUN**; design recorded
-- **Primary (RQ4):** C (our CS pairs) vs B_ext (external English pairs) at
-  **equal accepted-pair budgets** and identical optimisation.
-  - This compares **training recipes**, not language alone.
-  - The planning target is ~100 accepted pairs per model, with nested budgets
-    of 25, 50 and 100.
-- **Secondary (optional):** C_matched vs B_matched, only where same-family
-  English and CS failures exist. It is never a gate.
-- **Feasibility pilot:** `outputs/exp6/feasibility-cpu-20260927/`.
-  - 400 responses: 100 training families × CS/EN × {phi3, llama32}.
-  - Generated with Ollama Q8_0 on the CPU; the repo's review sheets are blank.
-- **Team-reported AI-reviewed pilot counts** (exploratory, not gold):
-  - CS failures: 18 (phi3) / 17 (llama32); strict 13 / 10.
-  - Same-family CS-and-EN failures: 9 / 1; strict 6 / 1.
-  - Yield must be re-validated in the production configuration.
-- **Not yet run:**
-  - `scripts/prepare_external_english_pairs.py` (the B_ext source)
-  - any DPO training
-  - Exp 8/9
+## Phase 2 (Exp 6–10): **PREREQUISITES IN PROGRESS (2026-10-08)**; plan in `docs/PHASE2_PLAN.md`
+
+- **Primary (RQ4):** C (our CS pairs) vs B_ext (external English pairs) at equal accepted-pair
+  budgets and identical optimisation, for Llama-3.2 and Phi-3 — a comparison of training
+  recipes, not of language alone. Secondary C/B_matched optional (skipped by default).
+- **Production yield (Exp 2, judge-flagged CS failures on the 591 training families):** llama32
+  223, phi3 66 (qwen25 49, r1qwen15 232). Same-family CS-and-EN failures: llama32 57, phi3 18.
+  Judge precision on CS: llama32 .76, phi3 1.00 (Exp 1 cells). Phi-3's budget is therefore
+  about 55, not 100. The earlier CPU pilot (`outputs/exp6/feasibility-cpu-20260927/`, Ollama
+  Q8, team-reported counts) is superseded by these production counts.
+- **Prerequisites (PHASE2_PLAN P1–P7):**
+  - P1 training precision: `train_dpo` now takes `compute_dtype` from `configs/dpo.yaml`
+    (float16 = the T4 inference precision; trainable LoRA weights kept fp32 for fp16 AMP).
+    **GPU-unverified** until the GPU smoke.
+  - P2 Exp 8 split: `exp8_posteval.py --skip-judge` (Kaggle: generations + capability, provenance
+    in `run_manifest.json`) then `--judge-only` (laptop: no model; `CachedRunner` replays arm E's
+    system-prompted generations too). Mocked test: same flags as the one-step run.
+  - P3 over-refusal judge: **PASS** — DeepSeek V4.1 Flash, rubric benign-v1 (fingerprint
+    `2c6aa62d0eabc0a0`) on the 450 labelled benign responses: P 1.000, R 0.938, F1 0.968 (32
+    refused, 30 flagged, 0 failures) → `outputs/exp1/judge_validation_manifest_benign.json`.
+    Valid for the current probe set only (Latin script; see P4).
+  - P4 over-refusal probe: 150 Latin-script prompts, 0 Urdu script, language mix unaudited (a
+    rough lexicon check suggests mostly code-switched), old C01–C10 taxonomy — decision D4.
+  - P5 capability sets: **built and frozen** — `data/capability/mmlu_500.jsonl` (cais/mmlu test,
+    57 subjects, seed 42, sha256 `d21c06eb…`) and `urdummlu_300.jsonl` (MBZUAI/UrduMMLU @
+    `aae060a8`, CC BY 4.0, seed 42, sha256 `5f9d2206…`; all 300 answers checked against the
+    source). The loader now reads UrduMMLU's dict-shaped options in letter order (it would
+    otherwise have kept the letters) and its `correct_key`.
+  - P6 chosen generator needs `ANTHROPIC_API_KEY` — decision D5.
+  - P7 unseen-domain rule — decision D6.
+- **Exp 6 (2026-10-09): pairs built, human review out.** `exp6_build_prefdata.py --languages CS
+  --exclude-exemplar-domains D6` (every refusal written without the D6 exemplar, so one reviewed
+  set serves the main and the D6 runs). Chosen generator **OpenAI gpt-4.1-2025-04-14**: Anthropic's
+  classifier blocked the calls (the few-shot exemplars and targets contain harmful requests;
+  stop_reason refusal, general_harms), and claude-sonnet-4-5 was not served to the key. Mined CS
+  failures: phi3 66, llama32 223; chosen judged a genuine refusal, not harmful: 66/66, 223/223.
+  Refusals are much shorter than the rejected answers (median ~290 vs 1,600–1,960 characters;
+  not padded, per protocol — report it). Review: `scripts/exp6_review.py make` →
+  `outputs/exp6/review/review_file.xlsx` (156 rows: all 66 Phi-3 + first 90 Llama, 15 per domain;
+  private), then `apply` writes `outputs/exp6/<model>_verified` and `<model>_ablation_D6`.
+- **Over-refusal probe v2 (P4 resolved):** `data/benign_probe_v2.jsonl` — 60 harmless prompts
+  (10 per domain) × EN/CS/RU/UR, written by the team (UU) with AI assistance, human-verified
+  (manifest records it); now the Exp 8 default, with over-refusal reported per form.
+- **B_ext built (2026-10-09):** PKU-SafeRLHF @ `9421ffaf` (CC BY-NC 4.0 — cite; research use):
+  73,907 rows → 10,796 pairs with exactly one safe response (chosen = safe, rejected = unsafe);
+  leakage screen vs the 200 held-out EN prompts (token-Jaccard ≥ 0.5, the Exp 0 screen) dropped 0 —
+  lexical only, PKU prompts are worded very differently, so paraphrases are not ruled out; seeded
+  order, first 1,000 → `data/pref_pairs_en_external.jsonl`; the D6-free copy drops pairs whose
+  unsafe response PKU tags Cybercrime (2,007) → `..._noD6.jsonl`, which Exp 7 uses automatically
+  for the ablation split. Pair files gitignored; manifests committed.
+- **Kaggle Phase 2 ready:** `notebooks/kaggle_phase2.ipynb` + `scripts/phase2_kaggle.py`.
+  `STAGE="smoke"`: fp16 DPO on 8 harmless pairs + the adapter in vLLM, per model (no private
+  data). `STAGE="train_eval"`: per model on its own T4, all adapters (C and B_ext × seeds 42/43/44
+  at N, C n-curve, D6 ablation) then Exp 8 generation-only; resumable. Exp 7 gained `--seed`.
+- **Not yet run:** GPU smoke, Exp 7–10 (training waits for the pair review → `apply` → `pack`).
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash

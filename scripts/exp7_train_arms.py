@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml  # noqa: E402
 
-from csjail.artifacts import resolve_exp0, sha256_json  # noqa: E402
+from csjail.artifacts import resolve_exp0, sha256_file, sha256_json  # noqa: E402
 from csjail.models import resolve  # noqa: E402
 from csjail.prefdata import (  # noqa: E402
     PairBuildError, assert_pairs_trainable, load_external_english, pair_counts, read_pairs,
@@ -75,7 +75,14 @@ ARMS = ("C", "B_ext", "D", "C_matched", "B_matched")
 NEEDS_NATURALNESS = ("C", "D", "C_matched")
 
 
-def select_pairs(arm: str, pdir: Path, budget: str, cfg: dict) -> list[dict]:
+def external_path(cfg: dict, excl: list[str]) -> Path:
+    """B_ext source; an unseen-domain run uses the copy without that domain (..._no<D>.jsonl,
+    scripts/prepare_external_english_pairs.py --ablation-domain), so B_ext withholds it like C."""
+    p = ROOT / cfg["prefdata"]["external_english_pairs"]
+    return p.with_name(f"{p.stem}_no{excl[0]}{p.suffix}") if excl else p
+
+
+def select_pairs(arm: str, pdir: Path, budget: str, cfg: dict, ext_path: Path | None = None) -> list[dict]:
     """Training pairs for one arm. PRIMARY comparison: C (our validated CS
     pairs) vs B_ext (external English pairs) at the SAME accepted-pair count --
     a comparison of training recipes / data sources, not of language alone.
@@ -84,7 +91,7 @@ def select_pairs(arm: str, pdir: Path, budget: str, cfg: dict) -> list[dict]:
     cs_all = lambda: take_budget(read_pairs(str(pdir / "pairs_cs_all.jsonl")), budget)  # noqa: E731
 
     def external(n: int) -> list[dict]:
-        ext = load_external_english(str(ROOT / cfg["prefdata"]["external_english_pairs"]), limit=n)
+        ext = load_external_english(str(ext_path or external_path(cfg, [])), limit=n)
         if len(ext) < n:
             raise PairBuildError(f"only {len(ext)} external English pairs for budget {n}")
         return ext
@@ -122,6 +129,8 @@ def main(argv=None) -> int:
     ap.add_argument("--naturalness-csv", default=None,
                     help="rated naturalness_sample.csv (required for C/D)")
     ap.add_argument("--out-root", default=str(ROOT / "outputs" / "models"))
+    ap.add_argument("--seed", type=int, default=None,
+                    help="training seed (default configs/dpo.yaml dpo.seed); another seed adds _s<seed> to the name")
     args = ap.parse_args(argv)
 
     cfg = yaml.safe_load((ROOT / "configs" / "dpo.yaml").read_text(encoding="utf-8"))
@@ -145,20 +154,25 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 1
 
+    ext = external_path(cfg, excl)
     try:
-        pairs = select_pairs(args.arm, pdir, args.budget, cfg)
+        pairs = select_pairs(args.arm, pdir, args.budget, cfg, ext)
         assert_pairs_trainable(pairs, split, model=args.model, exclude_domains=excl)
     except (PairBuildError, ValueError, FileNotFoundError) as e:
         print(f"FAIL: {e}", file=sys.stderr)
         return 1
 
+    dpo_cfg = dict(cfg["dpo"])
+    seed_suffix = ""
+    if args.seed is not None and args.seed != dpo_cfg.get("seed"):
+        dpo_cfg["seed"], seed_suffix = args.seed, f"_s{args.seed}"
     name = f"{args.arm}_{args.model}" + (f"_n{args.budget}" if args.budget != "all" else "") \
-        + (f"_{args.tag}" if args.tag else "")
+        + seed_suffix + (f"_{args.tag}" if args.tag else "")
     out_dir = Path(args.out_root) / name
-    print(f"[exp7] arm={args.arm} model={args.model} n={len(pairs)} -> {out_dir}")
+    print(f"[exp7] arm={args.arm} model={args.model} n={len(pairs)} seed={dpo_cfg.get('seed')} -> {out_dir}")
     from csjail.train_dpo import train_dpo  # lazy (GPU deps)
 
-    train_dpo(spec.hf_id, pairs, cfg["dpo"], str(out_dir), revision=spec.revision,
+    train_dpo(spec.hf_id, pairs, dpo_cfg, str(out_dir), revision=spec.revision,
               manifest_extra={
                   "arm": args.arm, "model_key": args.model, "budget": args.budget,
                   "split_id": art.split_id, "split_scheme": split["meta"]["scheme"],
@@ -167,7 +181,9 @@ def main(argv=None) -> int:
                   "pair_families": [p.get("base_id") for p in pairs],
                   "pair_lineage_sha256": sha256_json([p.get("rejected_lineage") for p in pairs]),
                   "pair_counts": pair_counts(pairs), "naturalness_gate": nat,
-                  "d_budget": cfg.get("d_budget") if args.arm == "D" else None})
+                  "d_budget": cfg.get("d_budget") if args.arm == "D" else None,
+                  "external_pairs": (str(ext.relative_to(ROOT)) if args.arm in ("B_ext", "D") else None),
+                  "external_pairs_sha256": (sha256_file(ext) if args.arm in ("B_ext", "D") else None)})
     print(f"[exp7] DONE -> {out_dir}")
     return 0
 

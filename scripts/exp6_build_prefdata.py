@@ -48,10 +48,11 @@ from csjail.prefdata import (  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def build_language(results, split, rows_by_id, *, model, lang, excl, gen_cfg, judge, seed, tol):
+def build_language(results, split, rows_by_id, *, model, lang, excl, gen_cfg, judge, seed, tol,
+                   exemplar_excl=()):
     mined, mine_rep = mine_rejected(results, split, model=model, condition=lang,
                                     exclude_domains=excl)
-    exemplars = load_exemplars(lang, exclude_domains=excl)
+    exemplars = load_exemplars(lang, exclude_domains=sorted(set(excl) | set(exemplar_excl)))
     prompts = [rows_by_id[(m["base_id"], lang)] for m in mined]
     cands = ChosenGenerator(gen_cfg, language=lang).generate_sync(prompts, exemplars) if mined else []
     js = judge.score_sync([(p, c or "") for p, c in zip(prompts, cands)]) if mined else []
@@ -80,6 +81,9 @@ def main(argv=None) -> int:
     ap.add_argument("--judge-manifest",
                     default=str(ROOT / "outputs" / "exp1" / "judge_validation_manifest.json"))
     ap.add_argument("--languages", nargs="+", default=["CS", "EN"])
+    ap.add_argument("--exclude-exemplar-domains", nargs="*", default=[],
+                    help="also drop these domains' few-shot refusal exemplars (e.g. the Exp 9 ablation "
+                         "domain, so one reviewed chosen set serves the main and the ablation runs)")
     ap.add_argument("--out-dir", default=None, help="default outputs/exp6/<model>[_<tag>]")
     ap.add_argument("--allow-debug", action="store_true")
     args = ap.parse_args(argv)
@@ -108,6 +112,7 @@ def main(argv=None) -> int:
         per_lang[lang], reports[lang] = build_language(
             results, art.split, rows_by_id, model=args.model, lang=lang, excl=excl,
             gen_cfg=gen_cfg, judge=judge, seed=int(cfg["selection_seed"]),
+            exemplar_excl=args.exclude_exemplar_domains,
             tol=float(cfg["length_balance_tolerance"]))
         write_pairs(str(out_dir / f"pairs_{lang.lower()}_all.jsonl"), per_lang[lang])
         print(f"[exp6] {args.model}/{lang}: {reports[lang]['mining']['counts']} -> "
@@ -136,7 +141,8 @@ def main(argv=None) -> int:
         "kind": "pairs_manifest", "created_utc": datetime.now(timezone.utc).isoformat(),
         "model": args.model, "tag": args.tag, "dataset_version": art.dataset_version,
         "split_id": art.split_id, "split_scheme": art.split["meta"]["scheme"],
-        "excluded_domains": excl, "results_models_ignored": other,
+        "excluded_domains": excl, "excluded_exemplar_domains": sorted(set(excl) | set(args.exclude_exemplar_domains)),
+        "results_models_ignored": other,
         "judge_fingerprint": judge.fingerprint, "chosen_generator": gen_cfg.__dict__,
         "target_pairs_cap": cfg["target_pairs"], "per_language": reports,
         "budgets": {lang: supported_budgets(len(p), cfg["n_curve"]) for lang, p in per_lang.items()},

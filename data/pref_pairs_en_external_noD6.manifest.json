@@ -1,0 +1,24 @@
+{
+  "source": "PKU-Alignment/PKU-SafeRLHF",
+  "revision": "9421ffafec3fa40a1f1a7d567b4d525079477ecb",
+  "licence": "CC BY-NC 4.0",
+  "split": "train",
+  "seed": 42,
+  "rows": 73907,
+  "pairs_exactly_one_safe": 10796,
+  "rule": "exactly one response labelled safe; chosen=safe, rejected=unsafe",
+  "leakage_screen": {
+    "method": "token-Jaccard vs held-out EN prompts (csjail.qa.normalize_for_dup)",
+    "threshold": 0.5,
+    "n_heldout_prompts": 200,
+    "dropped": 0
+  },
+  "created_utc": "2026-10-09T06:37:54.943755+00:00",
+  "ablation_domain": "D6",
+  "excluded_pku_categories": [
+    "Cybercrime"
+  ],
+  "dropped_for_domain": 2007,
+  "n": 1000,
+  "sha256": "1c8e53bed968459dab686ecb3ad53ee2d3741f83bdb15c92651e8310f2c29148"
+}
