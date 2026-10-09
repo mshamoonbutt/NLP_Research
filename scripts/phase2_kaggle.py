@@ -3,7 +3,9 @@
 
     python scripts/phase2_kaggle.py smoke --model phi3 --step train     # GPU: DPO on 8 harmless pairs
     python scripts/phase2_kaggle.py smoke --model phi3 --step serve     # GPU: that adapter in vLLM
-    python scripts/phase2_kaggle.py run --model phi3                    # GPU: all adapters + Exp 8 generation
+    python scripts/phase2_kaggle.py run --model phi3 --phase gate --epochs 2   # GPU: seed-42 C/B_ext + learning check
+    python scripts/phase2_kaggle.py decide --models phi3 llama32 --epochs 2      # exit 0 = all passed
+    python scripts/phase2_kaggle.py run --model phi3 --phase rest --epochs 2   # GPU: the rest + Exp 8 generation
     python scripts/phase2_kaggle.py pack                                # laptop: private upload bundle
 
 smoke (PROTOCOL §9): trains a LoRA-DPO adapter on 8 harmless synthetic pairs with the production
@@ -28,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import statistics
 import subprocess
 import sys
 import zipfile
@@ -116,20 +119,59 @@ def plan(model: str, n: int, nab: int, seeds: list[int], ncurve: list[int]):
     return jobs, evals
 
 
-def cmd_run(model: str, seeds: list[int], ncurve: list[int]) -> int:
+def learning_check(manifest: dict, epochs: int, lc: dict) -> dict:
+    """The declared check (configs/dpo.yaml learning_check) on one adapter's TRAINING log: mean
+    loss and mean rewards/accuracies over the steps of the final epoch."""
+    steps = [h for h in manifest.get("log_history", []) if "loss" in h]
+    final = [h for h in steps if h.get("epoch", 0) > epochs - 1] or steps[-1:]
+    acc = [h["rewards/accuracies"] for h in final if "rewards/accuracies" in h]
+    loss = statistics.fmean(h["loss"] for h in final) if final else None
+    acc = statistics.fmean(acc) if acc else None
+    ok = (loss is not None and acc is not None and loss <= lc["max_final_epoch_loss"]
+          and acc >= lc["min_final_epoch_reward_accuracy"])
+    return {"epochs": epochs, "final_epoch_loss": loss, "final_epoch_reward_accuracy": acc,
+            "n_final_steps": len(final), "pass": ok}
+
+
+def trained_at(name: str, epochs: int) -> bool:
+    tm = ROOT / "outputs" / "models" / name / "training_manifest.json"
+    return tm.exists() and json.loads(tm.read_text(encoding="utf-8"))["dpo_config"].get("epochs") == epochs
+
+
+def cmd_run(model: str, seeds: list[int], ncurve: list[int], phase: str, epochs: int) -> int:
+    """phase gate: the seed-42 C and B_ext adapters + the learning check (outputs/phase2_gate/
+    <model>_e<epochs>.json); phase rest: every other adapter and all Exp 8 generations at `epochs`.
+    An adapter or evaluation made at a different epochs value is redone, never reused."""
+    import yaml
+
     summ = json.loads((ROOT / "outputs/exp6/review/verified_summary.json").read_text(encoding="utf-8"))
-    jobs, evals = plan(model, summ["budget_main"][model], summ["budget_ablation"][model], seeds, ncurve)
+    n = summ["budget_main"][model]
+    jobs, evals = plan(model, n, summ["budget_ablation"][model], seeds, ncurve)
+    gate = [f"C_{model}_n{n}", f"B_ext_{model}_n{n}"]
     for name, args in jobs:
-        if (ROOT / "outputs" / "models" / name / "training_manifest.json").exists():
-            print(f"[run] skip trained {name}", flush=True)
+        if phase == "gate" and name not in gate:
             continue
-        sh([sys.executable, "scripts/exp7_train_arms.py", "--model", model] + args)
+        if trained_at(name, epochs):
+            print(f"[run] skip trained {name} (epochs {epochs})", flush=True)
+            continue
+        sh([sys.executable, "scripts/exp7_train_arms.py", "--model", model, "--epochs", str(epochs)] + args)
+    if phase == "gate":
+        lc = yaml.safe_load((ROOT / "configs" / "dpo.yaml").read_text(encoding="utf-8"))["learning_check"]
+        res = {name: learning_check(json.loads((ROOT / "outputs" / "models" / name / "training_manifest.json")
+                                               .read_text(encoding="utf-8")), epochs, lc) for name in gate}
+        out = ROOT / "outputs" / "phase2_gate" / f"{model}_e{epochs}.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps({"model": model, "epochs": epochs, "criteria": lc, "adapters": res,
+                                   "pass": all(r["pass"] for r in res.values())}, indent=2), encoding="utf-8")
+        print(f"[gate] {model} epochs {epochs}: {res}", flush=True)
+        return 0
 
     first = ROOT / "outputs" / "exp8" / f"{evals[0][0]}__{model}"
     for tag, arms, split in evals:
         out = ROOT / "outputs" / "exp8" / f"{tag}__{model}"
-        pm = out / "run_manifest.json"
-        if pm.exists() and set(arms) <= set(json.loads(pm.read_text(encoding="utf-8")).get("arms", [])):
+        pm, meta = out / "run_manifest.json", out / "phase2_meta.json"
+        if (pm.exists() and meta.exists() and json.loads(meta.read_text(encoding="utf-8")).get("epochs") == epochs
+                and set(arms) <= set(json.loads(pm.read_text(encoding="utf-8")).get("arms", []))):
             print(f"[run] skip evaluated {out.name}", flush=True)
             continue
         if out != first and (first / "generations.jsonl").exists():   # reuse arm A's cached generations
@@ -139,8 +181,22 @@ def cmd_run(model: str, seeds: list[int], ncurve: list[int]) -> int:
                     shutil.copy2(first / rel, out / rel)
         sh([sys.executable, "scripts/exp8_posteval.py", "--models", model, "--arms", *arms, "--tag", tag,
             "--skip-judge", "--out-dir", str(out)] + (["--split-manifest", split] if split else []))
+        meta.write_text(json.dumps({"epochs": epochs}), encoding="utf-8")
     print(f"[run] {model} DONE", flush=True)
     return 0
+
+
+def cmd_decide(models: list[str], epochs: int) -> int:
+    """Exit 0 when every model's gate at `epochs` passed, 10 otherwise; records the decision."""
+    gates = {m: json.loads((ROOT / "outputs" / "phase2_gate" / f"{m}_e{epochs}.json").read_text(encoding="utf-8"))
+             for m in models}
+    ok = all(g["pass"] for g in gates.values())
+    (ROOT / "outputs" / "phase2_gate" / "decision.json").write_text(json.dumps(
+        {"epochs": epochs, "all_pass": ok, "gates": gates}, indent=2), encoding="utf-8")
+    print(f"[decide] epochs {epochs}: {'PASS' if ok else 'FAIL'} "
+          + str({m: {a: (r['final_epoch_loss'], r['final_epoch_reward_accuracy']) for a, r in g['adapters'].items()}
+                 for m, g in gates.items()}), flush=True)
+    return 0 if ok else 10
 
 
 def cmd_pack() -> int:
@@ -171,12 +227,19 @@ def main(argv=None) -> int:
     r.add_argument("--model", required=True)
     r.add_argument("--seeds", nargs="+", type=int, default=[42, 43, 44])
     r.add_argument("--ncurve", nargs="*", type=int, default=[25, 50])
+    r.add_argument("--phase", required=True, choices=["gate", "rest"])
+    r.add_argument("--epochs", required=True, type=int)
+    d = sub.add_parser("decide")
+    d.add_argument("--models", nargs="+", required=True)
+    d.add_argument("--epochs", required=True, type=int)
     sub.add_parser("pack")
     args = ap.parse_args(argv)
     if args.cmd == "smoke":
         return cmd_smoke(args.model, args.step)
     if args.cmd == "run":
-        return cmd_run(args.model, args.seeds, args.ncurve)
+        return cmd_run(args.model, args.seeds, args.ncurve, args.phase, args.epochs)
+    if args.cmd == "decide":
+        return cmd_decide(args.models, args.epochs)
     return cmd_pack()
 
 

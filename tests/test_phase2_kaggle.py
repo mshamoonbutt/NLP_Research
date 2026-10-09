@@ -31,3 +31,17 @@ def test_every_evaluated_arm_has_its_adapter():
     jobs, _ = pk.plan("phi3", 60, 48, [42, 43], [25])
     b43 = dict(jobs)["B_ext_phi3_n60_s43"]
     assert b43[b43.index("--seed") + 1] == "43" and "--naturalness-csv" not in b43
+
+
+def test_learning_check_uses_the_final_epoch_only():
+    pk = _load()
+    lc = {"max_final_epoch_loss": 0.60, "min_final_epoch_reward_accuracy": 0.75}
+    learned = {"log_history": [
+        {"loss": 0.69, "rewards/accuracies": 0.5, "epoch": 0.5}, {"loss": 0.66, "rewards/accuracies": 0.6, "epoch": 1.0},
+        {"loss": 0.55, "rewards/accuracies": 0.8, "epoch": 1.5}, {"loss": 0.50, "rewards/accuracies": 0.9, "epoch": 2.0},
+        {"train_loss": 0.6, "epoch": 2.0}]}
+    r = pk.learning_check(learned, 2, lc)
+    assert r["pass"] and r["n_final_steps"] == 2 and abs(r["final_epoch_loss"] - 0.525) < 1e-9
+    flat = {"log_history": [{"loss": 0.69, "rewards/accuracies": 0.5, "epoch": e} for e in (0.5, 1.0, 1.5, 2.0)]}
+    assert not pk.learning_check(flat, 2, lc)["pass"]
+    assert not pk.learning_check({"log_history": []}, 2, lc)["pass"]       # nothing logged is never a pass

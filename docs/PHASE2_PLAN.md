@@ -102,6 +102,7 @@ pinned stack), Qwen (49 failures).
 | D5 | Chosen generator | `ANTHROPIC_API_KEY` for Claude Sonnet 4.5, or another model distinct from the judge | **changed 2026-10-09:** OpenAI gpt-4.1-2025-04-14 — Anthropic's classifier blocked the calls (harmful requests in every prompt) and claude-sonnet-4-5 was not served to the key |
 | D6 | Unseen-domain rule | Seeded draw recorded before drawing | **done:** rule committed in 5b4d2e7 (`random.Random(791)` over D1–D6), drawn **D6** in 141cfe4; split `1af335defc251d52` |
 | D7 | Optional arms | Run E; skip D and matched arms | recommended |
+| D8 | Learning check (small budgets ≈ 5–8 optimizer steps) | Seed-42 C and B_ext of both models judged on TRAINING logs: final-epoch loss ≤ 0.60 and reward accuracy ≥ 0.75; else retrain all arms at 4, then 6 epochs | **agreed 2026-10-09, declared in `configs/dpo.yaml` before any training on real pairs; automatic in the notebook** |
 
 ## Schedule (~3–4 days; critical path: reviewer, API key, Kaggle quota)
 
@@ -131,3 +132,11 @@ roughly halves it.
 - **Why 50–60 is enough:** every arm answers the same items, so arms are compared pair by pair;
   with 200–240 items per arm a 10-point over-refusal increase (the reporting flag) is
   detectable; per-form rates (50–60 each) are descriptive.
+
+## Power of the primary test (simulated 2026-10-09)
+
+C vs B_ext on CS, 200 held-out families, paired McNemar at α = .025 (Holm's first step), family-difficulty
+model: Llama-like C .15 vs B_ext .30 → power 0.97; .20 vs .30 → 0.61; .25 vs .30 → 0.13. Phi-3-like (near the
+floor) .04 vs .08 → 0.25; .03 vs .10 → 0.73. The pair budget does not change this power (the test set is fixed);
+it changes how large the effect can be. Differences under ~10 points will mostly go undetected: report CIs,
+never equivalence.

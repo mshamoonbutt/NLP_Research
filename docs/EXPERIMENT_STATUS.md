@@ -756,6 +756,11 @@ Gemma probes run on Kaggle with the pinned Ollama version.
   Note for Exp 2: the judge was right on 14/14 flagged phi3 CS answers in Exp 1 but on 44/66 here;
   at 0.67 precision phi3's corrected CS ASR would be ~0.08 rather than 0.12 (llama32 consistent:
   0.76 vs 0.73). Small Exp 1 sample or a stricter standard here; phi3 had no Exp 3 finding.
+- **Learning check (agreed 2026-10-09, before any training on real pairs):** `configs/dpo.yaml`
+  `learning_check` — the seed-42 C and B_ext adapters of both models are judged on their training logs
+  (final-epoch loss ≤ 0.60, reward accuracy ≥ 0.75); if any fails, all arms retrain at 4, then 6 epochs.
+  Built into the notebook (`phase2_kaggle.py run --phase gate|rest --epochs`, `decide`); results in
+  `outputs/phase2_gate/`.
 - **Over-refusal probe v2 (P4 resolved):** `data/benign_probe_v2.jsonl` — 60 harmless prompts
   (10 per domain) × EN/CS/RU/UR, written by the team (UU) with AI assistance, human-verified
   (manifest records it); now the Exp 8 default, with over-refusal reported per form.

@@ -84,6 +84,18 @@ prefdata:
 # Exp 8 improvement targets are REPORTING FLAGS, not pass/fail gates, and
 # never grounds for hiding or discarding results (null/negative results are
 # reported with uncertainty). Undefined quantities are NA, not "met".
+# Learning check (declared 2026-10-09, agreed by the team, BEFORE any training on real pairs).
+# Budgets of 39/60 pairs are only ~5-8 optimizer steps, so the seed-42 C and B_ext adapters of
+# both models are trained first and judged on their TRAINING logs only (never test results):
+# over the final epoch, mean DPO loss <= max_final_epoch_loss (ln 2 = 0.693 at the start) AND
+# mean rewards/accuracies >= min_final_epoch_reward_accuracy. If any of the four fails, every
+# arm of every model is retrained at the next epochs value; the first value where all pass is
+# used for all Phase 2 adapters (the last value is used, and reported, if none passes).
+learning_check:
+  epochs_ladder: [2, 4, 6]
+  max_final_epoch_loss: 0.60
+  min_final_epoch_reward_accuracy: 0.75
+
 # Exp 9 unseen-domain ablation. Declared 2026-10-09, BEFORE the draw and before any Phase 2
 # result. Phase 1 per-domain results had already been seen, so the domain is drawn by this
 # fixed rule rather than chosen: random.Random(seed).choice(domains); all six are eligible.
