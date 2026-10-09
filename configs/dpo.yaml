@@ -72,7 +72,7 @@ prefdata:
   n_curve: [25, 50, 100]           # nested prefixes; only budgets <= available pairs run
   chosen_generator:                # MUST differ from the judge (configs/judge.yaml)
     provider: anthropic
-    model: claude-sonnet-4-5
+    model: claude-sonnet-4-6       # 2026-10-09: claude-sonnet-4-5 not served to the project key (404); its direct successor
     temperature: 0.7
     max_tokens: 300
   # B_ext source, built by scripts/prepare_external_english_pairs.py (local, gitignored)
