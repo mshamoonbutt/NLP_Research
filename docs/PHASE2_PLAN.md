@@ -33,7 +33,7 @@ pinned stack), Qwen (49 failures).
 
 | # | Blocker | Fix | Status (2026-10-08) |
 |---|---|---|---|
-| P1 | `train_dpo` uses bf16; Kaggle T4s have no bf16 | fp16 compute on T4 (= inference precision); GPU smoke (PROTOCOL §9, never run) | code done (`compute_dtype: float16`); GPU smoke pending |
+| P1 | `train_dpo` uses bf16; Kaggle T4s have no bf16 | fp16 compute on T4 (= inference precision); GPU smoke (PROTOCOL §9, never run) | **done:** GPU smoke passed on Kaggle T4 (fp16 training + adapter in vLLM, both models) |
 | P2 | Exp 8 judges inside the GPU run; Kaggle cannot reach the Ollama judge | Split: generate on Kaggle, judge on the laptop (as Exp 2) | done (`--skip-judge` / `--judge-only`, tested) |
 | P3 | Over-refusal (benign) judge not checked with Flash; Exp 8 needs its manifest | Run Flash on the 450 labelled benign responses | **PASS**: P 1.000, R 0.938, F1 0.968 |
 | P4 | Over-refusal probe: 150 Latin-script prompts, 0 Urdu script, language mix unaudited, old C01–C10 taxonomy | Decision D4 | **done:** `data/benign_probe_v2.jsonl` (60 × 4 forms) |

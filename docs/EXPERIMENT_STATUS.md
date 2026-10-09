@@ -757,7 +757,13 @@ Gemma probes run on Kaggle with the pinned Ollama version.
   `STAGE="smoke"`: fp16 DPO on 8 harmless pairs + the adapter in vLLM, per model (no private
   data). `STAGE="train_eval"`: per model on its own T4, all adapters (C and B_ext × seeds 42/43/44
   at N, C n-curve, D6 ablation) then Exp 8 generation-only; resumable. Exp 7 gained `--seed`.
-- **Not yet run:** GPU smoke, Exp 7–10 (training waits for the pair review → `apply` → `pack`).
+- **GPU smoke PASSED (Kaggle T4, 2026-10-09; `outputs/phase2_smoke/`):** both models trained a LoRA-DPO
+  adapter in fp16 (P1 verified) with the pinned stack (torch 2.4.0, transformers 4.46.3, trl 0.12.2,
+  peft 0.13.2, bitsandbytes 0.44.1; no pin mismatches), LoRA modules resolved (Phi-3 fused
+  `qkv_proj` / `gate_up_proj`; Llama q/k/v/o/gate/up/down), finite loss (ln 2 at initialisation, as
+  expected), and the adapter served through vLLM. Training now logs every step (a 60-pair budget is
+  ~8 optimizer steps): check the loss falls below ln 2 and reward accuracy rises in the real runs.
+- **Not yet run:** Exp 7–10 (training waits for the pair review → `apply` → `pack`).
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash

@@ -154,7 +154,9 @@ def train_dpo(base_hf_id: str, pairs: list[dict], dpo_config: dict[str, Any], ou
         max_length=int(dpo_config.get("max_length", 1024)),
         max_prompt_length=int(dpo_config.get("max_prompt_length", 512)),
         bf16=dtype is torch.bfloat16, fp16=dtype is torch.float16,
-        gradient_checkpointing=True, logging_steps=10, save_strategy="no",
+        # every step: a ~60-pair budget is ~8 optimizer steps, and the per-step loss and reward
+        # margins in the manifest are the only evidence the adapter learned anything
+        gradient_checkpointing=True, logging_steps=1, save_strategy="no",
         report_to=[], seed=int(dpo_config.get("seed", 42)))
     trainer = DPOTrainer(model=model, args=args, train_dataset=train_ds, processing_class=tok,
                          peft_config=peft_config)

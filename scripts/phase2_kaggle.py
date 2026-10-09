@@ -70,8 +70,10 @@ def cmd_smoke(model: str, step: str) -> int:
         train_dpo(spec.hf_id, pairs, cfg, str(out / "adapter"), revision=spec.revision,
                   manifest_extra={"smoke": True, "model_key": model})
         man = json.loads((out / "adapter" / "training_manifest.json").read_text(encoding="utf-8"))
-        losses = [h["loss"] for h in man["log_history"] if "loss" in h]
-        res = {"step": "train", "ok": all(x == x for x in losses), "compute_dtype": cfg.get("compute_dtype"),
+        losses = [h.get("loss", h.get("train_loss")) for h in man["log_history"]
+                  if "loss" in h or "train_loss" in h]
+        res = {"step": "train", "ok": bool(losses) and all(x == x and abs(x) != float("inf") for x in losses),
+               "compute_dtype": cfg.get("compute_dtype"),
                "adapted_modules": man["adapted_modules"], "trainable_params": man["trainable_params"],
                "losses": losses, "pins_mismatched": man["pins_mismatched"]}
     else:

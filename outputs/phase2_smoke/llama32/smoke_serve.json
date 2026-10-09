@@ -1,0 +1,9 @@
+{
+  "step": "serve",
+  "ok": true,
+  "n_chars": [
+    200,
+    224
+  ],
+  "adapter_sha256": "3cc0b1d43f1422c164ee0ab15955b701265884228688c810335265417ffc29b3"
+}

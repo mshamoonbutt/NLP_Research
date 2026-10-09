@@ -1,0 +1,14 @@
+{
+  "step": "train",
+  "ok": true,
+  "compute_dtype": "float16",
+  "adapted_modules": [
+    "down_proj",
+    "gate_up_proj",
+    "o_proj",
+    "qkv_proj"
+  ],
+  "trainable_params": 25165824,
+  "losses": [],
+  "pins_mismatched": {}
+}
