@@ -746,7 +746,18 @@ Gemma probes run on Kaggle with the pinned Ollama version.
 - **Over-refusal probe v2 (P4 resolved):** `data/benign_probe_v2.jsonl` — 60 harmless prompts
   (10 per domain) × EN/CS/RU/UR, written by the team (UU) with AI assistance, human-verified
   (manifest records it); now the Exp 8 default, with over-refusal reported per form.
-- **Not yet run:** `prepare_external_english_pairs.py`, GPU smoke, Exp 7–10.
+- **B_ext built (2026-10-09):** PKU-SafeRLHF @ `9421ffaf` (CC BY-NC 4.0 — cite; research use):
+  73,907 rows → 10,796 pairs with exactly one safe response (chosen = safe, rejected = unsafe);
+  leakage screen vs the 200 held-out EN prompts (token-Jaccard ≥ 0.5, the Exp 0 screen) dropped 0 —
+  lexical only, PKU prompts are worded very differently, so paraphrases are not ruled out; seeded
+  order, first 1,000 → `data/pref_pairs_en_external.jsonl`; the D6-free copy drops pairs whose
+  unsafe response PKU tags Cybercrime (2,007) → `..._noD6.jsonl`, which Exp 7 uses automatically
+  for the ablation split. Pair files gitignored; manifests committed.
+- **Kaggle Phase 2 ready:** `notebooks/kaggle_phase2.ipynb` + `scripts/phase2_kaggle.py`.
+  `STAGE="smoke"`: fp16 DPO on 8 harmless pairs + the adapter in vLLM, per model (no private
+  data). `STAGE="train_eval"`: per model on its own T4, all adapters (C and B_ext × seeds 42/43/44
+  at N, C n-curve, D6 ablation) then Exp 8 generation-only; resumable. Exp 7 gained `--seed`.
+- **Not yet run:** GPU smoke, Exp 7–10 (training waits for the pair review → `apply` → `pack`).
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash
