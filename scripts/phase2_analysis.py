@@ -232,6 +232,15 @@ def main(argv=None) -> int:
                         comps.append({"kind": ("overrefusal_vs_A" if probe else "vs_A"), "model": model,
                                       "comparison": f"{a}-A", "condition": cond,
                                       **ctx.compare(maps[a], maps["A"], model, cond, probe)})
+            if probe:   # all four forms: each harmless prompt's refusal averaged over its forms (and seeds)
+                maps = {a: pooled([arm_map(a, c, True) for c in CONDITIONS]) for a in arms}
+                for a in arms:
+                    rates.append({"kind": "overrefusal", "model": model, "arm": a, "condition": "ALL", "budget": n,
+                                  "pooled_seeds": len(main_tags) if a in ("C", "B_ext") else 1,
+                                  **ctx.rate(maps[a], model, "ALL", True)})
+                    if a != "A":
+                        comps.append({"kind": "overrefusal_vs_A", "model": model, "comparison": f"{a}-A",
+                                      "condition": "ALL", **ctx.compare(maps[a], maps["A"], model, "ALL", True)})
 
         for b in [x for x in NCURVE if x < n] + [n]:
             tag = f"n{b}"
