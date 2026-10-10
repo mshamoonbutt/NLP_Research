@@ -1,0 +1,30 @@
+{
+  "model": "phi3",
+  "epochs": 2,
+  "criteria": {
+    "epochs_ladder": [
+      2,
+      4,
+      6
+    ],
+    "max_final_epoch_loss": 0.6,
+    "min_final_epoch_reward_accuracy": 0.75
+  },
+  "adapters": {
+    "B_ext_phi3_n39": {
+      "epochs": 2,
+      "final_epoch_loss": 0.6931,
+      "final_epoch_reward_accuracy": 0.0,
+      "n_final_steps": 2,
+      "pass": false
+    },
+    "C_phi3_n39": {
+      "epochs": 2,
+      "final_epoch_loss": 0.6931,
+      "final_epoch_reward_accuracy": 0.0,
+      "n_final_steps": 2,
+      "pass": false
+    }
+  },
+  "pass": false
+}

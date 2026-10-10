@@ -1,0 +1,30 @@
+{
+  "model": "llama32",
+  "epochs": 2,
+  "criteria": {
+    "epochs_ladder": [
+      2,
+      4,
+      6
+    ],
+    "max_final_epoch_loss": 0.6,
+    "min_final_epoch_reward_accuracy": 0.75
+  },
+  "adapters": {
+    "B_ext_llama32_n60": {
+      "epochs": 2,
+      "final_epoch_loss": 0.6866,
+      "final_epoch_reward_accuracy": 0.22916666666666666,
+      "n_final_steps": 3,
+      "pass": false
+    },
+    "C_llama32_n60": {
+      "epochs": 2,
+      "final_epoch_loss": 0.6930999999999999,
+      "final_epoch_reward_accuracy": 0.0,
+      "n_final_steps": 3,
+      "pass": false
+    }
+  },
+  "pass": false
+}

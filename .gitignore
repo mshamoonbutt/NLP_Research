@@ -63,6 +63,7 @@ outputs/exp6/**/*.jsonl
 outputs/exp6/**/*.csv
 outputs/exp8/
 outputs/models/
+outputs/models_e2/
 
 # Secrets
 .env

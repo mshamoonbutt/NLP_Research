@@ -1,0 +1,66 @@
+{
+  "epochs": 4,
+  "all_pass": true,
+  "gates": {
+    "phi3": {
+      "model": "phi3",
+      "epochs": 4,
+      "criteria": {
+        "epochs_ladder": [
+          2,
+          4,
+          6
+        ],
+        "max_final_epoch_loss": 0.6,
+        "min_final_epoch_reward_accuracy": 0.75
+      },
+      "adapters": {
+        "B_ext_phi3_n39": {
+          "epochs": 4,
+          "final_epoch_loss": 0.3827,
+          "final_epoch_reward_accuracy": 0.9375,
+          "n_final_steps": 1,
+          "pass": true
+        },
+        "C_phi3_n39": {
+          "epochs": 4,
+          "final_epoch_loss": 0.0611,
+          "final_epoch_reward_accuracy": 1.0,
+          "n_final_steps": 1,
+          "pass": true
+        }
+      },
+      "pass": true
+    },
+    "llama32": {
+      "model": "llama32",
+      "epochs": 4,
+      "criteria": {
+        "epochs_ladder": [
+          2,
+          4,
+          6
+        ],
+        "max_final_epoch_loss": 0.6,
+        "min_final_epoch_reward_accuracy": 0.75
+      },
+      "adapters": {
+        "B_ext_llama32_n60": {
+          "epochs": 4,
+          "final_epoch_loss": 0.30565,
+          "final_epoch_reward_accuracy": 0.96875,
+          "n_final_steps": 2,
+          "pass": true
+        },
+        "C_llama32_n60": {
+          "epochs": 4,
+          "final_epoch_loss": 0.0009,
+          "final_epoch_reward_accuracy": 1.0,
+          "n_final_steps": 2,
+          "pass": true
+        }
+      },
+      "pass": true
+    }
+  }
+}
