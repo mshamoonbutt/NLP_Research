@@ -7,6 +7,7 @@
     python scripts/phase2_kaggle.py decide --models phi3 llama32 --epochs 2      # exit 0 = all passed
     python scripts/phase2_kaggle.py run --model phi3 --phase rest --epochs 2   # GPU: the rest + Exp 8 generation
     python scripts/phase2_kaggle.py pack                                # laptop: private upload bundle
+    python scripts/phase2_kaggle.py judge                               # laptop: judge every Exp 8 folder
 
 smoke (PROTOCOL §9): trains a LoRA-DPO adapter on 8 harmless synthetic pairs with the production
 config (fp16 compute on a T4, resolved LoRA modules) for one epoch, then serves it through vLLM;
@@ -237,6 +238,25 @@ def cmd_stage(search: Path) -> int:
     return 0
 
 
+def cmd_judge(models: list[str], seeds: list[int], ncurve: list[int]) -> int:
+    """Laptop: judge every Exp 8 generation folder (exp8_posteval --judge-only; resumable, each
+    folder caches its judgments). Arm A is identical in every folder, so the first folder's
+    judgment cache is copied into the others first and A is judged once per model."""
+    summ = json.loads((ROOT / "outputs/exp6/review/verified_summary.json").read_text(encoding="utf-8"))
+    for model in models:
+        _, evals = plan(model, summ["budget_main"][model], summ["budget_ablation"][model], seeds, ncurve)
+        first = ROOT / "outputs" / "exp8" / f"{evals[0][0]}__{model}"
+        for tag, arms, split in evals:
+            out = ROOT / "outputs" / "exp8" / f"{tag}__{model}"
+            for rel in ("judgments.jsonl", "benign/judgments.jsonl"):
+                if out != first and (first / rel).exists() and not (out / rel).exists():
+                    shutil.copy2(first / rel, out / rel)
+            sh([sys.executable, "scripts/exp8_posteval.py", "--judge-only", "--models", model, "--arms", *arms,
+                "--tag", tag, "--out-dir", str(out)] + (["--split-manifest", split] if split else []))
+    print(f"[judge] all Exp 8 folders judged for {models}", flush=True)
+    return 0
+
+
 def cmd_pack() -> int:
     files = [ROOT / f for f in bundle_files()]
     missing = [str(f) for f in files if not f.exists()]
@@ -267,6 +287,10 @@ def main(argv=None) -> int:
     d.add_argument("--models", nargs="+", required=True)
     d.add_argument("--epochs", required=True, type=int)
     sub.add_parser("pack")
+    j = sub.add_parser("judge")
+    j.add_argument("--models", nargs="+", default=["phi3", "llama32"])
+    j.add_argument("--seeds", nargs="+", type=int, default=[42, 43, 44])
+    j.add_argument("--ncurve", nargs="*", type=int, default=[25, 50])
     st = sub.add_parser("stage")
     st.add_argument("--search", default="/kaggle/input")
     args = ap.parse_args(argv)
@@ -278,6 +302,8 @@ def main(argv=None) -> int:
         return cmd_run(args.model, args.seeds, args.ncurve, args.phase, args.epochs)
     if args.cmd == "decide":
         return cmd_decide(args.models, args.epochs)
+    if args.cmd == "judge":
+        return cmd_judge(args.models, args.seeds, args.ncurve)
     return cmd_pack()
 
 

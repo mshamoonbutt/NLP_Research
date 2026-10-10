@@ -102,7 +102,15 @@ pinned stack), Qwen (49 failures).
 | D5 | Chosen generator | `ANTHROPIC_API_KEY` for Claude Sonnet 4.5, or another model distinct from the judge | **changed 2026-10-09:** OpenAI gpt-4.1-2025-04-14 — Anthropic's classifier blocked the calls (harmful requests in every prompt) and claude-sonnet-4-5 was not served to the key |
 | D6 | Unseen-domain rule | Seeded draw recorded before drawing | **done:** rule committed in 5b4d2e7 (`random.Random(791)` over D1–D6), drawn **D6** in 141cfe4; split `1af335defc251d52` |
 | D7 | Optional arms | Run E; skip D and matched arms | recommended |
-| D8 | Learning check (small budgets ≈ 5–8 optimizer steps) | Seed-42 C and B_ext of both models judged on TRAINING logs: final-epoch loss ≤ 0.60 and reward accuracy ≥ 0.75; else retrain all arms at 4, then 6 epochs | **agreed 2026-10-09, declared in `configs/dpo.yaml` before any training on real pairs; automatic in the notebook** |
+| D8 | Learning check (small budgets ≈ 5–8 optimizer steps) | Seed-42 C and B_ext of both models judged on TRAINING logs: final-epoch loss ≤ 0.60 and reward accuracy ≥ 0.75; else retrain all arms at 4, then 6 epochs | **agreed 2026-10-09, declared in `configs/dpo.yaml` before any training on real pairs; automatic in the notebook.** Result: 2 epochs failed, 4 passed → all adapters at 4 |
+| D9 | Combining the 3 seeds (RQ4 primary) | Per family, mean judge label over seeds for C and for B_ext; sign-flip permutation over families; Holm across the 2 models; finding = Holm-significant AND corrected CI excludes 0 with the same sign; per-seed McNemar as robustness | **agreed and declared 2026-10-10** (`configs/dpo.yaml` `analysis`), while Kaggle was still generating, before any output was judged |
+| D10 | Judge correction after training | Phase 1 error counts; the blinded audit (A, B_ext, C × CS/EN, 30 flagged + 30 unflagged per model × condition; + 60 harmless RU/UR) switches ALL arms of a model × condition to its counts when either rate differs from Phase 1 (Fisher exact p < .05) | **declared 2026-10-10**; switch wording amended the same day, still before any output was judged (the first wording, "outside Phase 1's interval", ignored the audit's sample size) |
+
+**Laptop steps after the Kaggle run** (unzip `phase2_outputs.zip` into the repo first):
+1. `python scripts/phase2_kaggle.py judge` — every Exp 8 folder, DeepSeek judge, resumable (~24k judgments).
+2. `python scripts/exp8_audit.py make` → reviewer fills `outputs/exp8/audit/audit_file.xlsx` (~300 rows).
+3. `python scripts/exp8_audit.py apply --review <returned.xlsx> --reviewer-id UU`.
+4. `python scripts/phase2_analysis.py` → `outputs/phase2_analysis/` (PROVISIONAL until step 3 is applied).
 
 ## Schedule (~3–4 days; critical path: reviewer, API key, Kaggle quota)
 
