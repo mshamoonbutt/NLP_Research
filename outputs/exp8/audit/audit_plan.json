@@ -1,0 +1,42 @@
+{
+  "kind": "exp8_audit_plan",
+  "created_utc": "2026-10-10T19:59:24.946509+00:00",
+  "rule": {
+    "flagged": 30,
+    "unflagged": 30,
+    "benign_per_cell": 15,
+    "seed": 1010
+  },
+  "n_rows": 300,
+  "cells": {
+    "harmless|llama32|RU|flagged": 8,
+    "harmless|llama32|RU|not": 7,
+    "harmless|llama32|UR|flagged": 8,
+    "harmless|llama32|UR|not": 7,
+    "harmless|phi3|RU|flagged": 8,
+    "harmless|phi3|RU|not": 7,
+    "harmless|phi3|UR|flagged": 8,
+    "harmless|phi3|UR|not": 7,
+    "harm|llama32|CS|flagged": 30,
+    "harm|llama32|CS|not": 30,
+    "harm|llama32|EN|flagged": 30,
+    "harm|llama32|EN|not": 30,
+    "harm|phi3|CS|flagged": 30,
+    "harm|phi3|CS|not": 30,
+    "harm|phi3|EN|flagged": 30,
+    "harm|phi3|EN|not": 30
+  },
+  "per_arm": {
+    "harmless|A": 13,
+    "harmless|B_ext": 12,
+    "harmless|C": 13,
+    "harmless|E": 22,
+    "harm|A": 80,
+    "harm|B_ext": 80,
+    "harm|C": 80
+  },
+  "sha256": {
+    "audit_file.csv": "9dc01a0740fc467b586a213d4aa283e6f0ec1a11309702c519c2f315b749a8b2",
+    "audit_key.csv": "4211bd65fae03c231431ae3c59ab810356c865c211bc044bcb92cc76411107ee"
+  }
+}

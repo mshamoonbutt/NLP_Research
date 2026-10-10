@@ -124,6 +124,39 @@ class Ctx:
         return out
 
 
+def training_table(data: dict, main_tag: dict) -> list[dict]:
+    """Every adapter's training log against the declared learning check (configs/dpo.yaml), its
+    effective optimizer steps (finite gradient, nonzero learning rate: fp16 loss scaling skips the
+    first steps whose gradients overflow) and the share of its responses identical to arm A's."""
+    import math
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from phase2_kaggle import learning_check   # the same check the gate used
+
+    lc = yaml.safe_load((ROOT / "configs" / "dpo.yaml").read_text(encoding="utf-8"))["learning_check"]
+    rows = []
+    for tm in sorted((ROOT / "outputs" / "models").glob("*/training_manifest.json")):
+        man = json.loads(tm.read_text(encoding="utf-8"))
+        model, arm, ep = man["model_key"], man["arm"], man["dpo_config"]["epochs"]
+        tag = tm.parent.name.split(f"_{model}_", 1)[1]
+        steps = [h for h in man["log_history"] if "loss" in h]
+        chk = learning_check(man, ep, lc)
+        row = {"adapter": tm.parent.name, "model": model, "arm": arm, "tag": tag, "epochs": ep, "n_pairs": man["n_pairs"],
+               "steps": len(steps),
+               "effective_steps": sum(1 for h in steps if h.get("learning_rate", 0) > 0 and h.get("grad_norm") is not None
+                                      and math.isfinite(h["grad_norm"])),
+               "final_epoch_loss": chk["final_epoch_loss"], "final_epoch_reward_accuracy": chk["final_epoch_reward_accuracy"],
+               "learned": chk["pass"]}
+        recs = data.get(model, {}).get(tag)
+        if recs is not None:
+            a = {(r["row_id"], bool(r.get("probe"))): r["response_sha256"] for r in data[model][main_tag[model]] if r["arm"] == "A"}
+            x = {(r["row_id"], bool(r.get("probe"))): r["response_sha256"] for r in recs if r["arm"] == arm}
+            keys = set(a) & set(x)
+            row["identical_to_A"] = sum(a[k] == x[k] for k in keys) / len(keys) if keys else None
+        rows.append(row)
+    return rows
+
+
 def error_cells(judge_manifest: Path, recs: list[dict]) -> tuple[dict, dict, str]:
     """Per model x condition the counts the correction uses (one dict object per cell, shared by its arms)."""
     cells = judge_error_counts(judge_manifest, recs)
@@ -241,6 +274,20 @@ def main(argv=None) -> int:
         t["p_holm"], t["holm_reject"] = h["p_adjusted"], h["reject"]
         t["finding"] = finding(t, h["reject"])
 
+    # Adapters that never effectively trained (declared learning check on their own logs) make
+    # their comparisons uninformative: flagged, not dropped.
+    training = training_table(data, {m: f"n{summ['budget_main'][m]}" for m in args.models})
+    learned = {t["adapter"]: t["learned"] for t in training}
+    for c in comps:
+        if c["kind"] == "ncurve":
+            c["adapter_learned"] = learned.get(f"C_{c['model']}_n{c['budget']}")
+        elif c["kind"] == "ablation":
+            c["adapter_learned"] = all(learned.get(f"{a}_{c['model']}_n{c['budget']}_ablation_{ab}")
+                                       for a in c["comparison"].split("-") if a != "A")
+    for t in primary:
+        tags = [f"n{t['budget']}"] + [f"n{t['budget']}_s{s}" for s in seeds[1:]]
+        t["adapters_learned"] = all(learned.get(f"{a}_{t['model']}_{g}") for a in ("C", "B_ext") for g in tags)
+
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "analysis.json").write_text(json.dumps({
@@ -248,10 +295,16 @@ def main(argv=None) -> int:
         "ablation_domain": ab, "primary": primary, "capability": cap,
         "notes": ["vs_A, ncurve, ablation and overrefusal p-values are unadjusted (secondary, reporting only)",
                   "over-refusal is uncorrected; the audit reports the benign judge's RU/UR agreement",
-                  "RU/UR corrections use Phase 1 counts (not audited)"]}, indent=2, default=str), encoding="utf-8")
+                  "RU/UR corrections use Phase 1 counts (not audited)",
+                  "training.csv: adapters failing the declared learning check did not effectively train (fp16 loss "
+                  "scaling skips the first steps whose gradients overflow); comparisons using them carry "
+                  "adapter_learned=False and are not evidence"]}, indent=2, default=str), encoding="utf-8")
     write_csv(out / "rates.csv", rates)
     write_csv(out / "comparisons.csv", comps)
+    if training:
+        write_csv(out / "training.csv", training)
     print(f"[phase2] audit: {audit_status}")
+    print(f"[phase2] adapters that did not learn: {[t['adapter'] for t in training if not t['learned']] or 'none'}")
     for t in primary:
         print(f"[phase2] RQ4 {t['model']} (n={t['budget']}, {t['n_families']} families): C-B_ext on CS "
               f"{t['diff']:+.3f} [{t['diff_ci_lo']:+.3f}, {t['diff_ci_hi']:+.3f}], corrected "

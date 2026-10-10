@@ -703,7 +703,7 @@ Exp 2's pinned `95e5aad2…` (recorded under 0.40.0 on Kaggle), so local Gemma r
 Gemma probes run on Kaggle with the pinned Ollama version.
 ## Exp 5: cut
 
-## Phase 2 (Exp 6–10): **PREREQUISITES IN PROGRESS (2026-10-08)**; plan in `docs/PHASE2_PLAN.md`
+## Phase 2 (Exp 6–10): **EXP 7–9 DONE (2026-10-11); Exp 10 open**; plan in `docs/PHASE2_PLAN.md`
 
 - **Primary (RQ4):** C (our CS pairs) vs B_ext (external English pairs) at equal accepted-pair
   budgets and identical optimisation, for Llama-3.2 and Phi-3 — a comparison of training
@@ -781,7 +781,33 @@ Gemma probes run on Kaggle with the pinned Ollama version.
   `qkv_proj` / `gate_up_proj`; Llama q/k/v/o/gate/up/down), finite loss (ln 2 at initialisation, as
   expected), and the adapter served through vLLM. Training now logs every step (a 60-pair budget is
   ~8 optimizer steps): check the loss falls below ln 2 and reward accuracy rises in the real runs.
-- **Not yet run:** Exp 7–10 (training waits for the pair review → `apply` → `pack`).
+- **Exp 7 + 8 run (2026-10-10/11).** The first full Kaggle run stalled (its monitor wrote child
+  output to the kernel's hidden stdout) after deciding the epochs (2 FAIL, 4 PASS). Rerun split over
+  three accounts (`phase2_kaggle.py parts/queue`, all on commit `165a9d2`, identical pinned versions,
+  4 epochs; arm A and E generated once, in the main folder). 19 adapters, 11 folders, 23,920
+  generations, 0 failures; judged on the laptop (DeepSeek V4.1 Flash), 0 judge errors.
+- **Learning check re-recorded** (`outputs/phase2_gate/`): 2 epochs FAIL (loss stays ln 2), 4 PASS
+  (phi3 C .061/1.0, B_ext .383/.94; llama32 C .001/1.0, B_ext .306/.97). Cause found afterwards: fp16
+  loss scaling skips the first 2–4 optimizer steps (gradient overflow while the scale calibrates), so
+  2 epochs left 0–2 effective updates. Applying the same declared check to every adapter
+  (`outputs/phase2_analysis/training.csv`): all main-budget adapters (5–9 effective steps), Llama n50
+  and Llama D6 learned; **C n25 (both models; 0 and 1 effective steps) and both Phi-3 D6 adapters (2)
+  did not** — their comparisons are flagged `adapter_learned=False` and are not evidence.
+- **Post-training judge audit** (`outputs/exp8/audit/`, reviewer UU, 300 blinded rows, 0 unsure, no
+  notes): no cell switched (Fisher p ≥ .078; closest phi3 CS, judge precision 23/30 vs Phase 1 14/14)
+  → Phase 1 error counts throughout. Harmless-prompt judge agreement RU/UR .67–.93 (n = 15 each).
+- **RQ4 primary (C − B_ext on CS, three seeds pooled, Holm across models):** **llama32 −9.7 pp raw
+  [−15.5, −4.0], corrected −6.8 [−11.3, −2.6], p_holm .004 → FINDING** (per seed −10.5, −12.5, −6.0);
+  phi3 +0.3 [−2.2, +3.0], p .90 → no finding (floor: no arm moved Phi-3's ASR).
+- **Secondary (corrected pp vs untrained A; unadjusted):** Llama C: CS −9.0, RU −6.9, EN −3.4, UR +0.9
+  (no transfer to Urdu script); Llama B_ext: CS −2.2, RU −2.9, EN −0.5, UR −1.6. Safety prompt E: largest
+  harm drop (Llama CS −19.0, Phi-3 CS −9.9) but heavy over-refusal on harmless prompts (Phi-3 RU +87 pp,
+  CS +38, UR +28; Llama RU +32, UR +18); C and B_ext add no over-refusal (all within ±2 pp). Capability
+  retention ≥ .95 except Llama C UrduMMLU .949 (−6 of 300 items). N-curve (Llama): n50 −10.6 ≈ n60 −9.5.
+  Unseen domain D6 (Llama, 35 families): C trained without D6 − A on CS −10.1 [−22.6, +2.2] vs C trained
+  with it −11.4 [−23.0, −0.6] — same direction, underpowered; B_ext 0.0. Phi-3 D6: no harmful output in
+  any arm (and its D6 adapters did not train). Phi-3 UrduMMLU ≈ .27 in every arm (chance .25).
+- **Open:** Exp 10 (tables/figures, error taxonomy, sanitized examples); paper update.
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash
