@@ -72,3 +72,30 @@ def test_stage_finds_the_bundle_wherever_kaggle_puts_it(tmp_path, monkeypatch):
     monkeypatch.setattr(pk, "ROOT", repo2)
     assert pk.cmd_stage(tmp_path / "zin") == 0 and all((repo2 / f).exists() for f in pk.bundle_files())
     assert pk.cmd_stage(tmp_path / "empty-dir-that-does-not-exist") == 1   # not found -> FAIL, not a crash
+
+
+def test_resume_restores_finished_work_and_needs_adapter_weights(tmp_path, monkeypatch):
+    import json
+    import zipfile
+    pk = _load()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.setattr(pk, "ROOT", repo)
+    man = json.dumps({"dpo_config": {"epochs": 4}})
+    prev = tmp_path / "input" / "csjail-phase2-notebook"            # an earlier version's output as input
+    prev.mkdir(parents=True)
+    with zipfile.ZipFile(prev / "phase2_outputs.zip", "w") as z:     # manifests only, no weights
+        z.writestr("outputs/models/C_phi3_n39/training_manifest.json", man)
+        z.writestr("outputs/phase2_gate/decision.json", json.dumps({"epochs": 4, "all_pass": True}))
+    pk.restore_previous(tmp_path / "input")
+    assert not pk.trained_at("C_phi3_n39", 4)                         # a manifest alone is not a finished adapter
+    with zipfile.ZipFile(prev / "phase2_adapters.zip", "w") as z:
+        z.writestr("outputs/models/C_phi3_n39/training_manifest.json", man)
+        z.writestr("outputs/models/C_phi3_n39/adapter_model.safetensors", "weights")
+    part = prev / "NLP_Research" / "outputs" / "exp8" / "n39__phi3"   # the version's repo tree: a partial evaluation
+    part.mkdir(parents=True)
+    (part / "generations.jsonl").write_text("{}\n")
+    got = pk.restore_previous(tmp_path / "input")
+    assert pk.trained_at("C_phi3_n39", 4) and not pk.trained_at("C_phi3_n39", 2)
+    assert (repo / "outputs/exp8/n39__phi3/generations.jsonl").exists()
+    assert (repo / "outputs/phase2_gate/decision.json").exists() and len(got) == 3

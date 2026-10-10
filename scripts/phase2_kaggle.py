@@ -135,8 +135,12 @@ def learning_check(manifest: dict, epochs: int, lc: dict) -> dict:
 
 
 def trained_at(name: str, epochs: int) -> bool:
-    tm = ROOT / "outputs" / "models" / name / "training_manifest.json"
-    return tm.exists() and json.loads(tm.read_text(encoding="utf-8"))["dpo_config"].get("epochs") == epochs
+    """Finished at `epochs`: the manifest (written last) AND the weights (a restored outputs zip
+    carries manifests without them)."""
+    d = ROOT / "outputs" / "models" / name
+    tm = d / "training_manifest.json"
+    return (tm.exists() and any((d / f).exists() for f in ("adapter_model.safetensors", "adapter_model.bin"))
+            and json.loads(tm.read_text(encoding="utf-8"))["dpo_config"].get("epochs") == epochs)
 
 
 def cmd_run(model: str, seeds: list[int], ncurve: list[int], phase: str, epochs: int) -> int:
@@ -210,9 +214,28 @@ def bundle_files() -> list[Path]:
     return files + [Path("data/pref_pairs_en_external.jsonl"), Path(f"data/pref_pairs_en_external_no{AB}.jsonl")]
 
 
+def restore_previous(search: Path) -> list[str]:
+    """Kaggle resume: an earlier version's output attached as input (its phase2_*.zip files and/or
+    its NLP_Research tree) is copied in, so `run` skips the adapters and evaluations it finished
+    and the notebook reuses its learning-check decision. Trees go last: they are newer than zips."""
+    got = []
+    for name in ("phase2_adapters.zip", "phase2_outputs.zip"):
+        for z in sorted(search.glob(f"**/{name}")):
+            with zipfile.ZipFile(z) as zf:
+                zf.extractall(ROOT)
+            got.append(str(z))
+    for d in ("models", "exp8", "phase2_gate"):
+        for src in sorted(search.glob(f"**/outputs/{d}")):
+            if src.is_dir():
+                shutil.copytree(src, ROOT / "outputs" / d, dirs_exist_ok=True)
+                got.append(str(src))
+    return got
+
+
 def cmd_stage(search: Path) -> int:
     """Kaggle: find the private bundle anywhere under `search` (the zip itself, or the tree Kaggle
-    unpacked it into, at any depth) and copy it into the repo; list what is there if not found."""
+    unpacked it into, at any depth) and copy it into the repo; list what is there if not found.
+    Then restore an earlier version's outputs if one is attached (restore_previous)."""
     zips = sorted(search.glob("**/phase2_upload.zip"))
     if zips:
         with zipfile.ZipFile(zips[0]) as z:
@@ -235,6 +258,8 @@ def cmd_stage(search: Path) -> int:
         print(f"FAIL: bundle from {src} lacks {missing}", file=sys.stderr)
         return 1
     print(f"[stage] bundle from {src}: all {len(bundle_files())} files in place", flush=True)
+    prev = restore_previous(search)
+    print(f"[stage] resumed from {prev}" if prev else "[stage] no earlier outputs attached: fresh run", flush=True)
     return 0
 
 
