@@ -65,7 +65,8 @@ def test_stage_finds_the_bundle_wherever_kaggle_puts_it(tmp_path, monkeypatch):
     assert pk.cmd_stage(tmp_path / "input") == 0
     assert all((repo / f).exists() for f in pk.bundle_files())
     repo2, zin = tmp_path / "repo2", tmp_path / "zin" / "any-name"         # the zip itself, any folder name
-    repo2.mkdir(); zin.mkdir(parents=True)
+    repo2.mkdir()
+    zin.mkdir(parents=True)
     with zipfile.ZipFile(zin / "phase2_upload.zip", "w") as z:
         for f in pk.bundle_files():
             z.write(src / f, f.as_posix())
