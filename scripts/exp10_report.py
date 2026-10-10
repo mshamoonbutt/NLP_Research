@@ -35,6 +35,7 @@ KINDS = {"harmful": {"harmful_compliance"}, "refusal": {"refusal"}, "safe_helpfu
          "non_response": {"irrelevant", "unintelligible", "empty"}}
 ARM_COLOR = {"C": "2A78D6", "B_ext": "EB6834", "E": "1BAF7A"}          # slots 1-3
 ARM_MARK = {"C": "*", "B_ext": "square*", "E": "triangle*"}
+MARK_SIZE = {"C": "2.5pt", "B_ext": "2.2pt", "E": "3.1pt"}     # similar visual area per shape
 KIND_COLOR = {"harmful": "2A78D6", "refusal": "EB6834", "safe_helpful": "1BAF7A", "non_response": "EDA100"}
 
 
@@ -98,7 +99,8 @@ def composition(a) -> list[dict]:
 
 
 def table_mitigation(a, rates, cap) -> str:
-    out = [r"\begin{table*}[t]", r"\centering\small", r"\begin{tabular}{@{}llrcccrr@{}}", r"\toprule",
+    out = [r"\begin{table*}[t]", r"\centering\small\setlength{\tabcolsep}{4.5pt}", r"\begin{tabular}{@{}llrcccrr@{}}",
+           r"\toprule",
            r"Model & Arm & Pairs & CS ASR & EN ASR & Benign ORR & MMLU & UrduMMLU \\", r"\midrule"]
     for t in a["primary"]:
         m = t["model"]
@@ -156,10 +158,9 @@ def figure_forest(comps) -> str:
            rf"  width=0.49\textwidth, height=5cm, xmin={lo}, xmax={hi}, ymin=0.5, ymax=4.5,",
            r"  ytick={1,2,3,4}, yticklabels={UR,RU,CS,EN}, xmajorgrids, grid style={black!10},",
            r"  axis line style={black!35}, tick style={black!35}, tick label style={font=\small, black!75},",
-           r"  title style={font=\small}, xlabel style={font=\small, black!75},",
-           r"  xlabel={Change in harmful compliance vs.\ untrained (pp, corrected)},",
-           r"  every axis plot/.append style={only marks, mark size=2.4pt, mark options={draw=white, line width=0.4pt},",
-           r"    error bars/.cd, x dir=both, x explicit, error bar style={line width=0.8pt}}]"]
+           r"  title style={font=\small},",
+           r"  every axis plot/.append style={only marks,",
+           r"    error bars/x dir=both, error bars/x explicit, error bars/error bar style={line width=0.8pt}}]"]
     for i, m in enumerate(MODELS):
         out.append(rf"\nextgroupplot[title={{{NAME[m]}}}" + (r", legend to name=ptwolegend, legend columns=3, "
                    r"legend style={draw=none, font=\small, column sep=8pt}" if i == 0 else "") + "]")
@@ -171,11 +172,16 @@ def figure_forest(comps) -> str:
                 x, xl, xh = (float(r[k]) * 100 for k in ("diff_corrected", "diff_corrected_ci_lo", "diff_corrected_ci_hi"))
                 pts.append(f"({x:.2f},{rows[cond] + off[arm]:.2f}) += ({xh - x:.2f},0) -= ({x - xl:.2f},0)")
             col = f"ptwo{arm.replace('_', '')}"
-            out.append(rf"\addplot+[color={col}, mark={ARM_MARK[arm]}, error bars/error bar style={{color={col}}}] "
-                       rf"coordinates {{{' '.join(pts)}}};")
+            # no "+": the default cycle list would override the marker fill
+            out.append(rf"\addplot[color={col}, mark={ARM_MARK[arm]}, mark size={MARK_SIZE[arm]}, "
+                       rf"mark options={{fill={col}, draw=white, line width=0.4pt}}, "
+                       rf"error bars/error bar style={{color={col}}}] coordinates {{{' '.join(pts)}}};")
             if i == 0:
                 out.append(rf"\addlegendentry{{{ARM[arm]}}}")
-    out += [r"\end{groupplot}", r"\end{tikzpicture}", r"\\[2pt]\pgfplotslegendfromname{ptwolegend}",
+    out += [r"\end{groupplot}", r"\end{tikzpicture}",
+            r"\\[1pt]{\small\color{black!75} Change in harmful compliance vs.\ the untrained model "
+            r"(percentage points, judge-corrected)}",
+            r"\\[3pt]\pgfplotslegendfromname{ptwolegend}",
             r"\caption{Change in harmful compliance relative to the untrained model, by prompt form (points: "
             r"judge-corrected difference; bars: 95\% family-bootstrap intervals; 200 held-out families; B and C "
             r"pool three seeds). Values in Table~\ref{tab:p2-transfer}.}",
@@ -190,7 +196,7 @@ def figure_composition(comp_rows) -> str:
            r"\begin{tikzpicture}",
            r"\begin{groupplot}[group style={group size=4 by 2, horizontal sep=0.25cm, vertical sep=0.45cm,",
            r"    yticklabels at=edge left, xticklabels at=edge bottom},",
-           r"  width=0.29\textwidth, height=3.1cm, xbar stacked, bar width=6pt, xmin=0, xmax=100, ymin=0.4, ymax=4.6,",
+           r"  width=0.29\textwidth, height=3.1cm, xbar stacked, /pgf/bar width=6pt, xmin=0, xmax=100, ymin=0.4, ymax=4.6,",
            r"  ytick={1,2,3,4}, yticklabels={C,B,E,A}, xtick={0,50,100}, axis line style={black!35},",
            r"  tick style={black!35}, tick label style={font=\scriptsize, black!75}, title style={font=\small},",
            r"  ylabel style={font=\small}, every axis plot/.append style={draw=white, line width=0.6pt}]"]
@@ -200,6 +206,10 @@ def figure_composition(comp_rows) -> str:
             opts = []
             if m == MODELS[0]:
                 opts.append(f"title={{{cond}}}")
+            if m == MODELS[0]:        # per-panel labels override "edge bottom": blank the top row
+                opts.append("xticklabels={}")
+            elif j < len(CONDS) - 1:  # "100" only on the last column, or it runs into the next panel's "0"
+                opts.append("xticklabels={0,50,{}}")
             if j == 0:
                 opts.append(f"ylabel={{{NAME[m]}}}")
             if first:
@@ -251,7 +261,7 @@ def appendix(a, rates, comps, training, audit, gates, residual, comp_rows) -> st
           r"uncorrected; the harmless-prompt judge agreed with the reviewer on RU/UR responses at " + agree
           + r" ($n=15$ each).}", r"\label{tab:p2-orr}", r"\end{table}", ""]
     # n-curve and unseen domain
-    t += [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{@{}llcl@{}}", r"\toprule",
+    t += [r"\begin{table*}[t]", r"\centering\small", r"\begin{tabular}{@{}llcl@{}}", r"\toprule",
           r"Model & Comparison & CS, C $-$ A (corrected) & Trained \\", r"\midrule"]
     for r in comps:
         if r["kind"] == "ncurve" and r["condition"] == "CS":
@@ -269,9 +279,9 @@ def appendix(a, rates, comps, training, audit, gates, residual, comp_rows) -> st
     t += [r"\bottomrule", r"\end{tabular}", r"\caption{Data efficiency (C at each pair budget) and the unseen "
           r"domain (D6, drawn by a rule fixed before the draw; its held-out families only). ``Trained'' applies the "
           r"declared learning check to that adapter's own training log (Table~\ref{tab:p2-training}).}",
-          r"\label{tab:p2-ncurve}", r"\end{table}", ""]
+          r"\label{tab:p2-ncurve}", r"\end{table*}", ""]
     # training
-    t += [r"\begin{table*}[t]", r"\centering\small", r"\begin{tabular}{@{}lrrrrrrl@{}}", r"\toprule",
+    t += [r"\begin{table*}[t]", r"\centering\footnotesize\setlength{\tabcolsep}{4pt}", r"\begin{tabular}{@{}lrrrrrrl@{}}", r"\toprule",
           r"Adapter & Pairs & Steps & Effective & Final-epoch loss & Reward acc. & Same as A & Learned \\",
           r"\midrule"]
     for r in training:
@@ -288,7 +298,7 @@ def appendix(a, rates, comps, training, audit, gates, residual, comp_rows) -> st
           r"accuracy $\ge$ 0.75). Same as A: share of responses byte-identical to the untrained model's. "
           r"Learning check (loss/accuracy): " + gtxt + r".}", r"\label{tab:p2-training}", r"\end{table*}", ""]
     # audit
-    t += [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{@{}lcccc@{}}", r"\toprule",
+    t += [r"\begin{table*}[t]", r"\centering\small", r"\begin{tabular}{@{}lcccc@{}}", r"\toprule",
           r"Cell & Audit TP/FP/FN/TN & Phase 1 TP/FP/FN/TN & Fisher $p$ (PPV, FOR) & Switch \\", r"\midrule"]
     for k, v in audit["cells"].items():
         au, p1, fp = v["audit"], v["phase1"], v["fisher_p"]
@@ -298,7 +308,7 @@ def appendix(a, rates, comps, training, audit, gates, residual, comp_rows) -> st
     t += [r"\bottomrule", r"\end{tabular}", r"\caption{Post-training judge audit: one reviewer, blinded, 30 "
           r"judge-flagged and 30 unflagged responses per cell drawn equally from A, B and C. The declared rule "
           r"switches a cell to the audit's counts when either predictive value differs from Phase 1 ($p<.05$); "
-          r"none did.}", r"\label{tab:p2-audit}", r"\end{table}", ""]
+          r"none did.}", r"\label{tab:p2-audit}", r"\end{table*}", ""]
     # composition (table view of Figure 2)
     t += [r"\begin{table*}[t]", r"\centering\small", r"\begin{tabular}{@{}ll" + "c" * 4 + r"@{}}", r"\toprule",
           r"Model & Arm & EN & CS & RU & UR \\", r"\midrule"]
