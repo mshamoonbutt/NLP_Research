@@ -43,6 +43,9 @@ train = [
   "peft==0.13.2",
   "bitsandbytes==0.44.1",
   "datasets==3.1.0",
+  # the version the passing GPU smoke used; 26.0.0 (2026-10-09) needs NumPy 2 at import but does not
+  # declare it, and vllm 0.6.3 pins NumPy 1.26 -> `import datasets` fails
+  "pyarrow==25.0.1",
   "matplotlib>=3.8",
 ]
 dev = [

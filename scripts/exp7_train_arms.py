@@ -131,6 +131,8 @@ def main(argv=None) -> int:
     ap.add_argument("--out-root", default=str(ROOT / "outputs" / "models"))
     ap.add_argument("--seed", type=int, default=None,
                     help="training seed (default configs/dpo.yaml dpo.seed); another seed adds _s<seed> to the name")
+    ap.add_argument("--epochs", type=int, default=None,
+                    help="override dpo.epochs (the learning check's ladder); recorded in the manifest's dpo_config")
     args = ap.parse_args(argv)
 
     cfg = yaml.safe_load((ROOT / "configs" / "dpo.yaml").read_text(encoding="utf-8"))
@@ -163,6 +165,8 @@ def main(argv=None) -> int:
         return 1
 
     dpo_cfg = dict(cfg["dpo"])
+    if args.epochs is not None:
+        dpo_cfg["epochs"] = args.epochs
     seed_suffix = ""
     if args.seed is not None and args.seed != dpo_cfg.get("seed"):
         dpo_cfg["seed"], seed_suffix = args.seed, f"_s{args.seed}"

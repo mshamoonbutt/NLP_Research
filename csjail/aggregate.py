@@ -165,7 +165,8 @@ def predictive_value_diff(a: list[bool], b: list[bool], strata: list[str], count
                           fallback: Optional[dict] = None, *, bootstrap_n: int = 10_000,
                           ci_alpha: float = 0.05, seed: int = 0) -> dict:
     """Paired difference of predictive-value corrected ASRs (Exp 3): `a`, `b` are the judge's
-    labels on complete pairs, one per family in the same order; `counts_*` each condition's
+    labels on complete pairs, one per family in the same order (Exp 8: per-family means over
+    training seeds, so values in [0, 1]); `counts_*` each condition's
     judge error (fallback as in predictive_value_asr). Interval: domain-stratified family
     bootstrap of both flagged shares together (the pair moves as one), paired with Jeffreys
     draws of each condition's two probabilities; a P(harmful | flagged) both conditions take
@@ -189,6 +190,8 @@ def predictive_value_diff(a: list[bool], b: list[bool], strata: list[str], count
     if srcs[0] is srcs[1]:
         ppv[1] = ppv[0]
     fo = [rng.beta(c["fn"] + .5, c["tn"] + .5, bootstrap_n) for c in (counts_a, counts_b)]
+    if counts_a is counts_b:   # two arms under one error cell (Exp 8): one draw of each rate
+        fo[1] = fo[0]
     reps = (xa * ppv[0] + (1 - xa) * fo[0]) - (xb * ppv[1] + (1 - xb) * fo[1])
 
     def point(x, s, c):

@@ -1,0 +1,50 @@
+{
+  "kind": "exp6_pair_review_result",
+  "review_file": "review_returned.xlsx",
+  "review_sha256": "c2d3b1e9add0f57d6ecbb85a33a5e60e9fbe78e2f718300b827ae2267c2b6d79",
+  "reviewer_ids": [
+    "UU"
+  ],
+  "reviewer_id_filled_from_cli": 156,
+  "provenance": "Final labels: review_file_adjudicated (2).xlsx, designated by the team as the correct file; reviewer UU (stated by the team, 2026-10-09); reviewer_id cells were blank and filled from that statement. An earlier returned workbook, review_file_adjudicated (1).xlsx, held the same labels on 155/156 rows (R008 rejected_harmful no->yes) plus a 'disagreements' sheet with a second labelling and an adjudication (93 rows; agreement on rejected_harmful 0.705, kappa 0.36); the team said that file was not the right one.",
+  "models": {
+    "phi3": {
+      "reviewed": 66,
+      "kept": 39,
+      "kept_without_D6": 30,
+      "rejected_harmful": {
+        "yes": 44,
+        "no": 22
+      },
+      "chosen_refusal_ok": {
+        "yes": 61,
+        "no": 5
+      },
+      "naturalness_mean_all": 4.681818181818182,
+      "naturalness_mean_kept": 4.717948717948718
+    },
+    "llama32": {
+      "reviewed": 90,
+      "kept": 61,
+      "kept_without_D6": 51,
+      "rejected_harmful": {
+        "yes": 66,
+        "no": 24
+      },
+      "chosen_refusal_ok": {
+        "yes": 84,
+        "no": 6
+      },
+      "naturalness_mean_all": 4.666666666666667,
+      "naturalness_mean_kept": 4.655737704918033
+    }
+  },
+  "budget_main": {
+    "phi3": 39,
+    "llama32": 60
+  },
+  "budget_ablation": {
+    "phi3": 30,
+    "llama32": 51
+  }
+}

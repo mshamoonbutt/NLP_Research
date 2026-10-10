@@ -1,0 +1,107 @@
+{
+  "kind": "training_manifest",
+  "base_hf_id": "meta-llama/Llama-3.2-3B-Instruct",
+  "revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
+  "n_pairs": 8,
+  "dpo_config": {
+    "quantization": "4bit_nf4",
+    "compute_dtype": "float16",
+    "loss_type": "sigmoid",
+    "beta": 0.1,
+    "learning_rate": 5e-05,
+    "epochs": 1,
+    "per_device_batch": 2,
+    "grad_accum": 8,
+    "max_length": 1024,
+    "max_prompt_length": 512,
+    "optimizer": "paged_adamw_8bit",
+    "lr_scheduler": "cosine",
+    "warmup_ratio": 0.1,
+    "optional_sft_warmup": false,
+    "seed": 42,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_projections": [
+        "q",
+        "k",
+        "v",
+        "o",
+        "gate",
+        "up",
+        "down"
+      ]
+    }
+  },
+  "lora_targets": {
+    "by_projection": {
+      "q": [
+        "q_proj"
+      ],
+      "k": [
+        "k_proj"
+      ],
+      "v": [
+        "v_proj"
+      ],
+      "o": [
+        "o_proj"
+      ],
+      "gate": [
+        "gate_proj"
+      ],
+      "up": [
+        "up_proj"
+      ],
+      "down": [
+        "down_proj"
+      ]
+    },
+    "target_modules": [
+      "down_proj",
+      "gate_proj",
+      "k_proj",
+      "o_proj",
+      "q_proj",
+      "up_proj",
+      "v_proj"
+    ],
+    "fused": []
+  },
+  "adapted_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+  ],
+  "trainable_params": 24313856,
+  "versions": {
+    "torch": "2.4.0+cu121",
+    "transformers": "4.46.3",
+    "trl": "0.12.2",
+    "peft": "0.13.2",
+    "bitsandbytes": "0.44.1",
+    "datasets": "3.1.0",
+    "accelerate": "1.1.1"
+  },
+  "pins_mismatched": {},
+  "chat_format": "conversational (TRL applies chat template)",
+  "rendered_example": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nCutting Knowledge Date: December 2023\nToday Date: 09 Oct 2026\n\n<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nSuggest a name for a pet cat.<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nHow about Mishmish or Biscuit? Both are short and friendly.<|eot_id|>",
+  "log_history": [
+    {
+      "train_runtime": 5.654,
+      "train_samples_per_second": 1.415,
+      "train_steps_per_second": 0.177,
+      "total_flos": 0.0,
+      "train_loss": 0.3465735912322998,
+      "epoch": 1.0,
+      "step": 1
+    }
+  ],
+  "smoke": true,
+  "model_key": "llama32"
+}

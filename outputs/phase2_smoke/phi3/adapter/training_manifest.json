@@ -1,0 +1,107 @@
+{
+  "kind": "training_manifest",
+  "base_hf_id": "microsoft/Phi-3-mini-4k-instruct",
+  "revision": "f39ac1d28e925b323eae81227eaba4464caced4e",
+  "n_pairs": 8,
+  "dpo_config": {
+    "quantization": "4bit_nf4",
+    "compute_dtype": "float16",
+    "loss_type": "sigmoid",
+    "beta": 0.1,
+    "learning_rate": 5e-05,
+    "epochs": 1,
+    "per_device_batch": 2,
+    "grad_accum": 8,
+    "max_length": 1024,
+    "max_prompt_length": 512,
+    "optimizer": "paged_adamw_8bit",
+    "lr_scheduler": "cosine",
+    "warmup_ratio": 0.1,
+    "optional_sft_warmup": false,
+    "seed": 42,
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_projections": [
+        "q",
+        "k",
+        "v",
+        "o",
+        "gate",
+        "up",
+        "down"
+      ]
+    }
+  },
+  "lora_targets": {
+    "by_projection": {
+      "q": [
+        "qkv_proj"
+      ],
+      "k": [
+        "qkv_proj"
+      ],
+      "v": [
+        "qkv_proj"
+      ],
+      "o": [
+        "o_proj"
+      ],
+      "gate": [
+        "gate_up_proj"
+      ],
+      "up": [
+        "gate_up_proj"
+      ],
+      "down": [
+        "down_proj"
+      ]
+    },
+    "target_modules": [
+      "down_proj",
+      "gate_up_proj",
+      "o_proj",
+      "qkv_proj"
+    ],
+    "fused": [
+      "gate",
+      "k",
+      "q",
+      "up",
+      "v"
+    ]
+  },
+  "adapted_modules": [
+    "down_proj",
+    "gate_up_proj",
+    "o_proj",
+    "qkv_proj"
+  ],
+  "trainable_params": 25165824,
+  "versions": {
+    "torch": "2.4.0+cu121",
+    "transformers": "4.46.3",
+    "trl": "0.12.2",
+    "peft": "0.13.2",
+    "bitsandbytes": "0.44.1",
+    "datasets": "3.1.0",
+    "accelerate": "1.1.1"
+  },
+  "pins_mismatched": {},
+  "chat_format": "conversational (TRL applies chat template)",
+  "rendered_example": "<|user|>\nSuggest a name for a pet cat.<|end|>\n<|assistant|>\nHow about Mishmish or Biscuit? Both are short and friendly.<|end|>\n<|endoftext|>",
+  "log_history": [
+    {
+      "train_runtime": 5.7434,
+      "train_samples_per_second": 1.393,
+      "train_steps_per_second": 0.174,
+      "total_flos": 0.0,
+      "train_loss": 0.3465735912322998,
+      "epoch": 1.0,
+      "step": 1
+    }
+  ],
+  "smoke": true,
+  "model_key": "phi3"
+}

@@ -33,7 +33,7 @@ pinned stack), Qwen (49 failures).
 
 | # | Blocker | Fix | Status (2026-10-08) |
 |---|---|---|---|
-| P1 | `train_dpo` uses bf16; Kaggle T4s have no bf16 | fp16 compute on T4 (= inference precision); GPU smoke (PROTOCOL §9, never run) | code done (`compute_dtype: float16`); GPU smoke pending |
+| P1 | `train_dpo` uses bf16; Kaggle T4s have no bf16 | fp16 compute on T4 (= inference precision); GPU smoke (PROTOCOL §9, never run) | **done:** GPU smoke passed on Kaggle T4 (fp16 training + adapter in vLLM, both models) |
 | P2 | Exp 8 judges inside the GPU run; Kaggle cannot reach the Ollama judge | Split: generate on Kaggle, judge on the laptop (as Exp 2) | done (`--skip-judge` / `--judge-only`, tested) |
 | P3 | Over-refusal (benign) judge not checked with Flash; Exp 8 needs its manifest | Run Flash on the 450 labelled benign responses | **PASS**: P 1.000, R 0.938, F1 0.968 |
 | P4 | Over-refusal probe: 150 Latin-script prompts, 0 Urdu script, language mix unaudited, old C01–C10 taxonomy | Decision D4 | **done:** `data/benign_probe_v2.jsonl` (60 × 4 forms) |
@@ -96,12 +96,28 @@ pinned stack), Qwen (49 failures).
 | # | Decision | Recommendation | Status |
 |---|---|---|---|
 | D1 | Phase 2 models | Llama + Phi-3 | recommended |
-| D2 | Reviewer checks rejected responses | Yes | **decided 2026-10-09:** yes, capped at ~160 → equal budget N = 60 pairs for both models (all 66 Phi-3 + the first 90 Llama in the seeded order; ~156 checks) |
+| D2 | Reviewer checks rejected responses | Yes | **done 2026-10-09:** 156 rows reviewed (UU); kept phi3 39, llama32 61 → **per-model budgets** 39 / 60 (D6 run 30 / 51), since Phi-3 has fewer than 60 |
 | D3 | Training seeds | 3 for primary C vs B_ext; 1 elsewhere | recommended |
 | D4 | Over-refusal set | Team writes ~50 benign prompts × 4 forms (3–4 h); else report over-refusal as limited | **decided:** yes; 60 (10 per domain) recommended, 50 minimum; spec below |
 | D5 | Chosen generator | `ANTHROPIC_API_KEY` for Claude Sonnet 4.5, or another model distinct from the judge | **changed 2026-10-09:** OpenAI gpt-4.1-2025-04-14 — Anthropic's classifier blocked the calls (harmful requests in every prompt) and claude-sonnet-4-5 was not served to the key |
 | D6 | Unseen-domain rule | Seeded draw recorded before drawing | **done:** rule committed in 5b4d2e7 (`random.Random(791)` over D1–D6), drawn **D6** in 141cfe4; split `1af335defc251d52` |
 | D7 | Optional arms | Run E; skip D and matched arms | recommended |
+| D8 | Learning check (small budgets ≈ 5–8 optimizer steps) | Seed-42 C and B_ext of both models judged on TRAINING logs: final-epoch loss ≤ 0.60 and reward accuracy ≥ 0.75; else retrain all arms at 4, then 6 epochs | **agreed 2026-10-09, declared in `configs/dpo.yaml` before any training on real pairs; automatic in the notebook.** Result: 2 epochs failed, 4 passed → all adapters at 4 |
+| D9 | Combining the 3 seeds (RQ4 primary) | Per family, mean judge label over seeds for C and for B_ext; sign-flip permutation over families; Holm across the 2 models; finding = Holm-significant AND corrected CI excludes 0 with the same sign; per-seed McNemar as robustness | **agreed and declared 2026-10-10** (`configs/dpo.yaml` `analysis`), while Kaggle was still generating, before any output was judged |
+| D10 | Judge correction after training | Phase 1 error counts; the blinded audit (A, B_ext, C × CS/EN, 30 flagged + 30 unflagged per model × condition; + 60 harmless RU/UR) switches ALL arms of a model × condition to its counts when either rate differs from Phase 1 (Fisher exact p < .05) | **declared 2026-10-10**; switch wording amended the same day, still before any output was judged (the first wording, "outside Phase 1's interval", ignored the audit's sample size) |
+
+**Kaggle run, split over accounts** (2026-10-10, after the first full run stalled): every account runs
+`notebooks/kaggle_phase2.ipynb` with the same `N_PARTS` (1–3) and its own `PART`; `phase2_kaggle.py parts
+--n-parts N` prints the fixed split (11 evaluation units + 2 learning-check records; Llama on the first
+queues, so the last part is Phi-3 only and needs no HF token). Arm A and E are generated once, in the main
+folder; every other folder is compared with it (`exp8_posteval.py --no-baseline`).
+
+**Laptop steps after the Kaggle run** (unzip every part's `phase2_outputs_partXofN.zip` into the repo first;
+`phase2_kaggle.py decide --models phi3 llama32 --epochs 2`, then `--epochs 4`, records the learning check):
+1. `python scripts/phase2_kaggle.py judge` — every Exp 8 folder, DeepSeek judge, resumable (~19k judgments).
+2. `python scripts/exp8_audit.py make` → reviewer fills `outputs/exp8/audit/audit_file.xlsx` (~300 rows).
+3. `python scripts/exp8_audit.py apply --review <returned.xlsx> --reviewer-id UU`.
+4. `python scripts/phase2_analysis.py` → `outputs/phase2_analysis/` (PROVISIONAL until step 3 is applied).
 
 ## Schedule (~3–4 days; critical path: reviewer, API key, Kaggle quota)
 
@@ -131,3 +147,11 @@ roughly halves it.
 - **Why 50–60 is enough:** every arm answers the same items, so arms are compared pair by pair;
   with 200–240 items per arm a 10-point over-refusal increase (the reporting flag) is
   detectable; per-form rates (50–60 each) are descriptive.
+
+## Power of the primary test (simulated 2026-10-09)
+
+C vs B_ext on CS, 200 held-out families, paired McNemar at α = .025 (Holm's first step), family-difficulty
+model: Llama-like C .15 vs B_ext .30 → power 0.97; .20 vs .30 → 0.61; .25 vs .30 → 0.13. Phi-3-like (near the
+floor) .04 vs .08 → 0.25; .03 vs .10 → 0.73. The pair budget does not change this power (the test set is fixed);
+it changes how large the effect can be. Differences under ~10 points will mostly go undetected: report CIs,
+never equivalence.

@@ -1,0 +1,144 @@
+{
+  "kind": "pairs_manifest",
+  "created_utc": "2026-10-09T11:18:08.860557+00:00",
+  "model": "phi3",
+  "tag": "verified",
+  "dataset_version": "final-791-ddc14ecbc568",
+  "split_id": "51c2dd1bb7d72166",
+  "split_scheme": "main",
+  "excluded_domains": [],
+  "excluded_exemplar_domains": [
+    "D6"
+  ],
+  "results_models_ignored": [
+    "llama32",
+    "qwen25"
+  ],
+  "judge_fingerprint": {
+    "provider": "ollama",
+    "model": "deepseek-v4.1-flash:cloud",
+    "temperature": 0.0,
+    "rubric_kind": "harm",
+    "rubric_version": "harm-v2",
+    "rubric_sha256": "03f83712a1cfcdf9899008e5d10fa39ffdeb0c26dc6566591b9fb0e12ec2f874",
+    "system_sha256": "c9ee7c3ad7cb56e6dc5f0f9f1499e55e2ed54d10c1997bcb61c787eb6223a2c2",
+    "schema_version": "harm-contract-v2",
+    "fingerprint_id": "b0248df31f1d9da2"
+  },
+  "chosen_generator": {
+    "provider": "openai",
+    "model": "gpt-4.1-2025-04-14",
+    "temperature": 0.7,
+    "max_tokens": 300
+  },
+  "target_pairs_cap": 250,
+  "per_language": {
+    "CS": {
+      "mining": {
+        "counts": {
+          "in_condition": 791,
+          "excluded_not_train_pool_or_group_relative": 200,
+          "mined": 66,
+          "not_unsafe": 525
+        },
+        "mined_by_domain": {
+          "D1": 9,
+          "D2": 12,
+          "D3": 6,
+          "D4": 10,
+          "D5": 13,
+          "D6": 16
+        }
+      },
+      "chosen_validation": {
+        "ok": 66
+      },
+      "n_duplicates_removed": 0,
+      "quality_approved": {
+        "n": 66,
+        "by_domain": {
+          "D1": 9,
+          "D2": 12,
+          "D3": 6,
+          "D4": 10,
+          "D5": 13,
+          "D6": 16
+        }
+      },
+      "length": {
+        "n": 66,
+        "median_chosen_chars": 293.0,
+        "median_rejected_chars": 1961.5,
+        "ratio": 0.14937547795054806,
+        "tolerance": 0.15,
+        "within_tolerance": false
+      }
+    }
+  },
+  "budgets": {
+    "CS": {
+      "n_available": 66,
+      "runnable": [
+        25,
+        50,
+        "all"
+      ],
+      "not_supported": [
+        100
+      ],
+      "status": "OK"
+    }
+  },
+  "matched": null,
+  "families": {
+    "CS": [
+      "732",
+      "376",
+      "473",
+      "CSJUR-X1-0041",
+      "10",
+      "CSJUR-R-0992-01",
+      "461",
+      "66",
+      "269",
+      "218",
+      "775",
+      "719",
+      "187",
+      "248",
+      "329",
+      "459",
+      "632",
+      "CSJUR-V4-0002",
+      "328",
+      "CSJUR-V3-0016",
+      "236",
+      "206",
+      "471",
+      "792",
+      "192",
+      "993",
+      "431",
+      "617",
+      "105",
+      "321",
+      "239",
+      "319",
+      "401",
+      "249",
+      "CSJUR-V4-0003",
+      "739",
+      "CSJUR-V4-0078",
+      "327",
+      "430"
+    ]
+  },
+  "naturalness_gate": "PENDING: native speaker rates naturalness_sample.csv; mean >= 4 and clean_refusal=yes required before training C/D",
+  "human_verified": {
+    "source": "outputs/exp6/phi3",
+    "n_pairs": 39,
+    "budget": 39,
+    "keep_rule": "rejected_harmful = yes AND chosen_refusal_ok = yes",
+    "review_sha256": "c2d3b1e9add0f57d6ecbb85a33a5e60e9fbe78e2f718300b827ae2267c2b6d79"
+  }
+}

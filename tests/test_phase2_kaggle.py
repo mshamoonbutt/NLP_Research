@@ -31,3 +31,93 @@ def test_every_evaluated_arm_has_its_adapter():
     jobs, _ = pk.plan("phi3", 60, 48, [42, 43], [25])
     b43 = dict(jobs)["B_ext_phi3_n60_s43"]
     assert b43[b43.index("--seed") + 1] == "43" and "--naturalness-csv" not in b43
+
+
+def test_learning_check_uses_the_final_epoch_only():
+    pk = _load()
+    lc = {"max_final_epoch_loss": 0.60, "min_final_epoch_reward_accuracy": 0.75}
+    learned = {"log_history": [
+        {"loss": 0.69, "rewards/accuracies": 0.5, "epoch": 0.5}, {"loss": 0.66, "rewards/accuracies": 0.6, "epoch": 1.0},
+        {"loss": 0.55, "rewards/accuracies": 0.8, "epoch": 1.5}, {"loss": 0.50, "rewards/accuracies": 0.9, "epoch": 2.0},
+        {"train_loss": 0.6, "epoch": 2.0}]}
+    r = pk.learning_check(learned, 2, lc)
+    assert r["pass"] and r["n_final_steps"] == 2 and abs(r["final_epoch_loss"] - 0.525) < 1e-9
+    flat = {"log_history": [{"loss": 0.69, "rewards/accuracies": 0.5, "epoch": e} for e in (0.5, 1.0, 1.5, 2.0)]}
+    assert not pk.learning_check(flat, 2, lc)["pass"]
+    assert not pk.learning_check({"log_history": []}, 2, lc)["pass"]       # nothing logged is never a pass
+
+
+def test_stage_finds_the_bundle_wherever_kaggle_puts_it(tmp_path, monkeypatch):
+    import zipfile
+    pk = _load()
+    src = tmp_path / "src"
+    for f in pk.bundle_files():
+        (src / f).parent.mkdir(parents=True, exist_ok=True)
+        (src / f).write_text("x")
+    nested = tmp_path / "input" / "csjail-phase2" / "phase2_upload"      # unpacked one level deeper
+    nested.mkdir(parents=True)
+    for d in ("outputs", "data"):
+        import shutil
+        shutil.copytree(src / d, nested / d)
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.setattr(pk, "ROOT", repo)
+    assert pk.cmd_stage(tmp_path / "input") == 0
+    assert all((repo / f).exists() for f in pk.bundle_files())
+    repo2, zin = tmp_path / "repo2", tmp_path / "zin" / "any-name"         # the zip itself, any folder name
+    repo2.mkdir()
+    zin.mkdir(parents=True)
+    with zipfile.ZipFile(zin / "phase2_upload.zip", "w") as z:
+        for f in pk.bundle_files():
+            z.write(src / f, f.as_posix())
+    monkeypatch.setattr(pk, "ROOT", repo2)
+    assert pk.cmd_stage(tmp_path / "zin") == 0 and all((repo2 / f).exists() for f in pk.bundle_files())
+    assert pk.cmd_stage(tmp_path / "empty-dir-that-does-not-exist") == 1   # not found -> FAIL, not a crash
+
+
+def test_resume_restores_finished_work_and_needs_adapter_weights(tmp_path, monkeypatch):
+    import json
+    import zipfile
+    pk = _load()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.setattr(pk, "ROOT", repo)
+    man = json.dumps({"dpo_config": {"epochs": 4}})
+    prev = tmp_path / "input" / "csjail-phase2-notebook"            # an earlier version's output as input
+    prev.mkdir(parents=True)
+    with zipfile.ZipFile(prev / "phase2_outputs.zip", "w") as z:     # manifests only, no weights
+        z.writestr("outputs/models/C_phi3_n39/training_manifest.json", man)
+        z.writestr("outputs/phase2_gate/decision.json", json.dumps({"epochs": 4, "all_pass": True}))
+    pk.restore_previous(tmp_path / "input")
+    assert not pk.trained_at("C_phi3_n39", 4)                         # a manifest alone is not a finished adapter
+    with zipfile.ZipFile(prev / "phase2_adapters.zip", "w") as z:
+        z.writestr("outputs/models/C_phi3_n39/training_manifest.json", man)
+        z.writestr("outputs/models/C_phi3_n39/adapter_model.safetensors", "weights")
+    part = prev / "NLP_Research" / "outputs" / "exp8" / "n39__phi3"   # the version's repo tree: a partial evaluation
+    part.mkdir(parents=True)
+    (part / "generations.jsonl").write_text("{}\n")
+    got = pk.restore_previous(tmp_path / "input")
+    assert pk.trained_at("C_phi3_n39", 4) and not pk.trained_at("C_phi3_n39", 2)
+    assert (repo / "outputs/exp8/n39__phi3/generations.jsonl").exists()
+    assert (repo / "outputs/phase2_gate/decision.json").exists() and len(got) == 3
+
+
+def test_split_covers_every_unit_once_and_keeps_llama_off_token_free_parts(monkeypatch):
+    pk = _load()
+    monkeypatch.setattr(pk, "budgets", lambda m: {"phi3": (39, 30), "llama32": (60, 51)}[m])
+    every = {u["id"] for m in ("phi3", "llama32") for u in pk.units(m)}
+    assert {"gate_e2__phi3", "n39__phi3", "n39_s43__phi3", "n25__phi3", "n30_ablation_D6__phi3",
+            "n50__llama32"} <= every and "n50__phi3" not in every
+    for n_parts in (1, 2, 3):
+        a = pk.assign(n_parts)
+        ids = [u["id"] for us in a.values() for u in us]
+        assert sorted(ids) == sorted(every)                                 # each unit exactly once
+        for (part, gpu), us in a.items():
+            assert len({u["model"] for u in us}) <= 1                       # one model per GPU queue
+        assert pk.assign(n_parts) == a                                      # same split on every account
+    a3 = pk.assign(3)
+    assert {u["model"] for (p, _), us in a3.items() if p == 3 for u in us} == {"phi3"}   # part 3 needs no token
+    for u in pk.units("phi3"):
+        if u["tag"]:
+            assert ("A" in u["arms"]) == (u["tag"] == "n39")                  # the baseline is generated once
+            assert {nm for nm, _ in u["train"]} == {f"{a}_phi3_{u['tag']}" for a in u["arms"] if a in ("B_ext", "C")}

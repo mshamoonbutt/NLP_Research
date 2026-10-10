@@ -254,6 +254,17 @@ def test_full_wiring(env, monkeypatch):
     monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
     judged = json.loads((tmp / "exp8s" / "acceptance_flags.json").read_text(encoding="utf-8"))
     assert judged["flags"] == flags["flags"]                    # same numbers as the one-step run
+    # Phase 2 split folders hold no arm A (it lives in the main folder): allowed only when declared
+    noa = ["--exp0-dir", exp0_dir, "--models", "phi3", "--arms", "E", "--skip-capability",
+           "--judge-manifest", str(env["man"]), "--benign-judge-manifest", str(env["bman"]),
+           "--out-dir", str(tmp / "exp8noa")]
+    assert exp8.main(noa + ["--skip-judge"]) == 1
+    assert exp8.main(noa + ["--skip-judge", "--no-baseline"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", NoModel)
+    assert exp8.main(noa + ["--judge-only", "--no-baseline"]) == 0
+    monkeypatch.setattr(models_mod, "SLMRunner", FakeRunner)
+    assert json.loads((tmp / "exp8noa" / "acceptance_flags.json").read_text(encoding="utf-8"))["flags"] == []
+    assert (tmp / "exp8noa" / "results.jsonl").exists()
 
 
 def test_robustness_and_comprehension_wiring(env, monkeypatch):

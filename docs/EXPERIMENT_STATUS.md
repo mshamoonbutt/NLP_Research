@@ -743,6 +743,24 @@ Gemma probes run on Kaggle with the pinned Ollama version.
   not padded, per protocol — report it). Review: `scripts/exp6_review.py make` →
   `outputs/exp6/review/review_file.xlsx` (156 rows: all 66 Phi-3 + first 90 Llama, 15 per domain;
   private), then `apply` writes `outputs/exp6/<model>_verified` and `<model>_ablation_D6`.
+- **Exp 6 review applied (2026-10-09):** reviewer UU (as stated by the team; `reviewer_id` cells were
+  blank and filled from that statement); provenance recorded verbatim in
+  `outputs/exp6/review/verified_summary.json` — an earlier returned workbook held the same labels on
+  155/156 rows plus a second labelling and an adjudication sheet (agreement on `rejected_harmful`
+  0.705, κ 0.36); the paper must describe the labelling as it was actually done.
+  Judge-flagged CS answers confirmed harmful: phi3 44/66 (67%), llama32 66/90 (73%); refusals OK
+  61/66 and 84/90; kept (both yes) phi3 39, llama32 61; naturalness of kept refusals 4.72 / 4.66
+  (gate ≥ 4). **Budgets per model** (protocol: adjusted down if fewer qualify; C and B_ext equal within
+  a model): main phi3 39 / llama32 60, D6 ablation 30 / 51. N-curve: phi3 25; llama32 25, 50. All 19
+  training jobs pass a local pre-flight (naturalness gate, budgets, split/leakage/domain checks).
+  Note for Exp 2: the judge was right on 14/14 flagged phi3 CS answers in Exp 1 but on 44/66 here;
+  at 0.67 precision phi3's corrected CS ASR would be ~0.08 rather than 0.12 (llama32 consistent:
+  0.76 vs 0.73). Small Exp 1 sample or a stricter standard here; phi3 had no Exp 3 finding.
+- **Learning check (agreed 2026-10-09, before any training on real pairs):** `configs/dpo.yaml`
+  `learning_check` — the seed-42 C and B_ext adapters of both models are judged on their training logs
+  (final-epoch loss ≤ 0.60, reward accuracy ≥ 0.75); if any fails, all arms retrain at 4, then 6 epochs.
+  Built into the notebook (`phase2_kaggle.py run --phase gate|rest --epochs`, `decide`); results in
+  `outputs/phase2_gate/`.
 - **Over-refusal probe v2 (P4 resolved):** `data/benign_probe_v2.jsonl` — 60 harmless prompts
   (10 per domain) × EN/CS/RU/UR, written by the team (UU) with AI assistance, human-verified
   (manifest records it); now the Exp 8 default, with over-refusal reported per form.
@@ -757,7 +775,13 @@ Gemma probes run on Kaggle with the pinned Ollama version.
   `STAGE="smoke"`: fp16 DPO on 8 harmless pairs + the adapter in vLLM, per model (no private
   data). `STAGE="train_eval"`: per model on its own T4, all adapters (C and B_ext × seeds 42/43/44
   at N, C n-curve, D6 ablation) then Exp 8 generation-only; resumable. Exp 7 gained `--seed`.
-- **Not yet run:** GPU smoke, Exp 7–10 (training waits for the pair review → `apply` → `pack`).
+- **GPU smoke PASSED (Kaggle T4, 2026-10-09; `outputs/phase2_smoke/`):** both models trained a LoRA-DPO
+  adapter in fp16 (P1 verified) with the pinned stack (torch 2.4.0, transformers 4.46.3, trl 0.12.2,
+  peft 0.13.2, bitsandbytes 0.44.1; no pin mismatches), LoRA modules resolved (Phi-3 fused
+  `qkv_proj` / `gate_up_proj`; Llama q/k/v/o/gate/up/down), finite loss (ln 2 at initialisation, as
+  expected), and the adapter served through vLLM. Training now logs every step (a 60-pair budget is
+  ~8 optimizer steps): check the loss falls below ln 2 and reward accuracy rises in the real runs.
+- **Not yet run:** Exp 7–10 (training waits for the pair review → `apply` → `pack`).
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash
