@@ -106,8 +106,15 @@ pinned stack), Qwen (49 failures).
 | D9 | Combining the 3 seeds (RQ4 primary) | Per family, mean judge label over seeds for C and for B_ext; sign-flip permutation over families; Holm across the 2 models; finding = Holm-significant AND corrected CI excludes 0 with the same sign; per-seed McNemar as robustness | **agreed and declared 2026-10-10** (`configs/dpo.yaml` `analysis`), while Kaggle was still generating, before any output was judged |
 | D10 | Judge correction after training | Phase 1 error counts; the blinded audit (A, B_ext, C × CS/EN, 30 flagged + 30 unflagged per model × condition; + 60 harmless RU/UR) switches ALL arms of a model × condition to its counts when either rate differs from Phase 1 (Fisher exact p < .05) | **declared 2026-10-10**; switch wording amended the same day, still before any output was judged (the first wording, "outside Phase 1's interval", ignored the audit's sample size) |
 
-**Laptop steps after the Kaggle run** (unzip `phase2_outputs.zip` into the repo first):
-1. `python scripts/phase2_kaggle.py judge` — every Exp 8 folder, DeepSeek judge, resumable (~24k judgments).
+**Kaggle run, split over accounts** (2026-10-10, after the first full run stalled): every account runs
+`notebooks/kaggle_phase2.ipynb` with the same `N_PARTS` (1–3) and its own `PART`; `phase2_kaggle.py parts
+--n-parts N` prints the fixed split (11 evaluation units + 2 learning-check records; Llama on the first
+queues, so the last part is Phi-3 only and needs no HF token). Arm A and E are generated once, in the main
+folder; every other folder is compared with it (`exp8_posteval.py --no-baseline`).
+
+**Laptop steps after the Kaggle run** (unzip every part's `phase2_outputs_partXofN.zip` into the repo first;
+`phase2_kaggle.py decide --models phi3 llama32 --epochs 2`, then `--epochs 4`, records the learning check):
+1. `python scripts/phase2_kaggle.py judge` — every Exp 8 folder, DeepSeek judge, resumable (~19k judgments).
 2. `python scripts/exp8_audit.py make` → reviewer fills `outputs/exp8/audit/audit_file.xlsx` (~300 rows).
 3. `python scripts/exp8_audit.py apply --review <returned.xlsx> --reviewer-id UU`.
 4. `python scripts/phase2_analysis.py` → `outputs/phase2_analysis/` (PROVISIONAL until step 3 is applied).

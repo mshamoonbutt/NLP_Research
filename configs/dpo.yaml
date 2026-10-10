@@ -91,6 +91,10 @@ prefdata:
 # mean rewards/accuracies >= min_final_epoch_reward_accuracy. If any of the four fails, every
 # arm of every model is retrained at the next epochs value; the first value where all pass is
 # used for all Phase 2 adapters (the last value is used, and reported, if none passes).
+# Applied 2026-10-10 in the first full Kaggle run: 2 epochs FAILED, 4 PASSED -> 4 epochs for all
+# adapters. That run stalled before packaging, so the split reruns (phase2_kaggle.py parts/queue) train
+# at 4 and re-record both checks (outputs/phase2_gate/<model>_e2.json, _e4.json; e2 adapters in
+# outputs/models_e2, never evaluated).
 learning_check:
   epochs_ladder: [2, 4, 6]
   max_final_epoch_loss: 0.60

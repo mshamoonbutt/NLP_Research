@@ -75,7 +75,7 @@ def fake_root(tmp_path):
     for model, (n, nab) in BUDGET.items():
         tags = [f"n{n}", f"n{n}_s43", f"n{n}_s44"] + [f"n{b}" for b in (25, 50) if b < n] + [f"n{nab}_ablation_D2"]
         for tag in tags:
-            arms = ["A", "E", "B_ext", "C"] if tag == f"n{n}" else ["A", "C"] if tag in ("n25", "n50") else ["A", "B_ext", "C"]
+            arms = ["A", "E", "B_ext", "C"] if tag == f"n{n}" else ["C"] if tag in ("n25", "n50") else ["B_ext", "C"]
             d = tmp_path / "outputs" / "exp8" / f"{tag}__{model}"
             d.mkdir(parents=True)
             with (d / "results.jsonl").open("w", encoding="utf-8") as fh:

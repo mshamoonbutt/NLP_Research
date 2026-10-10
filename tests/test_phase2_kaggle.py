@@ -99,3 +99,24 @@ def test_resume_restores_finished_work_and_needs_adapter_weights(tmp_path, monke
     assert pk.trained_at("C_phi3_n39", 4) and not pk.trained_at("C_phi3_n39", 2)
     assert (repo / "outputs/exp8/n39__phi3/generations.jsonl").exists()
     assert (repo / "outputs/phase2_gate/decision.json").exists() and len(got) == 3
+
+
+def test_split_covers_every_unit_once_and_keeps_llama_off_token_free_parts(monkeypatch):
+    pk = _load()
+    monkeypatch.setattr(pk, "budgets", lambda m: {"phi3": (39, 30), "llama32": (60, 51)}[m])
+    every = {u["id"] for m in ("phi3", "llama32") for u in pk.units(m)}
+    assert {"gate_e2__phi3", "n39__phi3", "n39_s43__phi3", "n25__phi3", "n30_ablation_D6__phi3",
+            "n50__llama32"} <= every and "n50__phi3" not in every
+    for n_parts in (1, 2, 3):
+        a = pk.assign(n_parts)
+        ids = [u["id"] for us in a.values() for u in us]
+        assert sorted(ids) == sorted(every)                                 # each unit exactly once
+        for (part, gpu), us in a.items():
+            assert len({u["model"] for u in us}) <= 1                       # one model per GPU queue
+        assert pk.assign(n_parts) == a                                      # same split on every account
+    a3 = pk.assign(3)
+    assert {u["model"] for (p, _), us in a3.items() if p == 3 for u in us} == {"phi3"}   # part 3 needs no token
+    for u in pk.units("phi3"):
+        if u["tag"]:
+            assert ("A" in u["arms"]) == (u["tag"] == "n39")                  # the baseline is generated once
+            assert {nm for nm, _ in u["train"]} == {f"{a}_phi3_{u['tag']}" for a in u["arms"] if a in ("B_ext", "C")}

@@ -210,7 +210,8 @@ def main(argv=None) -> int:
         if ab:
             tag = f"n{nab}_ablation_{ab}"
             for cond in CONDITIONS:
-                m = {a: fam_map(d[tag], a, cond, domain=ab) for a in ("A", "B_ext", "C")}
+                m = {a: fam_map(d[tag], a, cond, domain=ab) for a in ("B_ext", "C")}
+                m["A"] = fam_map(d[main_tags[0]], "A", cond, domain=ab)    # A is generated in the main folder only
                 for a, b in (("C", "A"), ("B_ext", "A"), ("C", "B_ext")):
                     comps.append({"kind": "ablation", "model": model, "comparison": f"{a}-{b}", "condition": cond,
                                   "domain": ab, "budget": nab, **ctx.compare(m[a], m[b], model, cond)})

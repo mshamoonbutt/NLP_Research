@@ -103,6 +103,9 @@ def main(argv=None) -> int:
     ap.add_argument("--judge-only", action="store_true",
                     help="laptop: judge the cached generations of a --skip-judge run (no model loaded)")
     ap.add_argument("--out-dir", default=None)
+    ap.add_argument("--no-baseline", action="store_true",
+                    help="Phase 2 split runs: arm A lives in another folder (scripts/phase2_analysis.py compares "
+                         "across folders); this folder's own vs-A tests and flags are skipped")
     args = ap.parse_args(argv)
     if args.skip_judge and args.judge_only:
         print("FAIL: --skip-judge and --judge-only exclude each other", file=sys.stderr)
@@ -144,7 +147,7 @@ def main(argv=None) -> int:
                 if man.get("split_id") != art.split_id or man.get("model_key") != model:
                     problems.append(f"{d} trained for split {man.get('split_id')} / "
                                     f"{man.get('model_key')}, not {art.split_id} / {model}")
-    if "A" not in args.arms:
+    if "A" not in args.arms and not args.no_baseline:
         problems.append("arm A (untrained baseline) is required for pre/post comparisons")
     if not args.skip_overrefusal and not Path(args.probe).exists():
         problems.append(f"benign probe missing: {args.probe}")
@@ -270,7 +273,7 @@ def main(argv=None) -> int:
     tests, rq4 = [], []
     for model in models:
         for arm in args.arms:
-            if arm == "A":
+            if arm == "A" or "A" not in args.arms:
                 continue
             for cond in CONDITIONS:
                 m = mcnemar_paired(maps[(model, arm)][cond], maps[(model, "A")][cond],
@@ -295,7 +298,7 @@ def main(argv=None) -> int:
 
     by = {(r["model"], r["arm"]): r for r in table}
     flags = []
-    for model in models:
+    for model in (models if "A" in args.arms else []):
         base = by[(model, "A")]
         for arm in args.arms:
             if arm == "A":
