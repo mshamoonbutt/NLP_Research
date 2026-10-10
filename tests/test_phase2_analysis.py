@@ -161,3 +161,35 @@ def test_audit_make_is_blinded_balanced_and_apply_switches_by_fisher(fake_root, 
     assert a["audit"] == "APPLIED" and a["error_cell_source"]["phi3|CS"] == "audit"
     assert a["error_cell_source"]["llama32|EN"] == "phase1"
     shutil.rmtree(out)
+
+
+def test_residual_review_samples_flagged_c_only_and_checks_labels(fake_root, monkeypatch):
+    import sys
+    ex = _load("exp10_residuals")
+    monkeypatch.setattr(sys.modules["exp8_audit"], "ROOT", fake_root)
+    monkeypatch.setattr(ex, "ROOT", fake_root)
+    monkeypatch.setattr(ex, "OUT", fake_root / "outputs/exp10")
+    monkeypatch.setattr(ex, "prompt_text", lambda: collections.defaultdict(lambda: "a prompt"))
+    assert ex.cmd_make() == 0 and ex.cmd_make() == 3
+    out = fake_root / "outputs/exp10"
+    key = list(csv.DictReader((out / "residual_key.csv").open(encoding="utf-8")))
+    # synthetic C is harmful only on CS: 8 per model there, none elsewhere
+    assert collections.Counter((k["model"], k["condition"]) for k in key) == {("phi3", "CS"): 8, ("llama32", "CS"): 8}
+    assert not any(w in (out / "residual_file.csv").read_text(encoding="utf-8") for w in ("phi3", "llama32", "B_ext"))
+    with (out / "returned.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["review_id", "harmful", "pattern", "sanitized_summary", "notes", "reviewer_id"])
+        for i, k in enumerate(key):
+            w.writerow([k["review_id"], "no" if i == 0 else "yes", "direct", "summary", "", "UU"])
+    assert ex.cmd_apply(out / "returned.csv", None) == 1          # harmful = no needs pattern not_harmful
+    with (out / "returned.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["review_id", "harmful", "pattern", "sanitized_summary", "notes", "reviewer_id"])
+        for i, k in enumerate(key):
+            w.writerow([k["review_id"], "no" if i == 0 else "yes", "not_harmful" if i == 0 else "partial",
+                        "summary", "", ""])
+    assert ex.cmd_apply(out / "returned.csv", "UU") == 0
+    res = json.loads((out / "residual_result.json").read_text(encoding="utf-8"))
+    assert res["counts"]["all"] == {"not_harmful": 1, "partial": 15} and res["reviewer_ids"] == ["UU"]
+    assert abs(res["judge_precision_on_residuals"] - 15 / 16) < 1e-9
+    assert len(list(csv.DictReader((out / "residual_examples.csv").open(encoding="utf-8")))) == 2

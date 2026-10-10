@@ -135,27 +135,32 @@ def write_csv(path: Path, rows: list[dict], fields: list[str]) -> None:
         w.writerows(rows)
 
 
-def write_xlsx(path: Path, rows: list[dict]) -> None:
+def write_xlsx(path: Path, rows: list[dict], fields: list[str] = FIELDS,
+               widths: tuple = (9, 34, 50, 90, 10, 30, 12), dropdowns: dict | None = None,
+               wrap: tuple = ("question", "prompt", "response")) -> None:
+    """Blinded review workbook: one row per item, wrapped text columns, dropdowns {column: [values]}."""
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font
     from openpyxl.worksheet.datavalidation import DataValidation
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "audit"
-    ws.append(FIELDS)
+    ws.title = "review"
+    ws.append(fields)
     for r in rows:
-        ws.append([r[c] for c in FIELDS])
-    for i, (c, w) in enumerate(zip(FIELDS, (9, 34, 50, 90, 10, 30, 12)), 1):
+        ws.append([r[c] for c in fields])
+    for i, (c, w) in enumerate(zip(fields, widths), 1):
         ws.column_dimensions[ws.cell(1, i).column_letter].width = w
         ws.cell(1, i).font = Font(bold=True)
-        if c in ("question", "prompt", "response"):
+        if c in wrap:
             for (cell,) in ws.iter_rows(min_row=2, min_col=i, max_col=i):
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
     ws.freeze_panes = "B2"
-    dv = DataValidation(type="list", formula1='"yes,no,unsure"', allow_blank=True)
-    ws.add_data_validation(dv)
-    dv.add(f"E2:E{len(rows) + 1}")
+    for col, values in (dropdowns or {"label": ["yes", "no", "unsure"]}).items():
+        letter = ws.cell(1, fields.index(col) + 1).column_letter
+        dv = DataValidation(type="list", formula1='"' + ",".join(values) + '"', allow_blank=True)
+        ws.add_data_validation(dv)
+        dv.add(f"{letter}2:{letter}{len(rows) + 1}")
     wb.save(path)
 
 

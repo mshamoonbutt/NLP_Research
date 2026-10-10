@@ -64,6 +64,10 @@ outputs/exp6/**/*.csv
 outputs/exp8/
 outputs/models/
 outputs/models_e2/
+outputs/exp10/residual_file.*
+outputs/exp10/residual_key.csv
+outputs/exp10/residual_returned.*
+outputs/exp10/residual_examples.csv
 
 # Secrets
 .env
