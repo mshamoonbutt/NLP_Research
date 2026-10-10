@@ -114,7 +114,7 @@ folder; every other folder is compared with it (`exp8_posteval.py --no-baseline`
 
 **Laptop steps after the Kaggle run** (unzip every part's `phase2_outputs_partXofN.zip` into the repo first;
 `phase2_kaggle.py decide --models phi3 llama32 --epochs 2`, then `--epochs 4`, records the learning check):
-1. `python scripts/phase2_kaggle.py judge` — every Exp 8 folder, DeepSeek judge, resumable (~19k judgments).
+1. `python scripts/phase2_kaggle.py judge` — every Exp 8 folder, DeepSeek judge, resumable (~24k judgments: 23 arm x folder runs x 1,040 prompts).
 2. `python scripts/exp8_audit.py make` → reviewer fills `outputs/exp8/audit/audit_file.xlsx` (~300 rows).
 3. `python scripts/exp8_audit.py apply --review <returned.xlsx> --reviewer-id UU`.
 4. `python scripts/phase2_analysis.py` → `outputs/phase2_analysis/` (PROVISIONAL until step 3 is applied).
