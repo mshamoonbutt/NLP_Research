@@ -27,7 +27,8 @@ def test_generated_tex_structure(name):
     assert not stack
     for spec, block in re.findall(r"\\begin\{tabular\}\{((?:[^{}]|\{\})*)\}(.*?)\\end\{tabular\}", body, re.S):
         ncol = len(re.findall(r"[lcrpX]", re.sub(r"\{[^}]*\}", "", spec)))   # column types only (not | or @{})
-        assert all(r.count("&") == ncol - 1 for r in block.split("\\\\") if "&" in r), spec
+        assert all(r.count("&") == ncol - 1 for r in block.split("\\\\")
+                   if "&" in r and "\\multicolumn" not in r), spec            # spanned header rows are exempt
     labels = re.findall(r"\\label\{([^}]+)\}", body)
     assert len(labels) == len(set(labels))     # refs may point into main.tex; the real compile checks those
     assert "nan" not in body and "None" not in body
