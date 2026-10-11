@@ -325,16 +325,29 @@ def appendix(a, rates, comps, training, audit, gates, residual, comp_rows) -> st
     if residual:
         cnt = residual["counts"]
         pats = [p for p in residual["patterns"] if p != "not_harmful"] + ["not_harmful"]
-        t += [r"\begin{table}[t]", r"\centering\small", r"\begin{tabular}{@{}l" + "r" * 3 + r"@{}}", r"\toprule",
-              r"Pattern & " + " & ".join(NAME[m] for m in MODELS) + r" & All \\", r"\midrule"]
+        t += [r"\begin{table}[t]", r"\centering\small\setlength{\tabcolsep}{3.5pt}", r"\begin{tabular}{@{}l" + "r" * 5 + r"@{}}",
+              r"\toprule",
+              r"Pattern & " + " & ".join(CONDS) + r" & All \\", r"\midrule"]
         for p in pats:
-            t.append(p.replace("_", " ") + " & " + " & ".join(str(cnt.get(f"model={m}", {}).get(p, 0)) for m in MODELS)
+            if p == "not_harmful":
+                t.append(r"\midrule")
+            t.append(p.replace("_", " ") + " & " + " & ".join(str(cnt.get(f"condition={c}", {}).get(p, 0)) for c in CONDS)
                      + f" & {cnt['all'].get(p, 0)} \\\\")
+        conf = []
+        for c in CONDS:
+            ys = sum(cnt.get(f"cell={m}|{c}", {}).get("harmful_yes", 0) for m in MODELS)
+            n = sum(sum(cnt.get(f"cell={m}|{c}", {}).values()) for m in MODELS)
+            conf.append(f"{ys}/{n}")
+        t.append(r"Confirmed harmful & " + " & ".join(conf) + f" & {sum(cnt['all'].values()) - cnt['all'].get('not_harmful', 0)}"
+                 f"/{residual['n_rows']} \\\\")
+        by_model = "; ".join(f"{NAME[m]} " + ", ".join(
+            f"{c} {cnt.get(f'cell={m}|{c}', {}).get('harmful_yes', 0)}/{sum(cnt.get(f'cell={m}|{c}', {}).values())}"
+            for c in CONDS) for m in MODELS)
         t += [r"\bottomrule", r"\end{tabular}", r"\caption{Residual errors after C: " + str(residual["n_rows"])
               + r" judge-flagged responses (8 per model and form, three seeds, sampled by a recorded rule), coded "
-              r"blind by one reviewer. Judge precision on these residuals: "
-              + f"{residual['judge_precision_on_residuals']:.2f}" + r".}", r"\label{tab:p2-residual}",
-              r"\end{table}", ""]
+              r"blind by one reviewer: how the confirmed harmful responses comply, and how often the judge's flag "
+              r"was confirmed (" + by_model + r"). Most RU/UR flags after training were not harmful.}",
+              r"\label{tab:p2-residual}", r"\end{table}", ""]
     else:
         t += [r"% Residual-error taxonomy: pending (scripts/exp10_residuals.py apply, then re-run this script).", ""]
     return "\n".join(t)
@@ -391,13 +404,46 @@ def text(a, rates, comps, training, audit) -> str:
         r"largest reductions but makes both models refuse many harmless prompts, most of all in Roman Urdu. "
         r"Withholding the D6 domain from training leaves Llama's CS reduction on D6 similar in size, with intervals "
         r"too wide to separate the two (Table~\ref{tab:p2-ncurve}).",
+        r"A blinded review of 64 responses that C still produced and the judge flagged (Table~\ref{tab:p2-residual}) "
+        r"confirms nearly all English and most CS flags; the confirmed harmful responses mostly comply directly or "
+        r"after a warning or a fictional or educational frame, and none arise from misreading the request.",
+        r"\verify{After training, only 4/16 RU and 6/16 UR judge-flagged C responses were confirmed harmful "
+        r"(Table~\ref{tab:p2-residual}), while RU/UR corrections use Phase-1 error rates that were not re-audited "
+        r"after training and only C's flagged responses were reviewed (no unflagged sample, no A): treat the RU/UR "
+        r"transfer estimates as uncertain and say so in Limitations.}",
         r"\verify{Phi-3 UrduMMLU is near chance (0.27) in every arm; Llama C UrduMMLU retention 0.949 (6 of 300 "
         r"items). The judge's precision on flagged Phi-3 CS responses was 23/30 in the audit vs 14/14 in Phase 1 "
         r"(not significant; Exp~6 review 44/66) -- state as a caveat.}",
     ])
 
 
-def main() -> int:
+def tex_escape(s: str) -> str:
+    rep = {"\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#", "_": r"\_", "{": r"\{",
+           "}": r"\}", "~": r"\textasciitilde{}", "^": r"\textasciicircum{}"}
+    return "".join(rep.get(ch, ch) for ch in s)
+
+
+def table_examples() -> str:
+    """Reviewer-written one-line summaries (outputs/exp10/residual_examples.csv), only with --examples:
+    include them after a human has re-read the selection."""
+    rows = list(csv.DictReader((ROOT / "outputs/exp10/residual_examples.csv").open(encoding="utf-8")))
+    out = [r"\begin{table*}[t]", r"\centering\small", r"\begin{tabular}{@{}lllp{0.58\textwidth}@{}}", r"\toprule",
+           r"Pattern & Form & Model & What the response does (reviewer's sanitized summary) \\", r"\midrule"]
+    for r in rows:
+        out.append(f"{r['pattern'].replace('_', ' ')} & {r['condition']} & {NAME[r['model']]} & "
+                   f"{tex_escape(r['sanitized_summary'])} \\\\")
+    out += [r"\bottomrule", r"\end{tabular}", r"\caption{Sanitized examples of residual harmful responses after C "
+            r"(the first two confirmed responses per pattern in review order; operational details removed by the "
+            r"reviewer).}", r"\label{tab:p2-examples}", r"\end{table*}"]
+    return "\n".join(out)
+
+
+def main(argv=None) -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--examples", action="store_true",
+                    help="include the reviewer's sanitized example summaries (only after a human re-read them)")
+    args = ap.parse_args(argv)
     a, rates, comps, training, audit, gates, residual = load()
     cap = {(c["model"], c["arm"]): c for c in a["capability"]}
     comp_rows = composition(a)
@@ -411,7 +457,9 @@ def main() -> int:
         text(a, rates, comps, training, audit),
         table_mitigation(a, rates, cap), table_rq4(a), figure_forest(comps), figure_composition(comp_rows),
         "% " + "-" * 69 + "\n% Appendix\n% " + "-" * 69,
-        appendix(a, rates, comps, training, audit, gates, residual, comp_rows)])
+        appendix(a, rates, comps, training, audit, gates, residual, comp_rows)]
+        + ([table_examples()] if args.examples else
+           ["% Sanitized examples: re-read outputs/exp10/residual_examples.csv, then run with --examples."]))
     out = ROOT / "docs" / "paper_phase2.tex"
     out.write_text(doc + "\n", encoding="utf-8", newline="\n")
     print(f"[exp10] wrote {out} ({len(doc.splitlines())} lines) and {AN / 'response_composition.csv'}"

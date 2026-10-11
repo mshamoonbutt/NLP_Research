@@ -807,7 +807,16 @@ Gemma probes run on Kaggle with the pinned Ollama version.
   Unseen domain D6 (Llama, 35 families): C trained without D6 − A on CS −10.1 [−22.6, +2.2] vs C trained
   with it −11.4 [−23.0, −0.6] — same direction, underpowered; B_ext 0.0. Phi-3 D6: no harmful output in
   any arm (and its D6 adapters did not train). Phi-3 UrduMMLU ≈ .27 in every arm (chance .25).
-- **Open:** Exp 10 (tables/figures, error taxonomy, sanitized examples); paper update.
+- **Exp 10 (2026-10-11):** `scripts/exp10_report.py` → `docs/paper_phase2.tex` (methods as run with
+  `\verify` disclosures, results text, Table 7, the RQ4 table, two pgfplots figures, nine appendix tables);
+  compiled with the paper's ACL preamble (Tectonic) and checked page by page. Residual review
+  (`scripts/exp10_residuals.py`; 64 judge-flagged C responses, 8 per model × form, reviewer UU): judge
+  confirmed EN 16/16, CS 12/16, **RU 4/16, UR 6/16** (Phi-3 UR 0/8) → RU/UR rates after training are likely
+  overstated (Phase 1 error rates, not re-audited post-training): a limitation for the RU transfer claim.
+  Confirmed residuals: direct 15, partial 10, reframed 8, warning-then-comply 5, misread 0; the judge's
+  "partial" flags are the error source (26/51 confirmed vs "full" 12/13). Eight sanitized example lines
+  await the reviewer's re-read (`--examples` adds them).
+- **Open:** paper update (separate chat); optional fp16 fix and rerun (see the 4 untrained adapters).
 
 ## Next commands for the resource-owning collaborator (GPU + API)
 ```bash

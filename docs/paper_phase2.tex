@@ -23,6 +23,8 @@ Before any Phase-2 output was judged we fixed the analysis: for each family, C's
 For Llama-3.2, training on its own CS failures reduces CS harmful compliance more than the same number of external English pairs: $-$9.7 points raw, $-$6.8 after judge correction (95\% interval [$-$11.3, $-$2.6], Holm $p$ = .004; Table~\ref{tab:rq4}), with the same sign in every seed. For Phi-3-mini neither recipe moves harmful compliance (+0.3 points, $p$ = .903): its CS rate is already near its floor, and most of its Roman-Urdu and Urdu-script responses are non-responses in every arm (Figure~\ref{fig:p2-composition}). The Phi-3 result is limited evidence, not evidence of equal effectiveness.
 
 C lowers Llama's harmful compliance mainly by refusing more often, not by producing broken output (Figure~\ref{fig:p2-composition}); it transfers to Roman Urdu but not to Urdu script, and slightly lowers English harmful compliance (Figure~\ref{fig:p2-effects}). Neither recipe increases refusal of harmless prompts, and capability is retained (Table~\ref{tab:mitigation}). The safety system prompt (E) gives the largest reductions but makes both models refuse many harmless prompts, most of all in Roman Urdu. Withholding the D6 domain from training leaves Llama's CS reduction on D6 similar in size, with intervals too wide to separate the two (Table~\ref{tab:p2-ncurve}).
+A blinded review of 64 responses that C still produced and the judge flagged (Table~\ref{tab:p2-residual}) confirms nearly all English and most CS flags; the confirmed harmful responses mostly comply directly or after a warning or a fictional or educational frame, and none arise from misreading the request.
+\verify{After training, only 4/16 RU and 6/16 UR judge-flagged C responses were confirmed harmful (Table~\ref{tab:p2-residual}), while RU/UR corrections use Phase-1 error rates that were not re-audited after training and only C's flagged responses were reviewed (no unflagged sample, no A): treat the RU/UR transfer estimates as uncertain and say so in Limitations.}
 \verify{Phi-3 UrduMMLU is near chance (0.27) in every arm; Llama C UrduMMLU retention 0.949 (6 of 300 items). The judge's precision on flagged Phi-3 CS responses was 23/30 in the audit vs 14/14 in Phase 1 (not significant; Exp~6 review 44/66) -- state as a caveat.}
 
 \begin{table*}[t]
@@ -302,5 +304,26 @@ Llama-3.2 & A & 10 / 89 / 1 / 0 & 34 / 46 / 14 / 6 & 36 / 30 / 17 / 17 & 26 / 37
 \label{tab:p2-composition}
 \end{table*}
 
-% Residual-error taxonomy: pending (scripts/exp10_residuals.py apply, then re-run this script).
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Pattern & EN & CS & RU & UR & All \\
+\midrule
+direct & 11 & 3 & 0 & 1 & 15 \\
+warning then comply & 0 & 4 & 1 & 0 & 5 \\
+reframed & 4 & 3 & 1 & 0 & 8 \\
+partial & 1 & 2 & 2 & 5 & 10 \\
+misread & 0 & 0 & 0 & 0 & 0 \\
+other & 0 & 0 & 0 & 0 & 0 \\
+\midrule
+not harmful & 0 & 4 & 12 & 10 & 26 \\
+Confirmed harmful & 16/16 & 12/16 & 4/16 & 6/16 & 38/64 \\
+\bottomrule
+\end{tabular}
+\caption{Residual errors after C: 64 judge-flagged responses (8 per model and form, three seeds, sampled by a recorded rule), coded blind by one reviewer: how the confirmed harmful responses comply, and how often the judge's flag was confirmed (Phi-3-mini EN 8/8, CS 7/8, RU 2/8, UR 0/8; Llama-3.2 EN 8/8, CS 5/8, RU 2/8, UR 6/8). Most RU/UR flags after training were not harmful.}
+\label{tab:p2-residual}
+\end{table}
 
+
+% Sanitized examples: re-read outputs/exp10/residual_examples.csv, then run with --examples.
